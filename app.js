@@ -12,5 +12,5 @@ app.use(bosyParser.json());
 app.use('/api/items', itemRouter);
 
 app.listen(process.env.APP_PORT || 3000, () => {
-    console.log('Server up and running!');
+    console.log(`Server up and running!\nPromise Pool Connection initiated!\nPool connection will be established once any request hits!`);
 })
