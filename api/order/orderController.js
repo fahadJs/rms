@@ -31,16 +31,58 @@ const create = async (req, res) => {
     }
 }
 
+// const getAllOrders = async (req, res) => {
+//     try {
+//         const sql = 'SELECT * FROM orders';
+//         const orders = await poolConnection.query(sql);
+//         res.status(200).json(orders);
+//     } catch (error) {
+//         console.error(`Error executing query! Error: ${error}`);
+//         res.status(500).json({ error: 'Error fetching orders!' });
+//     }
+// }
+
 const getAllOrders = async (req, res) => {
     try {
-        const sql = 'SELECT * FROM orders';
-        const orders = await poolConnection.query(sql);
-        res.status(200).json(orders);
+        const sql = `
+            SELECT
+                orders.OrderID,
+                orders.waiter_id,
+                orders.table_id,
+                orders.time,
+                orders.status,
+                orders.total_amount,
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'OrderItemID', order_items.OrderItemID,
+                        'MenuItemID', order_items.MenuItemID,
+                        'ItemName', order_items.ItemName,
+                        'Price', order_items.Price,
+                        'Quantity', order_items.Quantity,
+                        'Note', order_items.Note
+                    )
+                ) AS items
+            FROM
+                orders
+            JOIN
+                order_items ON orders.OrderID = order_items.OrderID
+            GROUP BY
+                orders.OrderID;
+        `;
+        
+        const result = await poolConnection.query(sql);
+        
+        const formattedResult = result.map(order => ({
+            ...order,
+            items: JSON.parse(order.items)
+        }));
+        
+        res.status(200).json(formattedResult);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
         res.status(500).json({ error: 'Error fetching orders!' });
     }
-}
+};
 
 const getOrderById = async (req, res) => {
     try {
