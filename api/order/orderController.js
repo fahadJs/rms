@@ -20,6 +20,10 @@ const create = async (req, res) => {
             await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
         }
 
+        const updateTableStatusQuery = 'UPDATE tables SET status = ? WHERE table_id = ?';
+        const updateTableStatusValues = ['reserved', table_id];
+        await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
+
         await poolConnection.query('COMMIT');
         res.status(201).json({ message: 'Order created successfully!' });
     } catch (error) {
