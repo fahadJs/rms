@@ -21,9 +21,11 @@ const query = (sql, values) => {
             } else {
                 console.info('Successful Pool Connection with MySQL server.');
                 connection.query(sql, values, (queryErr, results, fields) => {
+                    console.info(`Connection Released back to pool!`);
+                    connection.release();
                     if (queryErr) {
                         console.error(`Error while executing query! Error: ${queryErr}`);
-                        connection.release();
+                        
                         console.error(`Connection Rejected!`);
                         reject(queryErr);
                     } else {
