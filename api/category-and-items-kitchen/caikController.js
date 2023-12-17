@@ -11,7 +11,7 @@ const getAll = async (req, res) => {
                 menuitems.Price,
                 categories.CategoryName,
                 categories.CategoryID,
-                inventory.Quantity,
+                inventory.on_hand,
                 kitchens.Name AS kitchenName,
                 kitchens.KitchenID AS kitchenid
             FROM 
@@ -31,7 +31,7 @@ const getAll = async (req, res) => {
             item_price: results.Price,
             category_id: results.CategoryID,
             category_name: results.CategoryName,
-            item_quantity: results.Quantity,
+            item_quantity: results.on_hand,
             kitchen_name: results.kitchenName,
             kitchen_id: results.kitchenid
         }));
