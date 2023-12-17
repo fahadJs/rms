@@ -3,16 +3,20 @@ const poolConnection = require('../../config/database');
 const getById = async (req, res) => {
     try {
         let id = req.params.id;
-        let sql = 'SELECT floor_plan_data FROM floor_plans WHERE restaurant_id = ?';
+        // let sql = 'SELECT floor_plan_data FROM floor_plans WHERE restaurant_id = ?';
+        let sql = 'SELECT * FROM floor_plans JOIN floors ON floor_plans.restaurant_id = floors.restaurant_id LEFT JOIN tables ON floors.floor_id = tables.floor_id WHERE floor_plans.restaurant_id = ?';
         let values = id;
         const result = await poolConnection.query(sql, values);
 
         const floorData = result.map(results => {
-            const floorPlanData = JSON.parse(results.floor_plan_data);
             return {
                 floor_plan_data: {
-                    floor: floorPlanData.floor,
-                    tables: floorPlanData.tables
+                    floor: results.floor_name,
+                    tables: {
+                        seats: results.seats,
+                        status: results.status,
+                        table_id: results.table_name
+                    }
                 }
             }
         });
