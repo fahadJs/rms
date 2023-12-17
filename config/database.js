@@ -25,7 +25,7 @@ const query = (sql, values) => {
                     connection.release();
                     if (queryErr) {
                         console.error(`Error while executing query! Error: ${queryErr}`);
-                        
+                        connection.release();
                         console.error(`Connection Rejected!`);
                         reject(queryErr);
                     } else {
