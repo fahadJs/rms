@@ -38,6 +38,32 @@ const query = (sql, values) => {
     });
 }
 
+const beginTransaction = () => {
+    return new Promise((resolve, reject) => {
+        pool.getConnection((error, connection) => {
+            if (error) {
+                console.error(`Connection Failed! Error: ${error}`);
+                reject(error);
+                return;
+            } else {
+                console.info('Successful Pool Connection with MySQL server for transaction.');
+                connection.beginTransaction((beginTransactionErr) => {
+                    if (beginTransactionErr) {
+                        console.error(`Error beginning transaction! Error: ${beginTransactionErr}`);
+                        connection.release();
+                        console.error(`Connection Rejected!`);
+                        reject(beginTransactionErr);
+                    } else {
+                        console.info('Transaction begun successfully.');
+                        resolve(connection);
+                    }
+                });
+            }
+        });
+    });
+}
+
 module.exports = {
-    query
+    query,
+    beginTransaction
 };
