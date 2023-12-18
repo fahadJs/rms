@@ -18,6 +18,11 @@ const create = async (req, res) => {
             const { menuitemID, name, price, quantity, kitchenID, categoryID, note } = item;
             const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note];
             await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
+
+            
+            const updateInventoryQuery = 'UPDATE inventory SET on_hand = on_hand - ? WHERE MenuItemID = ?';
+            const updateInventoryValues = [quantity, menuitemID];
+            await poolConnection.query(updateInventoryQuery, updateInventoryValues);
         }
 
         const updateTableStatusQuery = 'UPDATE tables SET status = ? WHERE table_id = ?';
@@ -34,17 +39,6 @@ const create = async (req, res) => {
         res.status(500).json({ error: 'Error creating order!' });
     }
 }
-
-// const getAllOrders = async (req, res) => {
-//     try {
-//         const sql = 'SELECT * FROM orders';
-//         const orders = await poolConnection.query(sql);
-//         res.status(200).json(orders);
-//     } catch (error) {
-//         console.error(`Error executing query! Error: ${error}`);
-//         res.status(500).json({ error: 'Error fetching orders!' });
-//     }
-// }
 
 const getAllOrders = async (req, res) => {
     try {
@@ -74,14 +68,14 @@ const getAllOrders = async (req, res) => {
             GROUP BY
                 orders.OrderID;
         `;
-        
+
         const result = await poolConnection.query(sql);
-        
+
         const formattedResult = result.map(order => ({
             ...order,
             items: JSON.parse(order.items)
         }));
-        
+
         res.status(200).json(formattedResult);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
