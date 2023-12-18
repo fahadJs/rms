@@ -7,8 +7,8 @@ const create = async (req, res) => {
         const { waiter_id, table_id, items, total_amount } = req.body;
         const { id } = req.params;
 
-        const orderInsertQuery = 'INSERT INTO orders (waiter_id, table_id, time, status, total_amount, restaurant_id) VALUES (?, ?, NOW(), ?, ?, ?)';
-        const orderValues = [waiter_id, table_id, 'Pending', total_amount, id];
+        const orderInsertQuery = 'INSERT INTO orders (waiter_id, table_id, time, total_amount, restaurant_id) VALUES (?, ?, NOW(), ?, ?)';
+        const orderValues = [waiter_id, table_id, total_amount, id];
         const orderResult = await poolConnection.query(orderInsertQuery, orderValues);
 
         const orderID = orderResult.insertId;
