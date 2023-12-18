@@ -11,6 +11,7 @@ const getAll = async (req, res) => {
             orders.table_id,
             orders.time,
             orders.order_status,
+            orders.bill_status,
             orders.total_amount,
             JSON_ARRAYAGG(
               JSON_OBJECT(
