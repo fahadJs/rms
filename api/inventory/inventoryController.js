@@ -5,7 +5,9 @@ const getAll = async (req, res) => {
         let sql = `
             SELECT 
                 inventory.InventoryID,
+                menuitems.MenuItemID,
                 menuitems.Name AS item_name,
+                categories.CategoryID,
                 categories.CategoryName AS category_name,
                 inventory.Unit,
                 inventory.available,
@@ -22,7 +24,9 @@ const getAll = async (req, res) => {
         const inventoryData = result.map(row => ({
             inventory_id: row.InventoryID,
             item_name: row.item_name,
+            item_id: row.MenuItemID,
             category_name: row.category_name,
+            category_id: row.CategoryID,
             unit: row.Unit,
             available: row.available,
             reserved: row.reserved,
