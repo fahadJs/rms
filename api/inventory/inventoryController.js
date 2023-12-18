@@ -44,14 +44,14 @@ const update = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
-        const { menuitem_id, category_id, available, reserved, on_hand } = req.body;
+        const { menuitem_id, available, reserved, on_hand } = req.body;
 
-        const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? AND CategoryID = ? FOR UPDATE';
-        const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id, category_id]);
+        const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? FOR UPDATE';
+        const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id]);
 
         if (existingInventory.length > 0) {
-            const updateInventoryQuery = 'UPDATE inventory SET available = ?, reserved = ?, on_hand = ? WHERE MenuItemID = ? AND CategoryID = ?';
-            await poolConnection.query(updateInventoryQuery, [available, reserved, on_hand, menuitem_id, category_id]);
+            const updateInventoryQuery = 'UPDATE inventory SET available = ?, reserved = ?, on_hand = ? WHERE MenuItemID = ?';
+            await poolConnection.query(updateInventoryQuery, [available, reserved, on_hand, menuitem_id]);
         }
 
         await poolConnection.query('COMMIT');

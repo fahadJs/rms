@@ -55,7 +55,7 @@ const getAll = async (req, res) => {
 
 const mrkPaid = async (req, res) => {
     try {
-        const orderId = req.params.orderId;
+        const orderId = req.params.id;
 
         const updateOrderQuery = 'UPDATE orders SET order_status = "paid" WHERE OrderID = ?';
         await poolConnection.query(updateOrderQuery, [orderId]);
@@ -72,7 +72,7 @@ const mrkPaid = async (req, res) => {
 
 const cancel = async (req, res) => {
     try {
-        const orderId = req.params.orderId;
+        const orderId = req.params.id;
 
         await poolConnection.query('START TRANSACTION');
 
