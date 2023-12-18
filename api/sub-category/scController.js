@@ -2,10 +2,10 @@ const poolConnection = require('../../config/database');
 
 const create = async (req, res) => {
     try {
-        const { subcategoryName, categoryId } = req.body;
+        const { subcategoryName, description,  categoryId } = req.body;
     
-        const query = 'INSERT INTO subcategories (SubCategoryName, Description CategoryID) VALUES (?, ?)';
-        const result = await poolConnection.query(query, [subcategoryName, categoryId]);
+        const query = 'INSERT INTO subcategories (SubCategoryName, Description, CategoryID) VALUES (?, ?, ?)';
+        const result = await poolConnection.query(query, [subcategoryName, description, categoryId]);
     
         res.status(201).json({ message: 'Subcategory added successfully!' });
       } catch (error) {
