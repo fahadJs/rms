@@ -16,7 +16,6 @@ const cors = require('cors');
 
 app.use(cors());
 app.use(bosyParser.json());
-// app.use('/api/users', userRouter);
 app.use('/api/items', itemRouter);
 app.use('/api/floors', floorsRouter);
 app.use('/api/cai', caiRouter);

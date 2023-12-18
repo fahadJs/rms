@@ -54,7 +54,8 @@ const getAllOrders = async (req, res) => {
                 orders.waiter_id,
                 orders.table_id,
                 orders.time,
-                orders.status,
+                orders.order_status,
+                orders.bill_status,
                 orders.total_amount,
                 JSON_ARRAYAGG(
                     JSON_OBJECT(

@@ -20,32 +20,55 @@ const getAll = async (req, res) => {
 
 const create = async (req, res) => {
     try {
-        let values = { name: req.body.name, description: req.body.description, price: req.body.price, categoryId: req.body.categoryId };
-        let sql = 'INSERT INTO menuitems SET ?';
-        const result = await poolConnection.query(sql, values);
-        res.status(200).json('New Record Inserted Successfully!');
+        const { name, description, price, categoryId, kitchenId, subCategoryId } = req.body;
+
+        await poolConnection.query('START TRANSACTION');
+
+        const insertMenuItemQuery = 'INSERT INTO menuitems (Name, Description, Price) VALUES (?, ?, ?)';
+        const insertMenuItemValues = [name, description, price];
+        const menuItemResult = await poolConnection.query(insertMenuItemQuery, insertMenuItemValues);
+
+        const menuItemId = menuItemResult.insertId;
+
+        const insertMenuItemCategoryQuery = 'INSERT INTO menuitem_categories (MenuItemID, CategoryID, SubCategoryID, KitchenID) VALUES (?, ?, ?)';
+        const insertMenuItemCategoryValues = [menuItemId, categoryId, subCategoryId, kitchenId];
+        await poolConnection.query(insertMenuItemCategoryQuery, insertMenuItemCategoryValues);
+
+        await poolConnection.query('COMMIT');
+
+        res.status(201).json({ message: 'Menu item added successfully!' });
     } catch (error) {
+        await poolConnection.query('ROLLBACK');
+
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while adding items!');
+        res.status(500).json({ error: 'Error adding menu item!' });
     }
 };
 
 const update = async (req, res) => {
     try {
-        const itemId = req.params.id;
-        const { name, description, price, categoryId } = req.body;
+        const menuItemId = req.params.id;
+        const { name, description, price, categoryId, subCategoryId, kitchenId } = req.body;
 
-        let sql = 'UPDATE menuitems SET Name=?, Description=?, Price=?, CategoryID=? WHERE MenuItemID=?';
-        const result = await poolConnection.query(sql, [name, description, price, categoryId, itemId]);
+        await poolConnection.query('START TRANSACTION');
 
-        if (result.affectedRows > 0) {
-            res.status(200).json('Record Updated Successfully!');
-        } else {
-            res.status(404).json('Record not found or no changes made.');
-        }
+        const updateMenuItemQuery = 'UPDATE menuitems SET Name = ?, Description = ?, Price = ? WHERE MenuItemID = ?';
+        const updateMenuItemValues = [name, description, price, menuItemId];
+        await poolConnection.query(updateMenuItemQuery, updateMenuItemValues);
+
+        const updateMenuItemCategoryQuery = 'UPDATE menuitem_categories SET CategoryID = ?, SubCategoryID = ?, KitchenID = ? WHERE MenuItemID = ?';
+        const updateMenuItemCategoryValues = [categoryId, subCategoryId, kitchenId, menuItemId];
+        await poolConnection.query(updateMenuItemCategoryQuery, updateMenuItemCategoryValues);
+
+        await poolConnection.query('COMMIT');
+
+        res.status(200).json({ message: 'Menu item updated successfully!' });
     } catch (error) {
+
+        await poolConnection.query('ROLLBACK');
+
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while updating item!');
+        res.status(500).json({ error: 'Error updating menu item!' });
     }
 };
 
