@@ -86,6 +86,9 @@ const cancel = async (req, res) => {
 
         const tableId = tableIdResult[0].table_id;
 
+        const getOrderItemsQuery = 'SELECT MenuItemID, Quantity FROM order_items WHERE OrderID = ?';
+        const orderItemsResult = await poolConnection.query(getOrderItemsQuery, [orderId]);
+
         const deleteOrderItemsQuery = 'DELETE FROM order_items WHERE OrderID = ?';
         await poolConnection.query(deleteOrderItemsQuery, [orderId]);
 
@@ -95,10 +98,15 @@ const cancel = async (req, res) => {
         const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = ?';
         await poolConnection.query(updateTableQuery, [tableId]);
 
+        for (const item of orderItemsResult) {
+            const updateInventoryQuery = 'UPDATE inventory SET on_hand = on_hand + ? WHERE MenuItemID = ?';
+            await poolConnection.query(updateInventoryQuery, [item.Quantity, item.MenuItemID]);
+        }
+
         await poolConnection.query('COMMIT');
 
         res.status(200).json({ message: 'Order deleted successfully and table status set to "available"!' });
-        
+
     } catch (error) {
         await poolConnection.query('ROLLBACK');
 
