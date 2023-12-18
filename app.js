@@ -9,6 +9,8 @@ const caikRouter = require('./api/category-and-items-kitchen/caikRouter');
 const orderRouter = require('./api/order/orderRouter');
 const inventoryRouter = require('./api/inventory/inventoryRouter');
 const tdRouter = require('./api/table-details/tdRouter');
+const categoryRouter = require('./api/category/categoryRouter');
+const scRouter = require('./api/sub-category/scRouter');
 const bosyParser = require('body-parser');
 const cors = require('cors');
 
@@ -22,6 +24,8 @@ app.use('/api/caik', caikRouter);
 app.use('/api/order', orderRouter);
 app.use('/api/inventory', inventoryRouter);
 app.use('/api/tabledetail', tdRouter);
+app.use('/api/category', categoryRouter);
+app.use('/api/subcategory', scRouter);
 
 app.listen(process.env.APP_PORT || 3000, () => {
     console.log(`Server up and running!\nConnection will be established once any request hits!`);
