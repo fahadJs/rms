@@ -24,7 +24,7 @@ const getAll = async (req, res) => {
         const inventoryData = result.map(row => ({
             inventory_id: row.InventoryID,
             item_name: row.item_name,
-            item_id: row.MenuItemID,
+            menuitem_id: row.MenuItemID,
             category_name: row.category_name,
             category_id: row.CategoryID,
             unit: row.Unit,
