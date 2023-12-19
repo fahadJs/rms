@@ -1,53 +1,52 @@
 const poolConnection = require('../../config/database');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const create = async (req, res) => {
     try {
-        const { name, username, password } = req.body;
+        const { waiter_name, login_id, login_pass, restaurant_id } = req.body;
+        
+        const hashedPassword = await bcrypt.hash(login_pass, 10);
 
-        // Hashing the password before storing it in the database
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-        const createWaiterQuery = 'INSERT INTO waiters (Name, Username, Password) VALUES (?, ?, ?)';
-        const createWaiterValues = [name, username, hashedPassword];
-
-        await poolConnection.query(createWaiterQuery, createWaiterValues);
+        const insertWaiterQuery = 'INSERT INTO waiters (waiter_name, login_id, login_pass, restaurant_id) VALUES (?, ?, ?, ?)';
+        const insertWaiterValues = [waiter_name, login_id, hashedPassword, restaurant_id];
+        await poolConnection.query(insertWaiterQuery, insertWaiterValues);
 
         res.status(201).json({ message: 'Waiter created successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
+        console.error(`Error creating waiter! Error: ${error}`);
         res.status(500).json({ error: 'Error creating waiter!' });
     }
 }
 
 const wLogin = async (req, res) => {
     try {
-        const { username, password } = req.body;
-
-        // Fetch the hashed password for the given username from the database
-        const getPasswordQuery = 'SELECT Password FROM waiters WHERE Username = ?';
-        const getPasswordValues = [username];
-        const result = await poolConnection.query(getPasswordQuery, getPasswordValues);
+        const { login_id, login_pass } = req.body;
+        const getWaiterQuery = 'SELECT * FROM waiters WHERE login_id = ?';
+        const result = await poolConnection.query(getWaiterQuery, [login_id]);
 
         if (result.length === 0) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            res.status(404).json({ message: 'Waiter not found!' });
+            return;
         }
 
-        const hashedPassword = result[0].Password;
+        const waiter = result[0];
 
-        // Compare the entered password with the hashed password from the database
-        const passwordMatch = await bcrypt.compare(password, hashedPassword);
+        // Compare hashed password
+        const passwordMatch = await bcrypt.compare(login_pass, waiter.login_pass);
 
         if (passwordMatch) {
-            // Passwords match, login successful
-            res.status(200).json({ message: 'Login successful!' });
+            // Generate JWT
+            const token = jwt.sign({ waiter_id: waiter.waiter_id }, 'RMSIDVERFY', { expiresIn: '1h' });
+            const restaurant_id = waiter.restaurant_id;
+
+            res.status(200).json({ message: 'Login successful!', token, restaurant_id });
         } else {
-            // Passwords don't match, login failed
-            res.status(401).json({ error: 'Invalid credentials' });
+            res.status(401).json({ message: 'Incorrect password!' });
         }
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ error: 'Error during login!' });
+        console.error(`Error logging in! Error: ${error}`);
+        res.status(500).json({ error: 'Error logging in!' });
     }
 }
 
@@ -105,5 +104,6 @@ const wdelete = async (req, res) => {
 
 
 module.exports = {
-
+    create,
+    wLogin
 }
