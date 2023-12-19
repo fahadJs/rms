@@ -65,30 +65,29 @@ const update = async (req, res) => {
 
 const create = async (req, res) => {
     try {
-      await poolConnection.query('START TRANSACTION');
-  
-      const { menuitem_id, category_id, unit, available, reserved } = req.body;
-  
-      const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? AND CategoryID = ? FOR UPDATE';
-      const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id, category_id]);
-  
-      if (existingInventory.length > 0) {
-        await poolConnection.query('ROLLBACK');
-        return res.status(400).json({ error: 'Inventory already exists for the specified menu item and category!' });
-      }
-  
-      const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, CategoryID, Unit, available, reserved, on_hand) VALUES (?, ?, ?, ?, ?, ?)';
-      const on_hand = available + reserved;
-      await poolConnection.query(insertInventoryQuery, [menuitem_id, category_id, unit, available, reserved, on_hand]);
-  
-      await poolConnection.query('COMMIT');
-      res.status(201).json({ message: 'Inventory created successfully!' });
+        await poolConnection.query('START TRANSACTION');
+
+        const { menuitem_id, unit, available, reserved, on_hand } = req.body;
+
+        const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? FOR UPDATE';
+        const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id]);
+
+        if (existingInventory.length > 0) {
+            await poolConnection.query('ROLLBACK');
+            return res.status(400).json({ error: 'Inventory already exists for the specified menu item and category!' });
+        }
+
+        const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, Unit, available, reserved, on_hand) VALUES (?, ?, ?, ?, ?, ?)';
+        await poolConnection.query(insertInventoryQuery, [menuitem_id, unit, available, reserved, on_hand]);
+
+        await poolConnection.query('COMMIT');
+        res.status(201).json({ message: 'Inventory created successfully!' });
     } catch (error) {
-      await poolConnection.query('ROLLBACK');
-      console.error(`Error creating inventory! Error: ${error}`);
-      res.status(500).json({ error: 'Error creating inventory!' });
+        await poolConnection.query('ROLLBACK');
+        console.error(`Error creating inventory! Error: ${error}`);
+        res.status(500).json({ error: 'Error creating inventory!' });
     }
-  };
+};
 
 module.exports = {
     getAll,
