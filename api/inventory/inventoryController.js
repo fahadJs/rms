@@ -77,7 +77,7 @@ const create = async (req, res) => {
             return res.status(400).json({ error: 'Inventory already exists for the specified menu item and category!' });
         }
 
-        const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, Unit, available, reserved, on_hand) VALUES (?, ?, ?, ?, ?, ?)';
+        const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, Unit, CategoryID, available, reserved, on_hand) VALUES (?, ?, 1, ?, ?, ?)';
         await poolConnection.query(insertInventoryQuery, [menuitem_id, unit, available, reserved, on_hand]);
 
         await poolConnection.query('COMMIT');
