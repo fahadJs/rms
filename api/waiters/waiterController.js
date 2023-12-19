@@ -37,7 +37,7 @@ const wLogin = async (req, res) => {
 
         if (passwordMatch) {
             // Generate JWT
-            const token = jwt.sign({ waiter_id: waiter.waiter_id }, 'RMSIDVERFY', { expiresIn: '1h' });
+            const token = jwt.sign({ waiter_id: waiter.waiter_id }, 'RMSIDVERFY', { expiresIn: '12h' });
             const restaurant_id = waiter.restaurant_id;
 
             res.status(200).json({ message: 'Login successful!', token, restaurant_id });

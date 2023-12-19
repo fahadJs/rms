@@ -9,14 +9,18 @@ function verifyToken(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, 'RMSIDVERFY');
-        req.waiterId = decoded.waiter_id; // Attach waiter ID to the request object
+        req.waiter_id = decoded.waiter_id;
         next();
     } catch (error) {
-        console.error(`Error verifying token! Error: ${error}`);
-        return res.status(401).json({ message: 'Unauthorized - Invalid token' });
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: 'Token has Expired!' });
+        } else {
+            return res.status(401).json({ message: 'Unauthorized - Invalid token' });
+        }
+
     }
 }
 
-module.exports = { 
-    verifyToken 
+module.exports = {
+    verifyToken
 }
