@@ -59,7 +59,8 @@ const getAll2 = async (req, res) => {
                         'item_id', menuitems.MenuItemID,
                         'item_name', menuitems.Name,
                         'item_description', menuitems.Description,
-                        'item_price', menuitems.Price
+                        'item_price', menuitems.Price,
+                        'kitchen_id', menuitem_categories.KitchenID
                     )
                 ) AS items
             FROM 
@@ -98,7 +99,8 @@ const getAll2ById = async (req, res) => {
                         'item_id', menuitems.MenuItemID,
                         'item_name', menuitems.Name,
                         'item_description', menuitems.Description,
-                        'item_price', menuitems.Price
+                        'item_price', menuitems.Price,
+                        'kitchen_id', menuitem_categories.KitchenID
                     )
                 ) AS items
             FROM 
