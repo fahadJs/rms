@@ -93,7 +93,8 @@ const updateOnHand = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
-        const { menuitem_id, on_hand } = req.body;
+        const menuitem_id = req.params.mid;
+        const on_hand = req.params.ohid
 
         const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? FOR UPDATE';
         const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id]);
