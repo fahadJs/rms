@@ -13,6 +13,7 @@ const categoryRouter = require('./api/category/categoryRouter');
 const scRouter = require('./api/sub-category/scRouter');
 const kitchenRouter = require('./api/kitchen/kitchenRouter');
 const waiterRouter = require('./api/waiters/waiterRouter');
+const posorderRouter = require('./api/pos-orders/posorderRouter');
 const bosyParser = require('body-parser');
 const cors = require('cors');
 
@@ -29,6 +30,7 @@ app.use('/api/category', categoryRouter);
 app.use('/api/subcategory', scRouter);
 app.use('/api/kitchen', kitchenRouter);
 app.use('/api/waiter', waiterRouter);
+app.use('/api/posorders', posorderRouter);
 
 app.listen(process.env.APP_PORT || 3000, () => {
     console.log(`Server up and running!\nConnection will be established once any request hits!`);

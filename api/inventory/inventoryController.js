@@ -89,8 +89,32 @@ const create = async (req, res) => {
     }
 };
 
+const updateOnHand = async (req, res) => {
+    try {
+        await poolConnection.query('START TRANSACTION');
+
+        const { menuitem_id, on_hand } = req.body;
+
+        const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? FOR UPDATE';
+        const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id]);
+
+        if (existingInventory.length > 0) {
+            const updateInventoryQuery = 'UPDATE inventory SET on_hand = ? WHERE MenuItemID = ?';
+            await poolConnection.query(updateInventoryQuery, [on_hand, menuitem_id]);
+        }
+
+        await poolConnection.query('COMMIT');
+        res.status(200).json({ message: 'Inventory updated successfully!' });
+    } catch (error) {
+        await poolConnection.query('ROLLBACK');
+        console.error(`Error updating inventory! Error: ${error}`);
+        res.status(500).json({ error: 'Error updating inventory!' });
+    }
+}
+
 module.exports = {
     getAll,
     update,
-    create
+    create,
+    updateOnHand
 };
