@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 const create = async (req, res) => {
     try {
         const { waiter_name, login_id, login_pass, restaurant_id } = req.body;
-        
+
         const hashedPassword = await bcrypt.hash(login_pass, 10);
 
         const insertWaiterQuery = 'INSERT INTO waiters (waiter_name, login_id, login_pass, restaurant_id) VALUES (?, ?, ?, ?)';
@@ -32,12 +32,14 @@ const wLogin = async (req, res) => {
 
         const waiter = result[0];
 
-        // Compare hashed password
+        if (waiter.status != 'allowed') {
+            res.status(401).json({ message: 'Waiter is not Allowed!' });
+            return;
+        }
         const passwordMatch = await bcrypt.compare(login_pass, waiter.login_pass);
 
         if (passwordMatch) {
-            // Generate JWT
-            const token = jwt.sign({ waiter_id: waiter.waiter_id }, 'RMSIDVERFY', { expiresIn: '12h' });
+            const token = jwt.sign({ waiter_id: waiter.waiter_id }, 'RMSIDVERFY');
             const restaurant_id = waiter.restaurant_id;
 
             res.status(200).json({ message: 'Login successful!', token, restaurant_id });
@@ -63,25 +65,38 @@ const getAll = async (req, res) => {
 }
 
 const getById = async (req, res) => {
+    try {
+        const waiterId = req.params.id;
+        const getWaiterQuery = 'SELECT * FROM waiters WHERE waiter_id = ?';
+        const result = await poolConnection.query(getWaiterQuery, [waiterId]);
 
+        if (result.length === 0) {
+            res.status(404).json({ message: 'Waiter not found!' });
+            return;
+        }
+
+        res.status(200).json(result[0]);
+    } catch (error) {
+        console.error(`Error fetching waiter! Error: ${error}`);
+        res.status(500).json({ error: 'Error fetching waiter!' });
+    }
 }
 
 const update = async (req, res) => {
     try {
         const waiterId = req.params.id;
-        const { name, username, password } = req.body;
+        const { waiter_name, login_id, login_pass, restaurant_id } = req.body;
 
-        // Hashing the updated password before storing it in the database
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        // Hash the password before updating it
+        const hashedPassword = await bcrypt.hash(login_pass, 10);
 
-        const updateWaiterQuery = 'UPDATE waiters SET Name = ?, Username = ?, Password = ? WHERE WaiterID = ?';
-        const updateWaiterValues = [name, username, hashedPassword, waiterId];
-
+        const updateWaiterQuery = 'UPDATE waiters SET waiter_name = ?, login_id = ?, login_pass = ?, restaurant_id = ? WHERE waiter_id = ?';
+        const updateWaiterValues = [waiter_name, login_id, hashedPassword, restaurant_id, waiterId];
         await poolConnection.query(updateWaiterQuery, updateWaiterValues);
 
         res.status(200).json({ message: 'Waiter updated successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
+        console.error(`Error updating waiter! Error: ${error}`);
         res.status(500).json({ error: 'Error updating waiter!' });
     }
 }
@@ -89,15 +104,12 @@ const update = async (req, res) => {
 const wdelete = async (req, res) => {
     try {
         const waiterId = req.params.id;
-
-        const deleteWaiterQuery = 'DELETE FROM waiters WHERE WaiterID = ?';
-        const deleteWaiterValues = [waiterId];
-
-        await poolConnection.query(deleteWaiterQuery, deleteWaiterValues);
+        const deleteWaiterQuery = 'DELETE FROM waiters WHERE waiter_id = ?';
+        await poolConnection.query(deleteWaiterQuery, [waiterId]);
 
         res.status(200).json({ message: 'Waiter deleted successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
+        console.error(`Error deleting waiter! Error: ${error}`);
         res.status(500).json({ error: 'Error deleting waiter!' });
     }
 }
@@ -105,5 +117,9 @@ const wdelete = async (req, res) => {
 
 module.exports = {
     create,
-    wLogin
+    wLogin,
+    getAll,
+    getById,
+    update,
+    wdelete
 }
