@@ -35,6 +35,10 @@ const createEqSplit = async (req, res) => {
 
         const updateOrderStatusQuery = 'UPDATE orders SET order_status = "paid" WHERE OrderID = ?';
         await poolConnection.query(updateOrderStatusQuery, [orderId]);
+        
+        const updateTableStatusQuery = 'UPDATE tables SET status = ? WHERE table_id = ?';
+        const updateTableStatusValues = ['reserved', table_id];
+        await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
 
         await poolConnection.query('COMMIT');
         res.status(201).json({ message: 'Bill split successfully!' });
