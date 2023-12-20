@@ -13,9 +13,8 @@ const create = async (req, res) => {
         const posOrderId = orderResult.insertId;
 
         const insertOrderItemsQuery = `
-          INSERT INTO pos_order_items (PosOrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note, Status)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
+          INSERT INTO pos_order_items (PosOrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
         for (const item of items) {
             const { menuitemID, name, price, quantity, kitchenID, categoryID, note } = item;
@@ -39,55 +38,51 @@ const create = async (req, res) => {
 const getOrderById = async (req, res) => {
     try {
         const orderId = req.params.id;
-    
-        const getOrderByIDQuery = `
-          SELECT pos_orders.PosOrderID, pos_orders.time, pos_orders.order_status, pos_orders.total_amount,
-                 pos_orders.restaurant_id, pos_orders.bill_status, pos_order_items.*
-          FROM pos_orders
-          JOIN pos_order_items ON pos_orders.PosOrderID = pos_order_items.PosOrderID
-          WHERE pos_orders.PosOrderID = ?;
-        `;
-    
-        const result = await poolConnection.query(getOrderByIDQuery, [orderId]);
-    
-        if (result.length > 0) {
-          const orderData = {
-            PosOrderID: result[0].PosOrderID,
-            time: result[0].time,
-            order_status: result[0].order_status,
-            total_amount: result[0].total_amount,
-            restaurant_id: result[0].restaurant_id,
-            bill_status: result[0].bill_status,
-            order_item: {
-              PosOrderItemID: result[0].PosOrderItemID,
-              MenuItemID: result[0].MenuItemID,
-              ItemName: result[0].ItemName,
-              Price: result[0].Price,
-              Quantity: result[0].Quantity,
-              KitchenID: result[0].KitchenID,
-              CategoryID: result[0].CategoryID,
-              Note: result[0].Note,
-              Status: result[0].Status,
-            },
-          };
-    
-          res.status(200).json(orderData);
-        } else {
-          res.status(404).json({ message: 'Order not found' });
+        const orderSql = 'SELECT * FROM pos_orders WHERE PosOrderID = ?';
+        const order = await poolConnection.query(orderSql, [orderId]);
+
+        if (!order.length) {
+            return res.status(404).json({ error: 'Order not found' });
         }
-      } catch (error) {
-        console.error(`Error fetching POS order by ID! Error: ${error}`);
-        res.status(500).json({ error: 'Error fetching POS order by ID!' });
-      }
+
+        const orderItemSql = 'SELECT * FROM pos_order_items WHERE PosOrderID = ?';
+        const orderItems = await poolConnection.query(orderItemSql, [orderId]);
+
+        const orderWithItems = { ...order[0], items: orderItems };
+
+        res.status(200).json(orderWithItems);
+    } catch (error) {
+        console.error(`Error executing query! Error: ${error}`);
+        res.status(500).json({ error: 'Error fetching order!' });
+    }
 };
 
 const getAllOrders = async (req, res) => {
     try {
         const getOrdersQuery = `
-          SELECT pos_orders.PosOrderID, pos_orders.time, pos_orders.order_status, pos_orders.total_amount,
-                 pos_orders.restaurant_id, pos_orders.bill_status, pos_order_items.*
-          FROM pos_orders
-          JOIN pos_order_items ON pos_orders.PosOrderID = pos_order_items.PosOrderID
+            SELECT 
+                pos_orders.PosOrderID,
+                pos_orders.time,
+                pos_orders.order_status,
+                pos_orders.total_amount,
+                pos_orders.restaurant_id,
+                pos_orders.bill_status,
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'PosOrderItemID', pos_order_items.PosOrderItemID,
+                        'MenuItemID', pos_order_items.MenuItemID,
+                        'ItemName', pos_order_items.ItemName,
+                        'Price', pos_order_items.Price,
+                        'Quantity', pos_order_items.Quantity,
+                        'KitchenID', pos_order_items.KitchenID,
+                        'CategoryID', pos_order_items.CategoryID,
+                        'Note', pos_order_items.Note,
+                        'Status', pos_order_items.Status
+                    )
+                ) AS order_items
+            FROM pos_orders
+            JOIN pos_order_items ON pos_orders.PosOrderID = pos_order_items.PosOrderID
+            GROUP BY pos_orders.PosOrderID;
         `;
 
         const result = await poolConnection.query(getOrdersQuery);
@@ -98,17 +93,7 @@ const getAllOrders = async (req, res) => {
             total_amount: row.total_amount,
             restaurant_id: row.restaurant_id,
             bill_status: row.bill_status,
-            order_item: {
-                PosOrderItemID: row.PosOrderItemID,
-                MenuItemID: row.MenuItemID,
-                ItemName: row.ItemName,
-                Price: row.Price,
-                Quantity: row.Quantity,
-                KitchenID: row.KitchenID,
-                CategoryID: row.CategoryID,
-                Note: row.Note,
-                Status: row.Status,
-            },
+            order_items: JSON.parse(row.order_items),
         }));
 
         res.status(200).json(ordersData);
@@ -116,6 +101,7 @@ const getAllOrders = async (req, res) => {
         console.error(`Error fetching POS orders! Error: ${error}`);
         res.status(500).json({ error: 'Error fetching POS orders!' });
     }
+
 };
 
 
