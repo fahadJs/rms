@@ -20,7 +20,7 @@ const create = async (req, res) => {
             await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
 
             
-            const updateInventoryQuery = 'UPDATE inventory SET on_hand = GREATES(on_hand - ?, 0) WHERE MenuItemID = ?';
+            const updateInventoryQuery = 'UPDATE inventory SET on_hand = GREATEST(on_hand - ?, 0) WHERE MenuItemID = ?';
             const updateInventoryValues = [quantity, menuitemID];
             await poolConnection.query(updateInventoryQuery, updateInventoryValues);
         }
