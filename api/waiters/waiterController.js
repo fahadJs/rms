@@ -85,13 +85,13 @@ const getById = async (req, res) => {
 const update = async (req, res) => {
     try {
         const waiterId = req.params.id;
-        const { waiter_name, login_id, login_pass, restaurant_id } = req.body;
+        const { waiter_name, login_id, login_pass, restaurant_id, status } = req.body;
 
         // Hash the password before updating it
         const hashedPassword = await bcrypt.hash(login_pass, 10);
 
-        const updateWaiterQuery = 'UPDATE waiters SET waiter_name = ?, login_id = ?, login_pass = ?, restaurant_id = ? WHERE waiter_id = ?';
-        const updateWaiterValues = [waiter_name, login_id, hashedPassword, restaurant_id, waiterId];
+        const updateWaiterQuery = 'UPDATE waiters SET waiter_name = ?, login_id = ?, login_pass = ?, restaurant_id = ?, status = ? WHERE waiter_id = ?';
+        const updateWaiterValues = [waiter_name, login_id, hashedPassword, restaurant_id, waiterId, status];
         await poolConnection.query(updateWaiterQuery, updateWaiterValues);
 
         res.status(200).json({ message: 'Waiter updated successfully!' });
