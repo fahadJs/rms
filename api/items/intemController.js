@@ -2,7 +2,7 @@ const poolConnection = require("../../config/database");
 
 const getAll = async (req, res) => {
     try {
-        let sql = 'SELECT *, menuitems.Description as des FROM menuitems JOIN categories ON menuitems.CategoryID = categories.CategoryID';
+        let sql = 'SELECT * FROM menuitems';
         const result = await poolConnection.query(sql);
         const menuData = result.map(results => ({
             id: results.MenuItemID,

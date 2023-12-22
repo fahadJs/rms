@@ -14,6 +14,18 @@ const create = async (req, res) => {
     }
 }
 
+const getAll = async (req, res) => {
+    try {
+        const query = 'SELECT * FROM categories';
+        const result = await poolConnection.query(query);
+        res.status(200).json(result);
+    } catch (error) {
+        console.error(`Error executing query! Error: ${error}`);
+        res.status(500).json({ error: 'Error fetching categories!' });
+    }
+}
+
 module.exports = {
-    create
+    create,
+    getAll
 }
