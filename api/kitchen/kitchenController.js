@@ -61,8 +61,29 @@ const remove = async (req, res) => {
     }
 };
 
+const getById = async (req, res) => {
+    try {
+        const kitchenId = req.params.id;
+
+        // Fetch the kitchen details by ID
+        const getKitchenQuery = 'SELECT * FROM kitchens WHERE KitchenID = ?';
+        const kitchenResult = await poolConnection.query(getKitchenQuery, [kitchenId]);
+
+        if (kitchenResult.length === 0) {
+            return res.status(404).json({ message: 'Kitchen not found!' });
+        }
+
+        const kitchenDetails = kitchenResult[0];
+        res.status(200).json(kitchenDetails);
+    } catch (error) {
+        console.error(`Error executing query! Error: ${error}`);
+        res.status(500).json({ error: 'Error fetching kitchen details!' });
+    }
+};
+
 module.exports = {
     getAll,
+    getById,
     create,
     update,
     remove
