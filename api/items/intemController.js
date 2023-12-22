@@ -2,16 +2,10 @@ const poolConnection = require("../../config/database");
 
 const getAll = async (req, res) => {
     try {
-        let sql = 'SELECT * FROM menuitems';
-        const result = await poolConnection.query(sql);
-        const menuData = result.map(results => ({
-            id: results.MenuItemID,
-            name: results.Name,
-            description: results.des,
-            price: results.Price,
-            category: results.CategoryName
-        }))
-        res.status(200).json(menuData);
+        let query = 'SELECT * FROM menuitems';
+        const result = await poolConnection.query(query);
+
+        res.status(200).json(result);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
         res.status(500).json('Error while Fetching items!');
