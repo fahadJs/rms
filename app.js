@@ -15,6 +15,7 @@ const kitchenRouter = require('./api/kitchen/kitchenRouter');
 const waiterRouter = require('./api/waiters/waiterRouter');
 const posorderRouter = require('./api/pos-orders/posorderRouter');
 const splitBillRouter = require('./api/split-bill/splitBillRouter');
+const ingredientsRouter = require('./api/ingredient/ingredientRouter');
 
 // Admin
 const adminRouter = require('./admin/adminRouter');
@@ -36,6 +37,7 @@ app.use('/api/kitchen', kitchenRouter);
 app.use('/api/waiter', waiterRouter);
 app.use('/api/posorders', posorderRouter);
 app.use('/api/split', splitBillRouter);
+app.use('/api/ingredients', ingredientsRouter);
 
 // Admin
 app.use('/admin', adminRouter);
