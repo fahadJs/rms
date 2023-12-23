@@ -4,11 +4,11 @@ const create = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
-        const { waiter_id, table_id, items, time } = req.body;
+        const { waiter_id, table_id, items, total_amount, time } = req.body;
         const restaurant_id = req.params.id;
 
-        const orderInsertQuery = 'INSERT INTO orders (waiter_id, table_id, time, restaurant_id) VALUES (?, ?, ?, ?)';
-        const orderValues = [waiter_id, table_id, time, restaurant_id];
+        const orderInsertQuery = 'INSERT INTO orders (waiter_id, table_id, time, total_amount, restaurant_id) VALUES (?, ?, ?, ?, ?)';
+        const orderValues = [waiter_id, table_id, time, total_amount, restaurant_id];
         const orderResult = await poolConnection.query(orderInsertQuery, orderValues);
 
         const orderID = orderResult.insertId;
@@ -16,16 +16,12 @@ const create = async (req, res) => {
         const orderItemsInsertQuery = 'INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
         for (const item of items) {
             const { menuitemID, name, price, quantity, kitchenID, categoryID, note } = item;
+            const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note];
+            await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
 
-            // Insert each item based on its quantity
-            for (let i = 0; i < quantity; i++) {
-                const orderItemsValues = [orderID, menuitemID, name, price, 1, kitchenID, categoryID, note];
-                await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
-            }
-
-            // Update inventory for each item
-            const updateInventoryQuery = 'UPDATE inventory SET on_hand = GREATEST(on_hand - 1, 0) WHERE MenuItemID = ?';
-            const updateInventoryValues = [menuitemID];
+            
+            const updateInventoryQuery = 'UPDATE inventory SET on_hand = GREATEST(on_hand - ?, 0) WHERE MenuItemID = ?';
+            const updateInventoryValues = [quantity, menuitemID];
             await poolConnection.query(updateInventoryQuery, updateInventoryValues);
         }
 
