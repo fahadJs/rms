@@ -16,10 +16,21 @@ const create = async (req, res) => {
     try {
         const { IngredientName, PricePerGm } = req.body;
 
-        const insertQuery = 'INSERT INTO ingredients (IngredientName, PricePerGm) VALUES (?, ?)';
-        const result = await poolConnection.query(insertQuery, [IngredientName, PricePerGm]);
+        // Check if the ingredient name already exists
+        const checkDuplicateQuery = 'SELECT COUNT(*) AS count FROM ingredients WHERE IngredientName = ?';
+        const result = await poolConnection.query(checkDuplicateQuery, [IngredientName]);
+        const isDuplicate = result[0].count > 0;
 
-        res.status(201).json(`Item created successfully!`);
+        if (isDuplicate) {
+            res.status(400).json({ error: 'Ingredient name already exists!' });
+            return;
+        }
+
+        // If not a duplicate, insert the new ingredient
+        const insertQuery = 'INSERT INTO ingredients (IngredientName, PricePerGm) VALUES (?, ?)';
+        await poolConnection.query(insertQuery, [IngredientName, PricePerGm]);
+
+        res.status(201).json({ message: 'Ingredient created successfully!' });
     } catch (error) {
         console.error(`Error creating ingredient! Error: ${error}`);
         res.status(500).json({ error: 'Error creating ingredient!' });
@@ -57,7 +68,7 @@ const remove = async (req, res) => {
 
 const getById = async (req, res) => {
     try {
-        const id  = req.params.id;
+        const id = req.params.id;
 
         const selectQuery = 'SELECT * FROM ingredients WHERE IngredientID = ?';
         const result = await poolConnection.query(selectQuery, [id]);
