@@ -3,7 +3,7 @@ const poolConnection = require('../../config/database');
 const getAll = async (req, res) => {
     try {
         const selectQuery = 'SELECT * FROM ingredients';
-        const [results] = await poolConnection.query(selectQuery);
+        const results = await poolConnection.query(selectQuery);
 
         res.status(200).json(results);
     } catch (error) {
@@ -60,7 +60,7 @@ const getById = async (req, res) => {
         const id  = req.params.id;
 
         const selectQuery = 'SELECT * FROM ingredients WHERE IngredientID = ?';
-        const [result] = await poolConnection.query(selectQuery, [id]);
+        const result = await poolConnection.query(selectQuery, [id]);
 
         if (result.length === 0) {
             res.status(404).json({ message: 'Ingredient not found!' });
