@@ -10,6 +10,35 @@ const getAll = async (req, res) => {
     }
 };
 
+const getAllWithIngredients = async (req, res) => {
+    try {
+        const query = `
+            SELECT
+                recipe_items.*,
+                JSON_ARRAYAGG(JSON_OBJECT('IngredientName', ingredients.IngredientName, 'PricePerGm', ingredients.PricePerGm)) AS ingredients
+            FROM
+                recipe_items
+            INNER JOIN
+                ingredients ON recipe_items.IngredientID = ingredients.IngredientID
+            GROUP BY
+                recipe_items.MenuItemID, recipe_items.IngredientID
+        `;
+
+        const rows = await poolConnection.query(query);
+
+        // Parse the ingredients column to ensure proper JSON format
+        const result = rows.map(row => ({
+            ...row,
+            ingredients: row.ingredients ? JSON.parse(row.ingredients) : [],
+        }));
+
+        res.status(200).json(result);
+    } catch (error) {
+        console.error(`Error fetching recipe items with ingredients! ${error.message}`);
+        res.status(500).json({ error: `Error fetching recipe items with ingredients! ${error.message}` });
+    }
+}
+
 const create = async (req, res) => {
     try {
         const { MenuItemID, CostPrice, items } = req.body;
@@ -18,7 +47,6 @@ const create = async (req, res) => {
         await poolConnection.query('START TRANSACTION');
 
         try {
-
             // Check if MenuItemID already exists
             const checkMenuItemQuery = 'SELECT COUNT(*) AS count FROM recipe_items WHERE MenuItemID = ?';
             const result = await poolConnection.query(checkMenuItemQuery, [MenuItemID]);
@@ -147,6 +175,7 @@ const deleteItem = async (req, res) => {
 module.exports = {
     getAll,
     create,
+    getAllWithIngredients,
     update,
     getById,
     deleteItem
