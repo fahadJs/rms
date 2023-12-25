@@ -1,17 +1,5 @@
 const poolConnection = require("../../config/database");
 
-// Function to check if an item with the same name already exists
-// async function isMenuItemExistsInRecipe(MenuItemID) {
-//     const rows = await poolConnection.query('SELECT COUNT(*) AS count FROM recipe_items WHERE MenuItemID = ?', [MenuItemID]);
-//     return rows[0].count > 0;
-// }
-
-// Function to check if a MenuItemID exists
-// async function doesMenuItemExist(menuItemId) {
-//     const rows = await poolConnection.query('SELECT COUNT(*) AS count FROM menuitems WHERE MenuItemID = ?', [menuItemId]);
-//     return rows[0].count > 0;
-// }
-
 const getAll = async (req, res) => {
     try {
         const rows = await poolConnection.query('SELECT * FROM recipe_items');
@@ -26,30 +14,27 @@ const create = async (req, res) => {
     try {
         const { MenuItemID, CostPrice, items } = req.body;
 
-        // Check if the MenuItemID exists
-        // const menuItemExists = await doesMenuItemExist(MenuItemID);
-        // if (!menuItemExists) {
-        //     return res.status(404).json({ error: 'Menu item not found!' });
-        // }
-
         // Start a transaction
         await poolConnection.query('START TRANSACTION');
 
         try {
+
+            // Check if MenuItemID already exists
+            const checkMenuItemQuery = 'SELECT COUNT(*) AS count FROM recipe_items WHERE MenuItemID = ?';
+            const result = await poolConnection.query(checkMenuItemQuery, [MenuItemID]);
+            const menuItemExists = result[0].count > 0;
+
+            if (menuItemExists) {
+                res.status(400).json({ error: 'Menu Item already exists!' });
+                return;
+            }
+
             // Update menuitems table with CostPrice
             await poolConnection.query('UPDATE menuitems SET CostPrice = ? WHERE MenuItemID = ?', [CostPrice, MenuItemID]);
 
             // Insert items into recipe_items table
             for (const item of items) {
                 const { IngredientID, PerItemPrice, Grams } = item;
-
-                // Check if the item name already exists
-                // const IngredientIDExists = await isMenuItemExistsInRecipe(MenuItemID);
-                // if (IngredientIDExists) {
-                //     // Rollback the transaction if the item name already exists
-                //     await poolConnection.query('ROLLBACK');
-                //     return res.status(400).json({ error: 'Item name already exists!' });
-                // }
 
                 await poolConnection.query(
                     'INSERT INTO recipe_items (MenuItemID, IngredientID, PerItemPrice, Grams) VALUES (?, ?, ?, ?)',
@@ -76,18 +61,6 @@ const update = async (req, res) => {
     try {
         const id = req.params.id;
         const { MenuItemID, IngredientID, PerItemPrice, Grams, CostPrice } = req.body;
-
-        // Check if the MenuItemID exists
-        const menuItemExists = await doesMenuItemExist(MenuItemID);
-        if (!menuItemExists) {
-            return res.status(404).json({ error: 'Menu item not found!' });
-        }
-
-        // Check if the item name already exists
-        const IngredientIDExists = await isMenuItemExistsInRecipe(MenuItemID);
-        if (IngredientIDExists) {
-            return res.status(400).json({ error: 'Item name already exists!' });
-        }
 
         // Start a transaction
         await poolConnection.query('BEGIN TRANSACTION');

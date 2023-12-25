@@ -12,6 +12,26 @@ const getAll = async (req, res) => {
     }
 };
 
+const getForRecipeItems = async (req, res) => {
+    try {
+        // Select menu items that do not exist in recipe_items
+        let query = `
+            SELECT *
+            FROM menuitems
+            WHERE MenuItemID NOT IN (
+                SELECT DISTINCT MenuItemID
+                FROM recipe_items
+            )`;
+    
+        const result = await poolConnection.query(query);
+    
+        res.status(200).json(result);
+    } catch (error) {
+        console.error(`Error executing query! Error: ${error}`);
+        res.status(500).json('Error while Fetching items!');
+    }
+}
+
 const create = async (req, res) => {
     try {
         const { name, description, price, categoryId, kitchenId, subCategoryId } = req.body;
@@ -111,6 +131,7 @@ const deleteItem = async (req, res) => {
 
 module.exports = {
     getAll,
+    getForRecipeItems,
     create,
     update,
     getById,
