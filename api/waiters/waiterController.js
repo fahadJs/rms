@@ -32,18 +32,22 @@ const wLogin = async (req, res) => {
 
         const waiter = result[0];
 
-        if (waiter.status != 'allowed') {
-            res.status(401).json({ message: 'Waiter is not Allowed!' });
-            return;
-        }
         const passwordMatch = await bcrypt.compare(login_pass, waiter.login_pass);
 
         if (passwordMatch) {
-            const token = jwt.sign({ waiter_id: waiter.waiter_id }, 'RMSIDVERFY');
-            const restaurant_id = waiter.restaurant_id;
-            const waiter_id = waiter.waiter_id
+            const tokenPayload = {
+                waiter_id: waiter.waiter_id,
+                restaurant_id: waiter.restaurant_id || null,
+            };
 
-            res.status(200).json({ message: 'Login successful!', token, restaurant_id, waiter_id });
+            const token = jwt.sign(tokenPayload, 'RMSIDVERFY');
+
+            res.status(200).json({
+                message: 'Login successful!',
+                waiter_id: waiter.waiter_id,
+                restaurant_id: waiter.restaurant_id || null,
+                token,
+            });
         } else {
             res.status(401).json({ message: 'Incorrect password!' });
         }

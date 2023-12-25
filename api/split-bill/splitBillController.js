@@ -83,7 +83,7 @@ const createItSplit = async (req, res) => {
 
             if (itemDetails) {
                 const itemTotal = itemDetails.Price;
-                const itemSplitAmount = (itemTotal / fetchedOrder.total_amount) * fetchedOrder.total_amount;
+                const itemSplitAmount = (itemTotal / fetchedOrder.total_amount) * item.quantity;
 
                 // Update order_items quantity
                 const updatedQuantity = itemDetails.Quantity - item.quantity;
@@ -121,9 +121,6 @@ const createItSplit = async (req, res) => {
         console.error(`Error splitting bill! Error: ${error.message}`);
         res.status(500).json({ error: `Error splitting bill! ${error.message}` });
     }
-
-
-
 }
 
 module.exports = {
