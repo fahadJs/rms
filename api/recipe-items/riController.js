@@ -14,28 +14,34 @@ const getAllWithIngredients = async (req, res) => {
     try {
         const query = `
             SELECT
-                recipe_items.*,
+                menuitems.MenuItemID,
+                menuitems.Name,
+                menuitems.CostPrice,
                 JSON_ARRAYAGG(JSON_OBJECT('IngredientName', ingredients.IngredientName, 'PricePerGm', ingredients.PricePerGm)) AS ingredients
             FROM
-                recipe_items
+                menuitems
+            INNER JOIN
+                recipe_items ON menuitems.MenuItemID = recipe_items.MenuItemID
             INNER JOIN
                 ingredients ON recipe_items.IngredientID = ingredients.IngredientID
             GROUP BY
-                recipe_items.MenuItemID, recipe_items.IngredientID
+                menuitems.MenuItemID
         `;
-
+    
         const rows = await poolConnection.query(query);
-
+    
         // Parse the ingredients column to ensure proper JSON format
         const result = rows.map(row => ({
-            ...row,
+            MenuItemID: row.MenuItemID,
+            Name: row.Name,
+            CostPrice: row.CostPrice,
             ingredients: row.ingredients ? JSON.parse(row.ingredients) : [],
         }));
-
+    
         res.status(200).json(result);
     } catch (error) {
-        console.error(`Error fetching recipe items with ingredients! ${error.message}`);
-        res.status(500).json({ error: `Error fetching recipe items with ingredients! ${error.message}` });
+        console.error(`Error fetching menu items with ingredients! ${error.message}`);
+        res.status(500).json({ error: `Error fetching menu items with ingredients! ${error.message}` });
     }
 }
 
