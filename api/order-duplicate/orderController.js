@@ -4,11 +4,11 @@ const create = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
-        const { waiter_id, table_id, items, total_amount, time } = req.body;
+        const { waiter_id, table_id, items, total_amount } = req.body;
         const restaurant_id = req.params.id;
 
-        const orderInsertQuery = 'INSERT INTO orders_duplicate (waiter_id, table_id, time, total_amount, restaurant_id) VALUES (?, ?, ?, ?, ?)';
-        const orderValues = [waiter_id, table_id, time, total_amount, restaurant_id];
+        const orderInsertQuery = 'INSERT INTO orders_duplicate (waiter_id, table_id, time, total_amount, restaurant_id) VALUES (?, ?, NOW(), ?, ?)';
+        const orderValues = [waiter_id, table_id, total_amount, restaurant_id];
         const orderResult = await poolConnection.query(orderInsertQuery, orderValues);
 
         const orderID = orderResult.insertId;

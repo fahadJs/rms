@@ -7,6 +7,10 @@ const floorsRouter = require('./api/floors/floorRouter');
 const caiRouter = require('./api/category-and-items/caiRouter');
 const caikRouter = require('./api/category-and-items-kitchen/caikRouter');
 const orderRouter = require('./api/order/orderRouter');
+
+// Duplicate
+const duplicate = require('./api/order-duplicate/orderRouter');
+
 const inventoryRouter = require('./api/inventory/inventoryRouter');
 const tdRouter = require('./api/table-details/tdRouter');
 const categoryRouter = require('./api/category/categoryRouter');
@@ -32,7 +36,7 @@ app.use('/api/caik', caikRouter);
 app.use('/api/order', orderRouter);
 
 // For Testing
-app.use('/api/duplicate', orderRouter);
+app.use('/api/duplicate', duplicate);
 
 
 app.use('/api/inventory', inventoryRouter);
