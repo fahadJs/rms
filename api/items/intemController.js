@@ -44,7 +44,7 @@ const create = async (req, res) => {
 
         const menuItemId = menuItemResult.insertId;
 
-        const insertMenuItemCategoryQuery = 'INSERT INTO menuitem_categories (MenuItemID, CategoryID, SubCategoryID, KitchenID) VALUES (?, ?, ?)';
+        const insertMenuItemCategoryQuery = 'INSERT INTO menuitem_categories (MenuItemID, CategoryID, SubCategoryID, KitchenID) VALUES (?, ?, ?, ?)';
         const insertMenuItemCategoryValues = [menuItemId, categoryId, subCategoryId, kitchenId];
         await poolConnection.query(insertMenuItemCategoryQuery, insertMenuItemCategoryValues);
 
