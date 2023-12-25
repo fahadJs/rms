@@ -30,6 +30,11 @@ app.use('/api/floors', floorsRouter);
 app.use('/api/cai', caiRouter);
 app.use('/api/caik', caikRouter);
 app.use('/api/order', orderRouter);
+
+// For Testing
+app.use('/api/duplicate', orderRouter);
+
+
 app.use('/api/inventory', inventoryRouter);
 app.use('/api/tabledetail', tdRouter);
 app.use('/api/category', categoryRouter);
