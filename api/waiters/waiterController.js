@@ -32,6 +32,11 @@ const wLogin = async (req, res) => {
 
         const waiter = result[0];
 
+        if (waiter.status != "allowed" ) {
+            res.status(400).json({ message: 'Waiter is not allowed!' });
+            return;
+        }
+
         const passwordMatch = await bcrypt.compare(login_pass, waiter.login_pass);
 
         if (passwordMatch) {

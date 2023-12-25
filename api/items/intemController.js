@@ -38,7 +38,7 @@ const create = async (req, res) => {
 
         await poolConnection.query('START TRANSACTION');
 
-        const insertMenuItemQuery = 'INSERT INTO menuitems (Name, Description, Price) VALUES (?, ?, ?)';
+        const insertMenuItemQuery = 'INSERT INTO menuitems (Name, Description, Price, CostPrice) VALUES (?, ?, ?, 0)';
         const insertMenuItemValues = [name, description, price];
         const menuItemResult = await poolConnection.query(insertMenuItemQuery, insertMenuItemValues);
 
