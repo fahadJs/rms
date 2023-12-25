@@ -41,8 +41,9 @@ const wLogin = async (req, res) => {
         if (passwordMatch) {
             const token = jwt.sign({ waiter_id: waiter.waiter_id }, 'RMSIDVERFY');
             const restaurant_id = waiter.restaurant_id;
+            const waiter_id = waiter.waiter_id
 
-            res.status(200).json({ message: 'Login successful!', token, restaurant_id });
+            res.status(200).json({ message: 'Login successful!', token, restaurant_id, waiter_id });
         } else {
             res.status(401).json({ message: 'Incorrect password!' });
         }
