@@ -164,9 +164,11 @@ const updateItemQuantity = async (req, res) => {
 
         // Commit the transaction
         await poolConnection.query('COMMIT');
+        // Get the updated quantity
+        const getUpdatedQuantityQuery = 'SELECT Quantity FROM order_items WHERE OrderID = ? AND MenuItemID = ?';
+        const updatedQuantityResult = await poolConnection.query(getUpdatedQuantityQuery, [orderId, menuItemId]);
 
-        res.status(200).json({ message: 'Item quantity updated successfully!' });
-
+        res.status(200).json({ message: 'Item quantity updated successfully!', updatedQuantityResult});
     } catch (error) {
         // Rollback the transaction in case of an error
         await poolConnection.query('ROLLBACK');
