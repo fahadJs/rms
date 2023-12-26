@@ -53,6 +53,69 @@ const getAll = async (req, res) => {
     }
 };
 
+const removeItem = async (req, res) => {
+    try {
+        const { orderId, menuItemId } = req.params;
+
+        // Start a transaction
+        await poolConnection.query('START TRANSACTION');
+
+        // Check if the order exists
+        const checkOrderQuery = 'SELECT * FROM orders WHERE OrderID = ?';
+        const checkOrderResult = await poolConnection.query(checkOrderQuery, [orderId]);
+
+        if (checkOrderResult.length === 0) {
+            await poolConnection.query('ROLLBACK');
+            return res.status(404).json({ message: 'Order not found!' });
+        }
+
+        // Check if the item exists in the order
+        const checkItemQuery = 'SELECT * FROM order_items WHERE OrderID = ? AND MenuItemID = ?';
+        const checkItemResult = await poolConnection.query(checkItemQuery, [orderId, menuItemId]);
+
+        if (checkItemResult.length === 0) {
+            await poolConnection.query('ROLLBACK');
+            return res.status(404).json({ message: 'Item not found in the order!' });
+        }
+
+        // Get the quantity of the item being removed
+        const removedItemQuantity = checkItemResult[0].Quantity;
+
+        // Remove the item from the order_items table
+        const removeItemQuery = 'DELETE FROM order_items WHERE OrderID = ? AND MenuItemID = ?';
+        await poolConnection.query(removeItemQuery, [orderId, menuItemId]);
+
+        // Update the on_hand value in the inventory table
+        const updateInventoryQuery = 'UPDATE inventory SET on_hand = on_hand + ? WHERE MenuItemID = ?';
+        await poolConnection.query(updateInventoryQuery, [removedItemQuantity, menuItemId]);
+
+        // Check if there are no more items left in the order
+        const remainingItemsQuery = 'SELECT * FROM order_items WHERE OrderID = ?';
+        const remainingItemsResult = await poolConnection.query(remainingItemsQuery, [orderId]);
+
+        if (remainingItemsResult.length === 0) {
+            // If no remaining items, delete the order
+            const deleteOrderQuery = 'DELETE FROM orders WHERE OrderID = ?';
+            await poolConnection.query(deleteOrderQuery, [orderId]);
+
+            const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = ?';
+            await poolConnection.query(updateTableQuery, [checkOrderResult[0].table_id]);
+        }
+
+        // Commit the transaction
+        await poolConnection.query('COMMIT');
+
+        res.status(200).json({ message: 'Item removed from the order successfully!' });
+
+    } catch (error) {
+        // Rollback the transaction in case of an error
+        await poolConnection.query('ROLLBACK');
+
+        console.error(`Error executing query! Error: ${error}`);
+        res.status(500).json('Error removing item from the order!');
+    }
+}
+
 const mrkPaid = async (req, res) => {
     try {
         const orderId = req.params.id;
@@ -118,5 +181,6 @@ const cancel = async (req, res) => {
 module.exports = {
     getAll,
     mrkPaid,
-    cancel
+    cancel,
+    removeItem
 }
