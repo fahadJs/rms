@@ -116,6 +116,66 @@ const removeItem = async (req, res) => {
     }
 }
 
+const updateItemQuantity = async (req, res) => {
+    try {
+        const { orderId, menuItemId, receivedQuantity } = req.params;
+
+        // Start a transaction
+        await poolConnection.query('START TRANSACTION');
+
+        // Check if the order exists
+        const checkOrderQuery = 'SELECT * FROM orders WHERE OrderID = ?';
+        const checkOrderResult = await poolConnection.query(checkOrderQuery, [orderId]);
+
+        if (checkOrderResult.length === 0) {
+            await poolConnection.query('ROLLBACK');
+            return res.status(404).json({ message: 'Order not found!' });
+        }
+
+        // Check if the item exists in the order
+        const checkItemQuery = 'SELECT * FROM order_items WHERE OrderID = ? AND MenuItemID = ?';
+        const checkItemResult = await poolConnection.query(checkItemQuery, [orderId, menuItemId]);
+
+        if (checkItemResult.length === 0) {
+            await poolConnection.query('ROLLBACK');
+            return res.status(404).json({ message: 'Item not found in the order!' });
+        }
+
+        // Get the existing quantity of the item in the order
+        const existingQuantity = checkItemResult[0].Quantity;
+
+        // Update the quantity in the order_items table
+        const updateQuantityQuery = 'UPDATE order_items SET Quantity = ? WHERE OrderID = ? AND MenuItemID = ?';
+        await poolConnection.query(updateQuantityQuery, [receivedQuantity, orderId, menuItemId]);
+
+        // Calculate the quantity difference
+        const quantityDifference = receivedQuantity - existingQuantity;
+
+        if (quantityDifference > 0) {
+            // If received quantity is greater, update inventory and quantity
+            const updateInventoryQuery = 'UPDATE inventory SET on_hand = on_hand - ? WHERE MenuItemID = ?';
+            await poolConnection.query(updateInventoryQuery, [quantityDifference, menuItemId]);
+        } else if (quantityDifference < 0) {
+            // If received quantity is less, add remaining quantity back to inventory
+            const remainingQuantity = Math.abs(quantityDifference);
+            const updateInventoryQuery = 'UPDATE inventory SET on_hand = on_hand + ? WHERE MenuItemID = ?';
+            await poolConnection.query(updateInventoryQuery, [remainingQuantity, menuItemId]);
+        }
+
+        // Commit the transaction
+        await poolConnection.query('COMMIT');
+
+        res.status(200).json({ message: 'Item quantity updated successfully!' });
+
+    } catch (error) {
+        // Rollback the transaction in case of an error
+        await poolConnection.query('ROLLBACK');
+
+        console.error(`Error executing query! Error: ${error}`);
+        res.status(500).json('Error updating item quantity in the order!');
+    }
+};
+
 const mrkPaid = async (req, res) => {
     try {
         const orderId = req.params.id;
@@ -182,5 +242,6 @@ module.exports = {
     getAll,
     mrkPaid,
     cancel,
-    removeItem
+    removeItem,
+    updateItemQuantity
 }
