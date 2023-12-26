@@ -5,6 +5,6 @@ router.get('/:id', tdController.getAll);
 router.patch('/:id/paid', tdController.mrkPaid);
 router.delete('/:id', tdController.cancel);
 router.delete('/:orderId/:menuItemId', tdController.removeItem);
-router.patch('/:orderId/:menuItemId/:receivedQuantity', tdController.updateItemQuantity);
+router.patch('/:orderId/:menuItemId/:receivedQuantity/:receivedPrice', tdController.updateItemQuantity);
 
 module.exports = router;
