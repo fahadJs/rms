@@ -66,6 +66,6 @@ app.use('/admin', adminRouter);
 
 const server = https.createServer(options, app);
 
-app.listen(port || 3000, () => {
+server.listen(port || 3000, () => {
     console.log(`Server up and running!\nConnection will be established once any request hits!`);
 })
