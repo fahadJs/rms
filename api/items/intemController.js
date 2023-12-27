@@ -102,7 +102,7 @@ const getById = async (req, res) => {
             };
             res.status(200).json(itemData);
         } else {
-            res.status(404).json('Item not found.');
+            res.status(404).json({status: 404, message: 'Item not found.'});
         }
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
