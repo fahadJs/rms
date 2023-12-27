@@ -7,10 +7,10 @@ const app = express();
 const db = require('./config/database');
 const port = 443;
 
-const options = {
-    key: fs.readFileSync('./server.key'),
-    cert: fs.readFileSync('./server.cert'),
-};
+// const options = {
+//     key: fs.readFileSync('./server.key'),
+//     cert: fs.readFileSync('./server.cert'),
+// };
 
 const itemRouter = require('./api/items/itemRouter');
 const floorsRouter = require('./api/floors/floorRouter');
@@ -64,8 +64,8 @@ app.use('/api/recipeitems', riRouter);
 app.use('/admin', adminRouter);
 
 
-const server = https.createServer(options, app);
+// const server = https.createServer(options, app);
 
-server.listen(port, () => {
+app.listen(process.env.APP_PORT || 3000, () => {
     console.log(`Server up and running!\nConnection will be established once any request hits!`);
 })
