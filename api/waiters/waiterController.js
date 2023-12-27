@@ -49,8 +49,8 @@ const wLogin = async (req, res) => {
 
             res.status(200).json({
                 message: 'Login successful!',
-                waiter_id: waiter.waiter_id,
-                restaurant_id: waiter.restaurant_id || null,
+                waiter_id: tokenPayload.waiter_id,
+                restaurant_id: tokenPayload.restaurant_id || null,
                 token,
             });
         } else {
