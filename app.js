@@ -4,7 +4,6 @@ const https = require('https');
 const fs = require('fs');
 
 const app = express();
-const db = require('./config/database');
 const port = 443;
 
 const options = {
@@ -18,7 +17,7 @@ const caiRouter = require('./api/category-and-items/caiRouter');
 const caikRouter = require('./api/category-and-items-kitchen/caikRouter');
 const orderRouter = require('./api/order/orderRouter');
 
-// Duplicate
+// Duplicate FOR TESTING
 const duplicate = require('./api/order-duplicate/orderRouter');
 
 const inventoryRouter = require('./api/inventory/inventoryRouter');
@@ -62,7 +61,6 @@ app.use('/api/recipeitems', riRouter);
 
 // Admin
 app.use('/admin', adminRouter);
-
 
 const server = https.createServer(options, app);
 

@@ -39,15 +39,16 @@ const adLogin = async (req, res) => {
         if (passwordMatch) {
             const tokenPayload = {
                 admin_id: admin.admin_id,
-                restaurant_id: admin.restaurant_id || null, // Use restaurant_id if available, otherwise null
+                restaurant_id: admin.restaurant_id || null,
             };
 
-            const token = jwt.sign(tokenPayload, 'RMSIDVERFY');
+            const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '12h'});
 
             res.status(200).json({
+                status: 200,
                 message: 'Login successful!',
-                admin_id: admin.admin_id,
-                restaurant_id: admin.restaurant_id || null,
+                admin_id: tokenPayload.admin_id,
+                restaurant_id: tokenPayload.restaurant_id,
                 token,
             });
         } else {

@@ -45,12 +45,13 @@ const wLogin = async (req, res) => {
                 restaurant_id: waiter.restaurant_id || null,
             };
 
-            const token = jwt.sign(tokenPayload, 'RMSIDVERFY');
+            const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '12h'});
 
             res.status(200).json({
+                status: 200,
                 message: 'Login successful!',
-                waiter_id: tokenPayload.waiter_id,
-                restaurant_id: tokenPayload.restaurant_id || null,
+                waiter_Id: tokenPayload.waiter_id,
+                restaurant_id: tokenPayload.restaurant_id,
                 token,
             });
         } else {
