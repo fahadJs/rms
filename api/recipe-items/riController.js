@@ -6,7 +6,7 @@ const getAll = async (req, res) => {
         res.status(200).json(rows);
     } catch (error) {
         console.error(`Error fetching recipe items! ${error.message}`);
-        res.status(500).json({ error: `Error fetching recipe items! ${error.message}` });
+        res.status(500).json({status: 500, message: `Error fetching recipe items! ${error.message}` });
     }
 };
 
@@ -41,7 +41,7 @@ const getAllWithIngredients = async (req, res) => {
         res.status(200).json(result);
     } catch (error) {
         console.error(`Error fetching menu items with ingredients! ${error.message}`);
-        res.status(500).json({ error: `Error fetching menu items with ingredients! ${error.message}` });
+        res.status(500).json({status: 500, message: `Error fetching menu items with ingredients! ${error.message}` });
     }
 }
 
@@ -59,7 +59,7 @@ const create = async (req, res) => {
             const menuItemExists = result[0].count > 0;
 
             if (menuItemExists) {
-                res.status(400).json({ error: 'Menu Item already exists!' });
+                res.status(400).json({status: 400, message: 'Menu Item already exists!' });
                 return;
             }
 
@@ -79,7 +79,7 @@ const create = async (req, res) => {
             // Commit the transaction
             await poolConnection.query('COMMIT');
 
-            res.status(201).json({ message: 'Recipe items created successfully!' });
+            res.status(201).json({status: 201, message: 'Recipe items created successfully!' });
         } catch (error) {
             // Rollback the transaction on error
             await poolConnection.query('ROLLBACK');
@@ -87,7 +87,7 @@ const create = async (req, res) => {
         }
     } catch (error) {
         console.error(`Error creating recipe items! ${error.message}`);
-        res.status(500).json({ error: `Error creating recipe items! ${error.message}` });
+        res.status(500).json({status: 500, message: `Error creating recipe items! ${error.message}` });
     }
 };
 
@@ -111,13 +111,13 @@ const update = async (req, res) => {
             if (result[0].affectedRows === 0) {
                 // Rollback the transaction if the recipe item is not found
                 await poolConnection.query('ROLLBACK');
-                return res.status(404).json({ error: 'Recipe item not found!' });
+                return res.status(404).json({status: 404, message: 'Recipe item not found!' });
             }
 
             // Commit the transaction
             await poolConnection.query('COMMIT');
 
-            res.status(200).json({ message: 'Recipe item updated successfully!' });
+            res.status(200).json({status: 200, message: 'Recipe item updated successfully!' });
         } catch (error) {
             // Rollback the transaction on error
             await poolConnection.query('ROLLBACK');
@@ -125,7 +125,7 @@ const update = async (req, res) => {
         }
     } catch (error) {
         console.error(`Error updating recipe item! ${error.message}`);
-        res.status(500).json({ error: `Error updating recipe item! ${error.message}` });
+        res.status(500).json({status: 500, message: `Error updating recipe item! ${error.message}` });
     }
 };
 
@@ -135,13 +135,13 @@ const getById = async (req, res) => {
         const rows = await poolConnection.query('SELECT * FROM recipe_items WHERE RecipeItemID = ?', [id]);
 
         if (rows.length === 0) {
-            return res.status(404).json({ error: 'Recipe item not found!' });
+            return res.status(404).json({status: 404, message: 'Recipe item not found!' });
         }
 
         res.status(200).json(rows[0]);
     } catch (error) {
         console.error(`Error fetching recipe item by ID! ${error.message}`);
-        res.status(500).json({ error: `Error fetching recipe item by ID! ${error.message}` });
+        res.status(500).json({status: 500, message: `Error fetching recipe item by ID! ${error.message}` });
     }
 };
 
@@ -158,13 +158,13 @@ const deleteItem = async (req, res) => {
             if (result[0].affectedRows === 0) {
                 // Rollback the transaction if the recipe item is not found
                 await poolConnection.query('ROLLBACK');
-                return res.status(404).json({ error: 'Recipe item not found!' });
+                return res.status(404).json({status: 404, message: 'Recipe item not found!' });
             }
 
             // Commit the transaction
             await poolConnection.query('COMMIT');
 
-            res.status(200).json({ message: 'Recipe item deleted successfully!' });
+            res.status(200).json({status: 200, message: 'Recipe item deleted successfully!' });
         } catch (error) {
             // Rollback the transaction on error
             await poolConnection.query('ROLLBACK');
@@ -172,7 +172,7 @@ const deleteItem = async (req, res) => {
         }
     } catch (error) {
         console.error(`Error deleting recipe item! ${error.message}`);
-        res.status(500).json({ error: `Error deleting recipe item! ${error.message}` });
+        res.status(500).json({status: 500, message: `Error deleting recipe item! ${error.message}` });
     }
 };
 

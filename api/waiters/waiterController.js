@@ -12,10 +12,10 @@ const create = async (req, res) => {
         const insertWaiterValues = [waiter_name, login_id, hashedPassword, restaurant_id];
         await poolConnection.query(insertWaiterQuery, insertWaiterValues);
 
-        res.status(201).json({ message: 'Waiter created successfully!' });
+        res.status(201).json({status: 201, message: 'Waiter created successfully!' });
     } catch (error) {
         console.error(`Error creating waiter! Error: ${error}`);
-        res.status(500).json({ error: 'Error creating waiter!' });
+        res.status(500).json({status: 500, message: 'Error creating waiter!' });
     }
 }
 
@@ -26,14 +26,14 @@ const wLogin = async (req, res) => {
         const result = await poolConnection.query(getWaiterQuery, [login_id]);
 
         if (result.length === 0) {
-            res.status(404).json({ message: 'Waiter not found!' });
+            res.status(404).json({status: 404, message: 'Waiter not found!' });
             return;
         }
 
         const waiter = result[0];
 
         if (waiter.status != "allowed" ) {
-            res.status(400).json({ message: 'Waiter is not allowed!' });
+            res.status(400).json({status: 400, message: 'Waiter is not allowed!' });
             return;
         }
 
@@ -54,11 +54,11 @@ const wLogin = async (req, res) => {
                 token,
             });
         } else {
-            res.status(401).json({ message: 'Incorrect password!' });
+            res.status(401).json({status: 401, message: 'Incorrect password!' });
         }
     } catch (error) {
         console.error(`Error logging in! Error: ${error}`);
-        res.status(500).json({ error: 'Error logging in!' });
+        res.status(500).json({status: 500, message: 'Error logging in!' });
     }
 }
 
@@ -70,7 +70,7 @@ const getAll = async (req, res) => {
         res.status(200).json(waiters);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ error: 'Error fetching waiters!' });
+        res.status(500).json({status: 500, message: 'Error fetching waiters!' });
     }
 }
 
@@ -81,14 +81,14 @@ const getById = async (req, res) => {
         const result = await poolConnection.query(getWaiterQuery, [waiterId]);
 
         if (result.length === 0) {
-            res.status(404).json({ message: 'Waiter not found!' });
+            res.status(404).json({status: 404, message: 'Waiter not found!' });
             return;
         }
 
         res.status(200).json(result[0]);
     } catch (error) {
         console.error(`Error fetching waiter! Error: ${error}`);
-        res.status(500).json({ error: 'Error fetching waiter!' });
+        res.status(500).json({status: 500, message: 'Error fetching waiter!' });
     }
 }
 
@@ -104,10 +104,10 @@ const update = async (req, res) => {
         const updateWaiterValues = [waiter_name, login_id, hashedPassword, restaurant_id, status, waiterId];
         await poolConnection.query(updateWaiterQuery, updateWaiterValues);
 
-        res.status(200).json({ message: 'Waiter updated successfully!' });
+        res.status(200).json({status: 200, message: 'Waiter updated successfully!' });
     } catch (error) {
         console.error(`Error updating waiter! Error: ${error}`);
-        res.status(500).json({ error: 'Error updating waiter!' });
+        res.status(500).json({status: 500, message: 'Error updating waiter!' });
     }
 }
 
@@ -117,10 +117,10 @@ const wdelete = async (req, res) => {
         const deleteWaiterQuery = 'DELETE FROM waiters WHERE waiter_id = ?';
         await poolConnection.query(deleteWaiterQuery, [waiterId]);
 
-        res.status(200).json({ message: 'Waiter deleted successfully!' });
+        res.status(200).json({status: 200, message: 'Waiter deleted successfully!' });
     } catch (error) {
         console.error(`Error deleting waiter! Error: ${error}`);
-        res.status(500).json({ error: 'Error deleting waiter!' });
+        res.status(500).json({status: 500, message: 'Error deleting waiter!' });
     }
 }
 

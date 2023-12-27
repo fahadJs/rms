@@ -27,11 +27,11 @@ const create = async (req, res) => {
         }
 
         await poolConnection.query('COMMIT');
-        res.status(201).json({ message: 'POS order placed successfully!' });
+        res.status(201).json({status: 201, message: 'POS order placed successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error(`Error placing POS order! Error: ${error}`);
-        res.status(500).json({ error: 'Error placing POS order!' });
+        res.status(500).json({status: 500, message: 'Error placing POS order!' });
     }
 }
 
@@ -42,7 +42,7 @@ const getOrderById = async (req, res) => {
         const order = await poolConnection.query(orderSql, [orderId]);
 
         if (!order.length) {
-            return res.status(404).json({ error: 'Order not found' });
+            return res.status(404).json({status: 404, message: 'Order not found' });
         }
 
         const orderItemSql = 'SELECT * FROM pos_order_items WHERE PosOrderID = ?';
@@ -53,7 +53,7 @@ const getOrderById = async (req, res) => {
         res.status(200).json(orderWithItems);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ error: 'Error fetching order!' });
+        res.status(500).json({status: 500, message: 'Error fetching order!' });
     }
 };
 
@@ -99,7 +99,7 @@ const getAllOrders = async (req, res) => {
         res.status(200).json(ordersData);
     } catch (error) {
         console.error(`Error fetching POS orders! Error: ${error}`);
-        res.status(500).json({ error: 'Error fetching POS orders!' });
+        res.status(500).json({status: 500, message: 'Error fetching POS orders!' });
     }
 
 };

@@ -7,10 +7,10 @@ const create = async (req, res) => {
     const query = 'INSERT INTO subcategories (SubCategoryName, Description, CategoryID) VALUES (?, ?, ?)';
     const result = await poolConnection.query(query, [subcategoryName, description, categoryId]);
 
-    res.status(201).json({ message: 'Subcategory added successfully!' });
+    res.status(201).json({status: 201, message: 'Subcategory added successfully!' });
   } catch (error) {
     console.error(`Error executing query! Error: ${error}`);
-    res.status(500).json('Error adding subcategory!');
+    res.status(500).json({status: 500, message: 'Error adding subcategory!'});
   }
 }
 
@@ -21,7 +21,7 @@ const getAll = async (req, res) => {
     res.status(200).json(result);
   } catch (error) {
     console.error(`Error executing query! Error: ${error}`);
-    res.status(500).json({ error: 'Error fetching subcategories!' });
+    res.status(500).json({status: 500, message: 'Error fetching subcategories!' });
   }
 }
 
@@ -31,10 +31,10 @@ const update = async (req, res) => {
       const { subcategoryName } = req.body;
       const query = 'UPDATE subcategories SET SubcategoryName = ? WHERE SubcategoryID = ?';
       await poolConnection.query(query, [subcategoryName, subcategoryId]);
-      res.status(200).json({ message: 'Subcategory updated successfully!' });
+      res.status(200).json({status: 200, message: 'Subcategory updated successfully!' });
   } catch (error) {
       console.error(`Error executing query! Error: ${error}`);
-      res.status(500).json({ error: 'Error updating subcategory!' });
+      res.status(500).json({status: 500, error: 'Error updating subcategory!' });
   }
 };
 
@@ -45,13 +45,13 @@ const getById = async (req, res) => {
       const result = await poolConnection.query(query, [subcategoryId]);
 
       if (result.length === 0) {
-          res.status(404).json({ message: 'Subcategory not found!' });
+          res.status(404).json({status: 404, message: 'Subcategory not found!' });
       } else {
           res.status(200).json(result[0]);
       }
   } catch (error) {
       console.error(`Error executing query! Error: ${error}`);
-      res.status(500).json({ error: 'Error fetching subcategory!' });
+      res.status(500).json({status: 500, message: 'Error fetching subcategory!' });
   }
 };
 
@@ -63,16 +63,16 @@ const del = async (req, res) => {
       const checkResult = await poolConnection.query(checkSubcategoryQuery, [subcategoryId]);
 
       if (checkResult.length === 0) {
-          return res.status(404).json({ message: 'Subcategory not found!' });
+          return res.status(404).json({status: 404, message: 'Subcategory not found!' });
       }
 
       const deleteSubcategoryQuery = 'DELETE FROM subcategories WHERE SubcategoryID = ?';
       await poolConnection.query(deleteSubcategoryQuery, [subcategoryId]);
 
-      res.status(200).json({ message: 'Subcategory deleted successfully!' });
+      res.status(200).json({status: 200, message: 'Subcategory deleted successfully!' });
   } catch (error) {
       console.error(`Error executing query! Error: ${error}`);
-      res.status(500).json({ error: 'Error deleting subcategory!' });
+      res.status(500).json({status: 500, message: 'Error deleting subcategory!' });
   }
 };
 

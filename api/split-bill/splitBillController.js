@@ -11,13 +11,13 @@ const createEqSplit = async (req, res) => {
         const orderResult = await poolConnection.query(getOrderQuery, [orderId]);
 
         if (orderResult.length === 0) {
-            return res.status(404).json({ message: 'Order not found!' });
+            return res.status(404).json({status: 404, message: 'Order not found!' });
         }
 
         const fetchedOrder = orderResult[0];
 
         if (fetchedOrder.order_status == "paid") {
-            res.status(401).json({ message: 'Bill is already Paid!' });
+            res.status(401).json({status: 401, message: 'Bill is already Paid!' });
             return;
         }
 
@@ -41,11 +41,11 @@ const createEqSplit = async (req, res) => {
         await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
 
         await poolConnection.query('COMMIT');
-        res.status(201).json({ message: 'Bill split successfully!' });
+        res.status(201).json({status: 201, message: 'Bill split successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error(`Error splitting bill! Error: ${error}`);
-        res.status(500).json({ error: 'Error splitting bill!' });
+        res.status(500).json({status: 500, message: 'Error splitting bill!' });
     }
 }
 
@@ -60,13 +60,13 @@ const createItSplit = async (req, res) => {
         const orderResult = await poolConnection.query(getOrderQuery, [orderId]);
 
         if (orderResult.length === 0) {
-            throw new Error('Order not found!');
+            throw new Error({status: 404, message: 'Order not found!'});
         }
 
         const fetchedOrder = orderResult[0];
 
         if (fetchedOrder.order_status === 'paid') {
-            throw new Error('Bill is already paid!');
+            throw new Error({status: 401, message: 'Bill is already paid!'});
         }
 
         // Fetch item details from order_items table
@@ -115,11 +115,11 @@ const createItSplit = async (req, res) => {
         }
 
         await poolConnection.query('COMMIT');
-        res.status(201).json({ message: 'Bill split successfully!' });
+        res.status(201).json({status: 201, message: 'Bill split successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error(`Error splitting bill! Error: ${error.message}`);
-        res.status(500).json({ error: `Error splitting bill! ${error.message}` });
+        res.status(500).json({status: 500, message: `Error splitting bill! ${error.message}` });
     }
 }
 

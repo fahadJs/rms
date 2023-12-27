@@ -8,7 +8,7 @@ const getAll = async (req, res) => {
         res.status(200).json(kitchens);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ error: 'Error fetching kitchens!' });
+        res.status(500).json({status: 500, message: 'Error fetching kitchens!' });
     }
 };
 
@@ -21,10 +21,10 @@ const create = async (req, res) => {
 
         await poolConnection.query(addKitchenQuery, addKitchenValues);
 
-        res.status(201).json({ message: 'Kitchen added successfully!' });
+        res.status(201).json({status: 201, message: 'Kitchen added successfully!' });
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ error: 'Error adding kitchen!' });
+        res.status(500).json({status: 500, message: 'Error adding kitchen!' });
     }
 };
 
@@ -38,10 +38,10 @@ const update = async (req, res) => {
 
         await poolConnection.query(updateKitchenQuery, updateKitchenValues);
 
-        res.status(200).json({ message: 'Kitchen updated successfully!' });
+        res.status(200).json({status: 200, message: 'Kitchen updated successfully!' });
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ error: 'Error updating kitchen!' });
+        res.status(500).json({status: 500, message: 'Error updating kitchen!' });
     }
 };
 
@@ -54,10 +54,10 @@ const remove = async (req, res) => {
 
         await poolConnection.query(deleteKitchenQuery, deleteKitchenValues);
 
-        res.status(200).json({ message: 'Kitchen deleted successfully!' });
+        res.status(200).json({status: 200, message: 'Kitchen deleted successfully!' });
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ error: 'Error deleting kitchen!' });
+        res.status(500).json({status: 500, message: 'Error deleting kitchen!' });
     }
 };
 
@@ -70,14 +70,14 @@ const getById = async (req, res) => {
         const kitchenResult = await poolConnection.query(getKitchenQuery, [kitchenId]);
 
         if (kitchenResult.length === 0) {
-            return res.status(404).json({ message: 'Kitchen not found!' });
+            return res.status(404).json({status: 404, message: 'Kitchen not found!' });
         }
 
         const kitchenDetails = kitchenResult[0];
         res.status(200).json(kitchenDetails);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ error: 'Error fetching kitchen details!' });
+        res.status(500).json({status: 500, message: 'Error fetching kitchen details!' });
     }
 };
 

@@ -23,7 +23,7 @@ const getById = async (req, res) => {
         res.status(200).json(floorData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while Fetching floors plans!');
+        res.status(500).json({status: 500, message: 'Error while Fetching floors plans!'});
     }
 }
 

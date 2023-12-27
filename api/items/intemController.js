@@ -8,7 +8,7 @@ const getAll = async (req, res) => {
         res.status(200).json(result);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while Fetching items!');
+        res.status(500).json({status: 500, message: 'Error while Fetching items!'});
     }
 };
 
@@ -28,7 +28,7 @@ const getForRecipeItems = async (req, res) => {
         res.status(200).json(result);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while Fetching items!');
+        res.status(500).json({status: 500, message: 'Error while Fetching items!'});
     }
 }
 
@@ -50,12 +50,12 @@ const create = async (req, res) => {
 
         await poolConnection.query('COMMIT');
 
-        res.status(201).json({ message: 'Menu item added successfully!' });
+        res.status(201).json({status: 201, message: 'Menu item added successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
 
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ error: 'Error adding menu item!' });
+        res.status(500).json({status: 500, message: 'Error adding menu item!' });
     }
 };
 
@@ -76,13 +76,13 @@ const update = async (req, res) => {
 
         await poolConnection.query('COMMIT');
 
-        res.status(200).json({ message: 'Menu item updated successfully!' });
+        res.status(200).json({status: 200, message: 'Menu item updated successfully!' });
     } catch (error) {
 
         await poolConnection.query('ROLLBACK');
 
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ error: 'Error updating menu item!' });
+        res.status(500).json({status: 500, message: 'Error updating menu item!' });
     }
 };
 
@@ -106,7 +106,7 @@ const getById = async (req, res) => {
         }
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while fetching item!');
+        res.status(500).json({status: 500, message: 'Error while fetching item!'});
     }
 };
 
@@ -117,13 +117,13 @@ const deleteItem = async (req, res) => {
         const result = await poolConnection.query(sql, [itemId]);
 
         if (result.affectedRows > 0) {
-            res.status(200).json('Record Deleted Successfully!');
+            res.status(200).json({status: 200, message: 'Record Deleted Successfully!'});
         } else {
-            res.status(404).json('Item not found or already deleted.');
+            res.status(404).json({status: 404, message: 'Item not found or already deleted.'});
         }
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while deleting item!');
+        res.status(500).json({status: 500, message: 'Error while deleting item!'});
     }
 };
 

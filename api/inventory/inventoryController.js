@@ -36,7 +36,7 @@ const getAll = async (req, res) => {
         res.status(200).json(inventoryData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while fetching inventory!');
+        res.status(500).json({status: 500, message: 'Error while fetching inventory!'});
     }
 }
 
@@ -55,11 +55,11 @@ const update = async (req, res) => {
         }
 
         await poolConnection.query('COMMIT');
-        res.status(200).json({ message: 'Inventory updated successfully!' });
+        res.status(200).json({status: 200, message: 'Inventory updated successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error(`Error updating inventory! Error: ${error}`);
-        res.status(500).json({ error: 'Error updating inventory!' });
+        res.status(500).json({status: 500, message: 'Error updating inventory!' });
     }
 };
 
@@ -74,18 +74,18 @@ const create = async (req, res) => {
 
         if (existingInventory.length > 0) {
             await poolConnection.query('ROLLBACK');
-            return res.status(400).json({ error: 'Inventory already exists for the specified menu item and category!' });
+            return res.status(400).json({status: 400, message: 'Inventory already exists for the specified menu item and category!' });
         }
 
         const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, Unit, CategoryID, available, reserved, on_hand) VALUES (?, ?, 1, ?, ?, ?)';
         await poolConnection.query(insertInventoryQuery, [menuitem_id, unit, available, reserved, on_hand]);
 
         await poolConnection.query('COMMIT');
-        res.status(201).json({ message: 'Inventory created successfully!' });
+        res.status(201).json({status: 201, message: 'Inventory created successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error(`Error creating inventory! Error: ${error}`);
-        res.status(500).json({ error: 'Error creating inventory!' });
+        res.status(500).json({status: 500, message: 'Error creating inventory!' });
     }
 };
 
@@ -105,11 +105,11 @@ const updateOnHand = async (req, res) => {
         }
 
         await poolConnection.query('COMMIT');
-        res.status(200).json({ message: 'Inventory updated successfully!' });
+        res.status(200).json({status: 200, message: 'Inventory updated successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error(`Error updating inventory! Error: ${error}`);
-        res.status(500).json({ error: 'Error updating inventory!' });
+        res.status(500).json({status: 500, message: 'Error updating inventory!' });
     }
 }
 

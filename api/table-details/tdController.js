@@ -37,7 +37,7 @@ const getAll = async (req, res) => {
         const result = await poolConnection.query(query, [tableId]);
 
         if (result.length == 0) {
-            res.status(200).json({ message: "Table is already PAID and AVAILABLE!" });
+            res.status(200).json({status: 200, message: "Table is already PAID and AVAILABLE!" });
         } else {
             const formattedResult = result.map(order => ({
                 ...order,
@@ -49,7 +49,7 @@ const getAll = async (req, res) => {
 
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while fetching order details!');
+        res.status(500).json({status: 500, message: 'Error while fetching order details!'});
     }
 };
 
@@ -66,7 +66,7 @@ const removeItem = async (req, res) => {
 
         if (checkOrderResult.length === 0) {
             await poolConnection.query('ROLLBACK');
-            return res.status(404).json({ message: 'Order not found!' });
+            return res.status(404).json({status: 404, message: 'Order not found!' });
         }
 
         // Check if the item exists in the order
@@ -75,7 +75,7 @@ const removeItem = async (req, res) => {
 
         if (checkItemResult.length === 0) {
             await poolConnection.query('ROLLBACK');
-            return res.status(404).json({ message: 'Item not found in the order!' });
+            return res.status(404).json({status: 404, message: 'Item not found in the order!' });
         }
 
         // Get the quantity of the item being removed
@@ -105,14 +105,14 @@ const removeItem = async (req, res) => {
         // Commit the transaction
         await poolConnection.query('COMMIT');
 
-        res.status(200).json({ message: 'Item removed from the order successfully!' });
+        res.status(200).json({status: 200, message: 'Item removed from the order successfully!' });
 
     } catch (error) {
         // Rollback the transaction in case of an error
         await poolConnection.query('ROLLBACK');
 
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error removing item from the order!');
+        res.status(500).json({status: 500, message: 'Error removing item from the order!'});
     }
 }
 
@@ -129,7 +129,7 @@ const updateItemQuantity = async (req, res) => {
 
         if (checkOrderResult.length === 0) {
             await poolConnection.query('ROLLBACK');
-            return res.status(404).json({ message: 'Order not found!' });
+            return res.status(404).json({status: 404, message: 'Order not found!' });
         }
 
         // Check if the item exists in the order
@@ -138,7 +138,7 @@ const updateItemQuantity = async (req, res) => {
 
         if (checkItemResult.length === 0) {
             await poolConnection.query('ROLLBACK');
-            return res.status(404).json({ message: 'Item not found in the order!' });
+            return res.status(404).json({status: 404, message: 'Item not found in the order!' });
         }
 
         // Get the existing quantity of the item in the order
@@ -165,13 +165,13 @@ const updateItemQuantity = async (req, res) => {
         // Commit the transaction
         await poolConnection.query('COMMIT');
 
-        res.status(200).json({ message: 'Item quantity updated successfully!'});
+        res.status(200).json({status: 200, message: 'Item quantity updated successfully!'});
     } catch (error) {
         // Rollback the transaction in case of an error
         await poolConnection.query('ROLLBACK');
 
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error updating item quantity in the order!');
+        res.status(500).json({status: 500, message: 'Error updating item quantity in the order!'});
     }
 };
 
@@ -185,10 +185,10 @@ const mrkPaid = async (req, res) => {
         const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = (SELECT table_id FROM orders WHERE OrderID = ?)';
         await poolConnection.query(updateTableQuery, [orderId]);
 
-        res.status(200).json({ message: 'Order status updated to "paid" and table status set to "available" successfully!' });
+        res.status(200).json({status: 200, message: 'Order status updated to "paid" and table status set to "available" successfully!' });
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error updating order status and table status!');
+        res.status(500).json({status: 500, message: 'Error updating order status and table status!'});
     }
 }
 
@@ -203,7 +203,7 @@ const cancel = async (req, res) => {
 
         if (tableIdResult.length === 0) {
             await poolConnection.query('ROLLBACK');
-            return res.status(404).json({ message: 'Order not found!' });
+            return res.status(404).json({status: 404, message: 'Order not found!' });
         }
 
         const tableId = tableIdResult[0].table_id;
@@ -227,13 +227,13 @@ const cancel = async (req, res) => {
 
         await poolConnection.query('COMMIT');
 
-        res.status(200).json({ message: 'Order deleted successfully and table status set to "available"!' });
+        res.status(200).json({status: 200, message: 'Order deleted successfully and table status set to "available"!' });
 
     } catch (error) {
         await poolConnection.query('ROLLBACK');
 
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error deleting order and updating table status!');
+        res.status(500).json({status: 500, message: 'Error deleting order and updating table status!'});
     }
 }
 

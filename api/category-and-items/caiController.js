@@ -44,7 +44,7 @@ const getAll = async (req, res) => {
         res.status(200).json(categoriesData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while fetching categories!');
+        res.status(500).json({status: 500, message: 'Error while fetching categories!'});
     }
 }
 
@@ -82,7 +82,7 @@ const getAll2 = async (req, res) => {
         res.status(200).json(subcategoriesData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while fetching subcategories and items!');
+        res.status(500).json({status: 500, message: 'Error while fetching subcategories and items!'});
     }
 }
 
@@ -154,7 +154,7 @@ const getAll3 = async (req, res) => {
         res.status(200).json(subcategoriesData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while fetching subcategories and items!');
+        res.status(500).json({status: 500, message: 'Error while fetching subcategories and items!'});
     }
 }
 
@@ -182,7 +182,7 @@ const getAllSimpleV3 = async (req, res) => {
         const result = await poolConnection.query(sql, [subcategoryId]);
 
         if (result.length === 0) {
-            res.status(404).json({ message: 'Subcategory not found!' });
+            res.status(404).json({status: 404, message: 'Subcategory not found!' });
             return;
         }
 
@@ -199,7 +199,7 @@ const getAllSimpleV3 = async (req, res) => {
         res.status(200).json(subcategoryData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while fetching subcategory and items!');
+        res.status(500).json({status: 500, message: 'Error while fetching subcategory and items!'});
     }
 }
 
@@ -233,7 +233,7 @@ const getAll2ById = async (req, res) => {
         const result = await poolConnection.query(sql, [subcategoryId]);
 
         if (result.length === 0) {
-            res.status(404).json({ message: 'Subcategory not found!' });
+            res.status(404).json({status: 404, message: 'Subcategory not found!' });
             return;
         }
 
@@ -246,7 +246,7 @@ const getAll2ById = async (req, res) => {
         res.status(200).json(subcategoryData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json('Error while fetching subcategory and items!');
+        res.status(500).json({status: 500, message: 'Error while fetching subcategory and items!'});
     }
 }
 
