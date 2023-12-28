@@ -27,10 +27,10 @@ const createEqSplit = async (req, res) => {
         const splitAmount = orderTotalAmount / numberOfPersons;
 
         // Insert split details into split_bill table
-        const insertSplitQuery = 'INSERT INTO bill_split (OrderID, SplitAmount, PersonNumber, SplitType) VALUES (?, ?, ?, ?)';
+        const insertSplitQuery = 'INSERT INTO bill_split (OrderID, SplitAmount, PersonNumber) VALUES (?, ?, ?)';
 
         for (let i = 1; i <= numberOfPersons; i++) {
-            await poolConnection.query(insertSplitQuery, [orderId, splitAmount, i, 'eqsplit']);
+            await poolConnection.query(insertSplitQuery, [orderId, splitAmount, i]);
         }
 
         const updateOrderStatusQuery = 'UPDATE orders SET order_status = "paid" WHERE OrderID = ?';

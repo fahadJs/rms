@@ -53,7 +53,6 @@ app.use('/api/order', orderRouter);
 // For Testing
 app.use('/api/duplicate', duplicate);
 
-
 app.use('/api/inventory', inventoryRouter);
 app.use('/api/tabledetail', tdRouter);
 app.use('/api/category', categoryRouter);
