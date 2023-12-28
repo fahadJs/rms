@@ -14,10 +14,10 @@ const create = async (req, res) => {
         const insertAdminValues = [login_id, hashedPassword, restaurant_id];
         await poolConnection.query(insertAdminQuery, insertAdminValues);
 
-        res.status(201).json({ message: 'Admin created successfully!' });
+        res.status(201).json({status: 201, message: 'Admin created successfully!' });
     } catch (error) {
         console.error(`Error creating admin! Error: ${error}`);
-        res.status(500).json({ error: 'Error creating admin!' });
+        res.status(500).json({status: 500, message: 'Error creating admin!' });
     }
 }
 
@@ -28,11 +28,14 @@ const adLogin = async (req, res) => {
         const result = await poolConnection.query(getAdminQuery, [login_id]);
 
         if (result.length === 0) {
-            res.status(404).json({ message: 'Admin not found!' });
+            res.status(404).json({status: 404, message: 'Admin not found!' });
             return;
         }
 
         const admin = result[0];
+
+        const getRestaurantCurrency = 'SELECT * FROM restaurants WHERE restaurant_id = ?';
+        const currencyResult = await poolConnection.query(getRestaurantCurrency, [admin.restaurant_id]);
 
         const passwordMatch = await bcrypt.compare(login_pass, admin.login_pass);
 
@@ -40,6 +43,7 @@ const adLogin = async (req, res) => {
             const tokenPayload = {
                 admin_id: admin.admin_id,
                 restaurant_id: admin.restaurant_id || null,
+                currency: currencyResult.default_currency
             };
 
             const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '12h'});
@@ -49,14 +53,15 @@ const adLogin = async (req, res) => {
                 message: 'Login successful!',
                 admin_id: tokenPayload.admin_id,
                 restaurant_id: tokenPayload.restaurant_id,
+                currency: tokenPayload.currency,
                 token,
             });
         } else {
-            res.status(401).json({ message: 'Incorrect password!' });
+            res.status(401).json({status: 401, message: 'Incorrect password!' });
         }
     } catch (error) {
         console.error(`Error logging in! Error: ${error}`);
-        res.status(500).json({ error: 'Error logging in!' });
+        res.status(500).json({status: 500, message: 'Error logging in!' });
     }
 }
 

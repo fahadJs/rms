@@ -31,6 +31,12 @@ const splitBillRouter = require('./api/split-bill/splitBillRouter');
 const ingredientsRouter = require('./api/ingredient/ingredientRouter');
 const riRouter = require('./api/recipe-items/riRouter');
 
+// Parameter Testing
+const testRouter = require('./api/test/testRouter');
+
+// Telegram
+const telegramRouter = require('./api/telegram/telegramRouter');
+
 // Admin
 const adminRouter = require('./admin/adminRouter');
 const bosyParser = require('body-parser');
@@ -58,6 +64,12 @@ app.use('/api/posorders', posorderRouter);
 app.use('/api/split', splitBillRouter);
 app.use('/api/ingredients', ingredientsRouter);
 app.use('/api/recipeitems', riRouter);
+
+// For Parameter Testing
+app.use('/api/test',testRouter);
+
+// Telegram
+app.use('/api/telegram', telegramRouter);
 
 // Admin
 app.use('/admin', adminRouter);
