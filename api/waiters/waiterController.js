@@ -50,7 +50,7 @@ const wLogin = async (req, res) => {
             res.status(200).json({
                 status: 200,
                 message: 'Login successful!',
-                waiter_Id: tokenPayload.waiter_id,
+                waiter_id: tokenPayload.waiter_id,
                 restaurant_id: tokenPayload.restaurant_id,
                 token,
             });
