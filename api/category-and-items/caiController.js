@@ -50,6 +50,8 @@ const getAll = async (req, res) => {
 
 const getAll2 = async (req, res) => {
     try {
+        const { restaurant_id } = req.params;
+
         let sql = `
             SELECT 
                 subcategories.SubcategoryID AS subcategory_id,
@@ -67,11 +69,14 @@ const getAll2 = async (req, res) => {
                 menuitem_categories
                 LEFT JOIN subcategories ON menuitem_categories.SubcategoryID = subcategories.SubcategoryID
                 LEFT JOIN menuitems ON menuitem_categories.MenuItemID = menuitems.MenuItemID
+                LEFT JOIN kitchens ON menuitem_categories.KitchenID = kitchens.KitchenID
+            WHERE 
+                kitchens.restaurant_id = ?  -- Filter by restaurant_id
             GROUP BY
                 subcategory_id, subcategory_name
         `;
 
-        const result = await poolConnection.query(sql);
+        const result = await poolConnection.query(sql, [restaurant_id]);
 
         const subcategoriesData = result.map(row => ({
             subcategory_id: row.subcategory_id,
@@ -82,7 +87,7 @@ const getAll2 = async (req, res) => {
         res.status(200).json(subcategoriesData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while fetching subcategories and items!'});
+        res.status(500).json({ status: 500, message: 'Error while fetching subcategories and items!' });
     }
 }
 
@@ -205,7 +210,7 @@ const getAllSimpleV3 = async (req, res) => {
 
 const getAll2ById = async (req, res) => {
     try {
-        const subcategoryId = req.params.id;
+        const { subcategoryId, restaurant_id } = req.params;
 
         let sql = `
             SELECT 
@@ -224,16 +229,18 @@ const getAll2ById = async (req, res) => {
                 menuitem_categories
                 LEFT JOIN subcategories ON menuitem_categories.SubcategoryID = subcategories.SubcategoryID
                 LEFT JOIN menuitems ON menuitem_categories.MenuItemID = menuitems.MenuItemID
+                LEFT JOIN kitchens ON menuitem_categories.KitchenID = kitchens.KitchenID
             WHERE 
-                subcategories.SubcategoryID = ?
+                subcategories.SubcategoryID = ? AND
+                kitchens.restaurant_id = ?
             GROUP BY
                 subcategory_id, subcategory_name
         `;
 
-        const result = await poolConnection.query(sql, [subcategoryId]);
+        const result = await poolConnection.query(sql, [subcategoryId, restaurant_id]);
 
         if (result.length === 0) {
-            res.status(404).json({status: 404, message: 'Subcategory not found!' });
+            res.status(404).json({ status: 404, message: 'Subcategory not found!' });
             return;
         }
 
@@ -246,7 +253,7 @@ const getAll2ById = async (req, res) => {
         res.status(200).json(subcategoryData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while fetching subcategory and items!'});
+        res.status(500).json({ status: 500, message: 'Error while fetching subcategory and items!' });
     }
 }
 
