@@ -2,8 +2,14 @@ const poolConnection = require('../../config/database');
 
 const getAll = async (req, res) => {
     try {
-        const getKitchensQuery = 'SELECT * FROM kitchens';
-        const kitchens = await poolConnection.query(getKitchensQuery);
+
+        const {restaurant_id} = req.params;
+        const getKitchensQuery = 'SELECT * FROM kitchens WHERE restaurant_id = ?';
+        const kitchens = await poolConnection.query(getKitchensQuery, [restaurant_id]);
+
+        if (kitchens.length === 0) {
+            return res.status(404).json({status: 404, message: 'Kitchen not found!' });
+        }
 
         res.status(200).json(kitchens);
     } catch (error) {
@@ -14,10 +20,11 @@ const getAll = async (req, res) => {
 
 const create = async (req, res) => {
     try {
+        const { restaurant_id } = req.params;
         const { name } = req.body;
 
-        const addKitchenQuery = 'INSERT INTO kitchens (Name) VALUES (?)';
-        const addKitchenValues = [name];
+        const addKitchenQuery = 'INSERT INTO kitchens (Name, restaurant_id) VALUES (?, ?)';
+        const addKitchenValues = [name, restaurant_id];
 
         await poolConnection.query(addKitchenQuery, addKitchenValues);
 
@@ -30,11 +37,11 @@ const create = async (req, res) => {
 
 const update = async (req, res) => {
     try {
-        const kitchenId = req.params.id;
+        const {kitchenId, restaurant_id} = req.params;
         const { name } = req.body;
 
-        const updateKitchenQuery = 'UPDATE kitchens SET Name = ? WHERE KitchenID = ?';
-        const updateKitchenValues = [name, kitchenId];
+        const updateKitchenQuery = 'UPDATE kitchens SET Name = ? WHERE KitchenID = ? AND restaurant_id = ?';
+        const updateKitchenValues = [name, kitchenId, restaurant_id];
 
         await poolConnection.query(updateKitchenQuery, updateKitchenValues);
 
@@ -47,10 +54,10 @@ const update = async (req, res) => {
 
 const remove = async (req, res) => {
     try {
-        const kitchenId = req.params.id;
+        const {kitchenId, restaurant_id} = req.params;
 
-        const deleteKitchenQuery = 'DELETE FROM kitchens WHERE KitchenID = ?';
-        const deleteKitchenValues = [kitchenId];
+        const deleteKitchenQuery = 'DELETE FROM kitchens WHERE KitchenID = ? AND restaurant_id = ?';
+        const deleteKitchenValues = [kitchenId, restaurant_id];
 
         await poolConnection.query(deleteKitchenQuery, deleteKitchenValues);
 
@@ -63,11 +70,11 @@ const remove = async (req, res) => {
 
 const getById = async (req, res) => {
     try {
-        const kitchenId = req.params.id;
+        const {kitchenId, restaurant_id} = req.params;
 
         // Fetch the kitchen details by ID
-        const getKitchenQuery = 'SELECT * FROM kitchens WHERE KitchenID = ?';
-        const kitchenResult = await poolConnection.query(getKitchenQuery, [kitchenId]);
+        const getKitchenQuery = 'SELECT * FROM kitchens WHERE KitchenID = ? AND restaurant_id = ?';
+        const kitchenResult = await poolConnection.query(getKitchenQuery, [kitchenId, restaurant_id]);
 
         if (kitchenResult.length === 0) {
             return res.status(404).json({status: 404, message: 'Kitchen not found!' });
