@@ -53,7 +53,7 @@ const createItSplit = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
-        const { orderId, items } = req.body;
+        const { orderId, tid, paidVia, items } = req.body;
 
         // Fetch order details
         const getOrderQuery = 'SELECT * FROM orders WHERE OrderID = ?';
@@ -74,7 +74,7 @@ const createItSplit = async (req, res) => {
         const itemDetailsResult = await poolConnection.query(getItemDetailsQuery, [orderId]);
 
         // Calculate and insert split amounts
-        const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount) VALUES (?, ?, ?, ?)';
+        const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity) VALUES (?, ?, ?, ?, ?, ?, ?)';
         const updateOrderItemQuantityQuery = 'UPDATE order_items SET Quantity = ? WHERE OrderID = ? AND MenuItemID = ?';
         const deleteOrderItemQuery = 'DELETE FROM order_items WHERE OrderID = ? AND MenuItemID = ?';
 
@@ -82,8 +82,9 @@ const createItSplit = async (req, res) => {
             const itemDetails = itemDetailsResult.find(details => details.MenuItemID === item.menuitemID);
 
             if (itemDetails) {
-                const itemTotal = itemDetails.Price;
-                const itemSplitAmount = (itemTotal / fetchedOrder.total_amount) * item.quantity;
+                const itemTotal = itemDetails.Price * item.quantity;
+                // const itemSplitAmount = (itemTotal / fetchedOrder.total_amount) * item.quantity;
+                const itemSplitAmount = itemTotal - fetchedOrder.total_amount;
 
                 // Update order_items quantity
                 const updatedQuantity = itemDetails.Quantity - item.quantity;
@@ -95,7 +96,7 @@ const createItSplit = async (req, res) => {
                 }
 
                 // Insert into bill_split_item table
-                await poolConnection.query(insertSplitItemQuery, [orderId, item.menuitemID, itemDetails.ItemName, itemSplitAmount]);
+                await poolConnection.query(insertSplitItemQuery, [orderId, item.menuitemID, itemDetails.ItemName, itemSplitAmount, tid, paidVia, item.quantity]);
             }
         }
 
