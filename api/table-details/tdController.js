@@ -177,10 +177,10 @@ const updateItemQuantity = async (req, res) => {
 
 const mrkPaid = async (req, res) => {
     try {
-        const orderId = req.params.id;
+        const {orderId, tid, paidVia} = req.params;
 
-        const updateOrderQuery = 'UPDATE orders SET order_status = "paid" WHERE OrderID = ?';
-        await poolConnection.query(updateOrderQuery, [orderId]);
+        const updateOrderQuery = 'UPDATE orders SET order_status = "paid", tid = ? , paid_via = ? WHERE OrderID = ?';
+        await poolConnection.query(updateOrderQuery, [orderId, tid, paidVia]);
 
         const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = (SELECT table_id FROM orders WHERE OrderID = ?)';
         await poolConnection.query(updateTableQuery, [orderId]);
