@@ -84,7 +84,7 @@ const createItSplit = async (req, res) => {
             if (itemDetails) {
                 const itemTotal = itemDetails.Price * item.quantity;
                 // const itemSplitAmount = (itemTotal / fetchedOrder.total_amount) * item.quantity;
-                const itemSplitAmount = itemTotal - fetchedOrder.total_amount;
+                const itemSplitAmount = fetchedOrder.total_amount - itemTotal;
 
                 // Update order_items quantity
                 const updatedQuantity = itemDetails.Quantity - item.quantity;

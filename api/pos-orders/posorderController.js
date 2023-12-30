@@ -35,6 +35,20 @@ const create = async (req, res) => {
     }
 }
 
+const mrkPaid = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+
+        const updateOrderQuery = 'UPDATE pos_orders SET order_status = "paid" WHERE OrderID = ?';
+        await poolConnection.query(updateOrderQuery, [orderId]);
+
+        res.status(200).json({status: 200, message: 'POS Order status updated to "paid" successfully!' });
+    } catch (error) {
+        console.error(`Error executing query! Error: ${error}`);
+        res.status(500).json({status: 500, message: 'Error updating order status and table status!'});
+    }
+}
+
 const getOrderById = async (req, res) => {
     try {
         const orderId = req.params.id;
@@ -107,5 +121,6 @@ const getAllOrders = async (req, res) => {
 module.exports = {
     create,
     getAllOrders,
-    getOrderById
+    getOrderById,
+    mrkPaid
 }
