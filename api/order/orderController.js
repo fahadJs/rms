@@ -1,3 +1,4 @@
+const { query } = require('express');
 const poolConnection = require('../../config/database');
 
 const create = async (req, res) => {
@@ -19,7 +20,7 @@ const create = async (req, res) => {
             const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note];
             await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
 
-            
+
             const updateInventoryQuery = 'UPDATE inventory SET on_hand = GREATEST(on_hand - ?, 0) WHERE MenuItemID = ?';
             const updateInventoryValues = [quantity, menuitemID];
             await poolConnection.query(updateInventoryQuery, updateInventoryValues);
@@ -30,13 +31,40 @@ const create = async (req, res) => {
         await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
 
         await poolConnection.query('COMMIT');
-        res.status(201).json({status: 201, message: 'Order created successfully!' });
+
+        // Fetch kitchen information
+        const kitchenInfoQuery = `
+        SELECT wc.instance_id, wi.access_token, wi.instance_number, wgi.w_group_number
+        FROM w_message_connection wc
+        JOIN WhatsAppInstances wi ON wc.instance_id = wi.instance_id
+        JOIN WGroupIds wgi ON wc.w_group_id = wgi.w_group_id
+        WHERE wc.KitchenID = ?`;
+        const kitchenInfo = await query(kitchenInfoQuery, [kitchenID]);
+        console.log(kitchenInfo);
+
+        if (kitchenInfo.length > 0) {
+            const instanceID = kitchenInfo[0].instance_name;
+            const accessToken = kitchenInfo[0].access_token;
+            const instanceNumber = kitchenInfo[0].instance_number;
+            const group_id = kitchenInfo[0].w_group_name;
+            // Prepare message
+            const message = `New order for table ${table_id} from waiter ${waiter_id}. Total: ${total_amount}.`;
+
+            // Prepare the URL
+            const apiUrl = `https://dash3.wabot.my/api/sendgroupmsg.php?group_id=${group_id}&type=text&message=${encodeURIComponent(message)}&instance_id=${instanceNumber}&access_token=${accessToken}`;
+
+            // Send message to the kitchen
+            const response = await axios.post(apiUrl);
+            console.log(`Message sent to kitchen. Response: ${JSON.stringify(response.data)}`);
+        }
+
+        res.status(201).json({ status: 201, message: 'Order created successfully!' });
     } catch (error) {
         if (poolConnection) {
             await poolConnection.query('ROLLBACK');
         }
         console.error(`Error creating order! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error creating order!' });
+        res.status(500).json({ status: 500, message: 'Error creating order!' });
     }
 }
 
@@ -79,7 +107,7 @@ const getAllOrders = async (req, res) => {
         res.status(200).json(formattedResult);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error fetching orders!' });
+        res.status(500).json({ status: 500, message: 'Error fetching orders!' });
     }
 };
 
@@ -90,7 +118,7 @@ const getOrderById = async (req, res) => {
         const order = await poolConnection.query(orderSql, [orderId]);
 
         if (!order.length) {
-            return res.status(404).json({status: 404, message: 'Order not found' });
+            return res.status(404).json({ status: 404, message: 'Order not found' });
         }
 
         const orderItemSql = 'SELECT * FROM order_items WHERE OrderID = ?';
@@ -101,7 +129,7 @@ const getOrderById = async (req, res) => {
         res.status(200).json(orderWithItems);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error fetching order!' });
+        res.status(500).json({ status: 500, message: 'Error fetching order!' });
     }
 };
 
