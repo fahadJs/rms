@@ -39,7 +39,7 @@ const mrkPaid = async (req, res) => {
     try {
         const orderId = req.params.id;
 
-        const updateOrderQuery = 'UPDATE pos_orders SET order_status = "paid" WHERE OrderID = ?';
+        const updateOrderQuery = 'UPDATE pos_orders SET order_status = "paid" WHERE PosOrderID = ?';
         await poolConnection.query(updateOrderQuery, [orderId]);
 
         res.status(200).json({status: 200, message: 'POS Order status updated to "paid" successfully!' });
