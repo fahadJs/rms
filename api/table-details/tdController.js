@@ -177,18 +177,31 @@ const updateItemQuantity = async (req, res) => {
 
 const mrkPaid = async (req, res) => {
     try {
-        const {orderId, tid, paidVia} = req.params;
-
-        const updateOrderQuery = 'UPDATE orders SET order_status = "paid", tid = ? , paid_via = ? WHERE OrderID = ?';
-        await poolConnection.query(updateOrderQuery, [orderId, tid, paidVia]);
-
+        const { orderId, tid, paidVia } = req.params;
+    
+        const startTransactionQuery = 'START TRANSACTION';
+        await poolConnection.query(startTransactionQuery);
+    
+        const updateOrderQuery = 'UPDATE orders SET order_status = "paid", tid = ?, paid_via = ? WHERE OrderID = ?';
+        await poolConnection.query(updateOrderQuery, [tid, paidVia, orderId]);
+    
         const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = (SELECT table_id FROM orders WHERE OrderID = ?)';
         await poolConnection.query(updateTableQuery, [orderId]);
-
-        res.status(200).json({status: 200, message: 'Order status updated to "paid" and table status set to "available" successfully!' });
+    
+        const commitTransactionQuery = 'COMMIT';
+        await poolConnection.query(commitTransactionQuery);
+    
+        res.status(200).json({ status: 200, message: 'Order status updated to "paid" and table status set to "available" successfully!' });
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error updating order status and table status!'});
+    
+        const rollbackTransactionQuery = 'ROLLBACK';
+        await poolConnection.query(rollbackTransactionQuery);
+    
+        res.status(500).json({ status: 500, message: 'Error updating order status and table status!' });
+    } finally {
+        // Make sure to release the connection after the transaction is completed
+        await poolConnection.release();
     }
 }
 
