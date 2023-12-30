@@ -37,6 +37,9 @@ const testRouter = require('./api/test/testRouter');
 // Telegram
 const telegramRouter = require('./api/telegram/telegramRouter');
 
+// Whatsapp
+const whatsappRouter = require('./api/whatsapp/whatsappRouter');
+
 // Admin
 const adminRouter = require('./admin/adminRouter');
 const bosyParser = require('body-parser');
@@ -69,6 +72,9 @@ app.use('/api/test',testRouter);
 
 // Telegram
 app.use('/api/telegram', telegramRouter);
+
+// Whatsapp
+app.use('/api/whatsapp', whatsappRouter);
 
 // Admin
 app.use('/admin', adminRouter);
