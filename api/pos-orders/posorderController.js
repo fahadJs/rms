@@ -1,14 +1,21 @@
 const poolConnection = require('../../config/database');
+const moment = require('moment-timezone');
 
 const create = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
-        const { time, total_amount, items } = req.body;
+        const { total_amount, items } = req.body;
         const restaurant_id = req.params.id;
 
+        const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+        const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+
+        const timeZone = timeZoneResult[0].time_zone;
+        const orderTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
         const insertOrderQuery = 'INSERT INTO pos_orders (time, total_amount, restaurant_id) VALUES (?, ?, ?)';
-        const orderValues = [time, total_amount, restaurant_id];
+        const orderValues = [orderTime, total_amount, restaurant_id];
         const orderResult = await poolConnection.query(insertOrderQuery, orderValues);
         const posOrderId = orderResult.insertId;
 
