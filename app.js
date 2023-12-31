@@ -30,6 +30,7 @@ const posorderRouter = require('./api/pos-orders/posorderRouter');
 const splitBillRouter = require('./api/split-bill/splitBillRouter');
 const ingredientsRouter = require('./api/ingredient/ingredientRouter');
 const riRouter = require('./api/recipe-items/riRouter');
+const timeRouter = require('./api/timezones/timeRouter');
 
 // Parameter Testing
 const testRouter = require('./api/test/testRouter');
@@ -66,6 +67,7 @@ app.use('/api/posorders', posorderRouter);
 app.use('/api/split', splitBillRouter);
 app.use('/api/ingredients', ingredientsRouter);
 app.use('/api/recipeitems', riRouter);
+app.use('/api/timezones', timeRouter);
 
 // For Parameter Testing
 app.use('/api/test',testRouter);

@@ -1,20 +1,26 @@
-const { query } = require('express');
 const poolConnection = require('../../config/database');
+const moment = require('moment-timezone');
 
 const create = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
-        const { waiter_id, table_id, items, total_amount, time } = req.body;
+        const { waiter_id, table_id, items, total_amount } = req.body;
         const restaurant_id = req.params.id;
 
+        const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+        const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+
+        const timeZone = timeZoneResult[0].time_zone;
+        const orderTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
         const orderInsertQuery = 'INSERT INTO orders (waiter_id, table_id, time, total_amount, restaurant_id) VALUES (?, ?, ?, ?, ?)';
-        const orderValues = [waiter_id, table_id, time, total_amount, restaurant_id];
+        const orderValues = [waiter_id, table_id, orderTime, total_amount, restaurant_id];
         const orderResult = await poolConnection.query(orderInsertQuery, orderValues);
 
         const orderID = orderResult.insertId;
 
-        const orderItemsInsertQuery = 'INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+        const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not-sent')`;
         for (const item of items) {
             const { menuitemID, name, price, quantity, kitchenID, categoryID, note } = item;
             const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note];
