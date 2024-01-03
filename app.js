@@ -32,6 +32,7 @@ const ingredientsRouter = require('./api/ingredient/ingredientRouter');
 const riRouter = require('./api/recipe-items/riRouter');
 const timeRouter = require('./api/timezones/timeRouter');
 const currencyRouter = require('./api/currency/currencyRouter');
+const expenseRouter = require('./api/expense/expenseRouter');
 
 // Parameter Testing
 const testRouter = require('./api/test/testRouter');
@@ -70,6 +71,7 @@ app.use('/api/ingredients', ingredientsRouter);
 app.use('/api/recipeitems', riRouter);
 app.use('/api/timezones', timeRouter);
 app.use('/api/currency', currencyRouter)
+app.use('/api/expense', expenseRouter);
 
 // For Parameter Testing
 app.use('/api/test',testRouter);
