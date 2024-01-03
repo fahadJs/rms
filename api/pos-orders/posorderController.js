@@ -44,10 +44,10 @@ const create = async (req, res) => {
 
 const mrkPaid = async (req, res) => {
     try {
-        const orderId = req.params.id;
+        const {orderId, tid, paidVia} = req.params;
 
-        const updateOrderQuery = 'UPDATE pos_orders SET order_status = "paid" WHERE PosOrderID = ?';
-        await poolConnection.query(updateOrderQuery, [orderId]);
+        const updateOrderQuery = 'UPDATE pos_orders SET order_status = "paid", tid = ?, paid_via = ? WHERE PosOrderID = ?';
+        await poolConnection.query(updateOrderQuery, [tid, paidVia, orderId]);
 
         res.status(200).json({status: 200, message: 'POS Order status updated to "paid" successfully!' });
     } catch (error) {
@@ -88,6 +88,8 @@ const getAllOrders = async (req, res) => {
                 pos_orders.total_amount,
                 pos_orders.restaurant_id,
                 pos_orders.bill_status,
+                pos_orders.tid,
+                pos_orders.paid_via,
                 JSON_ARRAYAGG(
                     JSON_OBJECT(
                         'PosOrderItemID', pos_order_items.PosOrderItemID,
@@ -114,6 +116,8 @@ const getAllOrders = async (req, res) => {
             total_amount: row.total_amount,
             restaurant_id: row.restaurant_id,
             bill_status: row.bill_status,
+            tid: row.tid,
+            paid_via: row.paid_via,
             order_items: JSON.parse(row.order_items),
         }));
 
