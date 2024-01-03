@@ -5,17 +5,29 @@ const getPosMonthlyExpense = async (req, res) => {
     try {
         const query = `
         SELECT 
-        DATE_FORMAT(po.time, '%b') AS name,
-        SUM(poi.Price * poi.Quantity) AS Expense,
-        SUM(po.total_amount) AS Income
-      FROM pos_orders po
-      JOIN pos_order_items poi ON po.PosOrderID = poi.PosOrderID
-      WHERE po.restaurant_id = ?
-      GROUP BY name
-      ORDER BY name;
+            DATE_FORMAT(po.time, '%b') AS month,
+            SUM(poi.Quantity * mi.CostPrice) AS Expense,
+            SUM(po.total_amount) AS Income
+        FROM 
+            pos_orders po
+            JOIN pos_order_items poi ON po.PosOrderID = poi.PosOrderID
+            JOIN menuitems mi ON poi.MenuItemID = mi.MenuItemID
+        WHERE 
+            po.restaurant_id = ?
+        GROUP BY 
+            month
+        ORDER BY 
+            month, Expense DESC;
     `;
         const data = await poolConnection.query(query, [restaurantId]);
-        res.json(data);
+
+        const formattedData = data.map(row => ({
+            name: row.month,
+            Expense: parseFloat(row.Expense.toFixed(2)),
+            Income: parseFloat(row.Income.toFixed(2))
+        }));
+
+        res.json(formattedData);
     } catch (error) {
         console.error(`Error fetching monthly report: ${error.message}`);
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
@@ -27,17 +39,30 @@ const getWaiterMonthlyExpenseAdmin = async (req, res) => {
     try {
         const query = `
         SELECT 
-        DATE_FORMAT(o.time, '%b') AS name,
-        SUM(oi.Price * oi.Quantity) AS Expense,
-        SUM(o.total_amount) AS Income
-      FROM orders o
-      JOIN order_items oi ON o.OrderID = oi.OrderID
-      WHERE o.restaurant_id = ?
-      GROUP BY name
-      ORDER BY name;
+            DATE_FORMAT(o.time, '%b') AS month,
+            SUM(oi.Quantity * mi.CostPrice) AS ItemExpense,
+            SUM(oi.Price) AS TotalIncome
+        FROM 
+            orders o
+            JOIN order_items oi ON o.OrderID = oi.OrderID
+            JOIN menuitems mi ON oi.MenuItemID = mi.MenuItemID
+        WHERE 
+            o.restaurant_id = ?
+        GROUP BY 
+            month
+        ORDER BY 
+            month, ItemExpense DESC;
     `;
         const data = await poolConnection.query(query, [restaurantId]);
-        res.json(data);
+
+        const formattedData = data.map(row => ({
+            name: row.month,
+            Expense: parseFloat(row.ItemExpense.toFixed(2)),
+            Income: parseFloat(row.TotalIncome.toFixed(2))
+        }));
+    
+
+        res.json(formattedData);
     } catch (error) {
         console.error(`Error fetching monthly report: ${error.message}`);
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
