@@ -14,8 +14,8 @@ const create = async (req, res) => {
         const timeZone = timeZoneResult[0].time_zone;
         const orderTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
-        const orderInsertQuery = 'INSERT INTO orders (waiter_id, table_id, time, total_amount, restaurant_id) VALUES (?, ?, ?, ?, ?)';
-        const orderValues = [waiter_id, table_id, orderTime, total_amount, restaurant_id];
+        const orderInsertQuery = 'INSERT INTO orders (waiter_id, table_id, time, total_amount, restaurant_id, tid, paid_via) VALUES (?, ?, ?, ?, ?)';
+        const orderValues = [waiter_id, table_id, orderTime, total_amount, restaurant_id, 'un-paid', 'un-paid'];
         const orderResult = await poolConnection.query(orderInsertQuery, orderValues);
 
         const orderID = orderResult.insertId;
@@ -85,6 +85,8 @@ const getAllOrders = async (req, res) => {
                 orders.order_status,
                 orders.bill_status,
                 orders.total_amount,
+                orders.tid,
+                orders.paid_via
                 JSON_ARRAYAGG(
                     JSON_OBJECT(
                         'OrderItemID', order_items.OrderItemID,
