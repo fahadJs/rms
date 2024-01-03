@@ -137,6 +137,77 @@ const getWaiterMonthlyExpenseAdmin = async (req, res) => {
     }
 }
 
+const getWaiterDailyExpenseAdmin = async (req, res) => {
+    const { restaurantId } = req.params;
+    try {
+        const query = `
+        SELECT 
+            DATE(o.time) AS day,
+            SUM(oi.Quantity * mi.CostPrice) AS ItemExpense,
+            SUM(oi.Price) AS TotalIncome
+        FROM 
+            orders o
+            JOIN order_items oi ON o.OrderID = oi.OrderID
+            JOIN menuitems mi ON oi.MenuItemID = mi.MenuItemID
+        WHERE 
+            o.restaurant_id = ?
+            AND DATE(o.time) = CURDATE()  -- Filter for the current day
+        GROUP BY 
+            day
+        ORDER BY 
+            day, ItemExpense DESC;
+    `;
+        const data = await poolConnection.query(query, [restaurantId]);
+
+        const formattedData = data.map(row => ({
+            name: row.day,
+            Expense: parseFloat(row.ItemExpense.toFixed(2)),
+            Income: parseFloat(row.TotalIncome.toFixed(2))
+        }));
+
+        res.json(formattedData);
+    } catch (error) {
+        console.error(`Error fetching daily report for admin: ${error.message}`);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    }
+}
+
+const getWaiterWeeklyExpenseAdmin = async (req, res) => {
+    const { restaurantId } = req.params;
+    try {
+        const query = `
+        SELECT 
+            CONCAT(YEAR(o.time), '-', WEEK(o.time)) AS week,
+            SUM(oi.Quantity * mi.CostPrice) AS ItemExpense,
+            SUM(oi.Price) AS TotalIncome
+        FROM 
+            orders o
+            JOIN order_items oi ON o.OrderID = oi.OrderID
+            JOIN menuitems mi ON oi.MenuItemID = mi.MenuItemID
+        WHERE 
+            o.restaurant_id = ?
+            AND YEARWEEK(o.time) = YEARWEEK(CURDATE())  -- Filter for the current week
+        GROUP BY 
+            week
+        ORDER BY 
+            week, ItemExpense DESC;
+    `;
+        const data = await poolConnection.query(query, [restaurantId]);
+
+        const formattedData = data.map(row => ({
+            name: row.week,
+            Expense: parseFloat(row.ItemExpense.toFixed(2)),
+            Income: parseFloat(row.TotalIncome.toFixed(2))
+        }));
+
+        res.json(formattedData);
+    } catch (error) {
+        console.error(`Error fetching weekly report for admin: ${error.message}`);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    }
+}
+
+
 const getWaiterMonthlyExpense = async (req, res) => {
     const { restaurantId } = req.params;
     try {
@@ -177,8 +248,97 @@ ORDER BY
     }
 }
 
+const getWaiterWeeklyExpense = async (req, res) => {
+    const { restaurantId } = req.params;
+    try {
+        const query = `
+        SELECT 
+            CONCAT(YEAR(o.time), '-', WEEK(o.time)) AS week,
+            oi.ItemName,
+            SUM(oi.Quantity * mi.CostPrice) AS ItemExpense,
+            SUM(oi.Price) AS TotalIncome
+        FROM 
+            orders o
+            JOIN order_items oi ON o.OrderID = oi.OrderID
+            JOIN menuitems mi ON oi.MenuItemID = mi.MenuItemID
+        WHERE 
+            o.restaurant_id = ?
+        GROUP BY 
+            week, oi.ItemName
+        ORDER BY 
+            week, ItemExpense DESC;
+    `;
+        const data = await poolConnection.query(query, [restaurantId]);
+
+        const nestedData = data.reduce((acc, row) => {
+            const { week, ItemName, ItemExpense, TotalIncome } = row;
+            acc[week] = acc[week] || [];
+            acc[week].push({
+                ItemName,
+                ItemExpense: parseFloat(ItemExpense.toFixed(2)),
+                TotalIncome: parseFloat(TotalIncome.toFixed(2)),
+            });
+            return acc;
+        }, {});
+
+        res.json({ nestedData });
+    } catch (error) {
+        console.error(`Error fetching weekly report: ${error.message}`);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    }
+}
+
+const getWaiterDailyExpense = async (req, res) => {
+    const { restaurantId } = req.params;
+    try {
+        const query = `
+        SELECT 
+            DATE(o.time) AS day,
+            oi.ItemName,
+            SUM(oi.Quantity * mi.CostPrice) AS ItemExpense,
+            SUM(oi.Price) AS TotalIncome
+        FROM 
+            orders o
+            JOIN order_items oi ON o.OrderID = oi.OrderID
+            JOIN menuitems mi ON oi.MenuItemID = mi.MenuItemID
+        WHERE 
+            o.restaurant_id = ?
+        GROUP BY 
+            day, oi.ItemName
+        ORDER BY 
+            day, ItemExpense DESC;
+    `;
+        const data = await poolConnection.query(query, [restaurantId]);
+
+        const nestedData = data.reduce((acc, row) => {
+            const { day, ItemName, ItemExpense, TotalIncome } = row;
+            acc[day] = acc[day] || [];
+            acc[day].push({
+                ItemName,
+                ItemExpense: parseFloat(ItemExpense.toFixed(2)),
+                TotalIncome: parseFloat(TotalIncome.toFixed(2)),
+            });
+            return acc;
+        }, {});
+
+        res.json({ nestedData });
+    } catch (error) {
+        console.error(`Error fetching daily report: ${error.message}`);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    }
+}
+
+
 module.exports = {
     getPosMonthlyExpense,
+    getPosWeeklyExpense,
+    getPosDailyExpense,
+
     getWaiterMonthlyExpense,
-    getWaiterMonthlyExpenseAdmin
+    getWaiterWeeklyExpense,
+    getWaiterDailyExpense,
+
+    getWaiterMonthlyExpenseAdmin,
+    getWaiterWeeklyExpenseAdmin,
+    getWaiterDailyExpenseAdmin
 }
