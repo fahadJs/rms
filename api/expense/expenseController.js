@@ -43,7 +43,19 @@ ORDER BY
     month, ItemExpense DESC;
     `;
         const data = await poolConnection.query(query, [restaurantId]);
-        res.json({ data });
+
+        const nestedData = data.reduce((acc, row) => {
+            const { month, ItemName, ItemExpense, TotalIncome } = row;
+            acc[month] = acc[month] || [];
+            acc[month].push({
+                ItemName,
+                ItemExpense: parseFloat(ItemExpense.toFixed(2)),
+                TotalIncome: parseFloat(TotalIncome.toFixed(2)),
+            });
+            return acc;
+        }, {});
+
+        res.json({ nestedData });
     } catch (error) {
         console.error(`Error fetching monthly report: ${error.message}`);
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
