@@ -15,7 +15,7 @@ const getPosMonthlyExpense = async (req, res) => {
       ORDER BY name;
     `;
         const data = await poolConnection.query(query, [restaurantId]);
-        res.json({data});
+        res.json(data);
     } catch (error) {
         console.error(`Error fetching monthly report: ${error.message}`);
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
