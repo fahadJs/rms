@@ -31,6 +31,7 @@ const splitBillRouter = require('./api/split-bill/splitBillRouter');
 const ingredientsRouter = require('./api/ingredient/ingredientRouter');
 const riRouter = require('./api/recipe-items/riRouter');
 const timeRouter = require('./api/timezones/timeRouter');
+const currencyRouter = require('./api/currency/currencyRouter');
 
 // Parameter Testing
 const testRouter = require('./api/test/testRouter');
@@ -68,6 +69,7 @@ app.use('/api/split', splitBillRouter);
 app.use('/api/ingredients', ingredientsRouter);
 app.use('/api/recipeitems', riRouter);
 app.use('/api/timezones', timeRouter);
+app.use('/api/currency', currencyRouter)
 
 // For Parameter Testing
 app.use('/api/test',testRouter);
