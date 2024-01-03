@@ -32,6 +32,11 @@ const wLogin = async (req, res) => {
 
         const waiter = result[0];
 
+        const getRestaurantQuery = 'SELECT * FROM restaurants WHERE restaurant_id = ?';
+        const restaurantResult = await poolConnection.query(getRestaurantQuery, [waiter.restaurant_id]);
+
+        const restaurants = restaurantResult[0];
+
         if (waiter.status != "allowed" ) {
             res.status(400).json({status: 400, message: 'Waiter is not allowed!' });
             return;
@@ -43,6 +48,8 @@ const wLogin = async (req, res) => {
             const tokenPayload = {
                 waiter_id: waiter.waiter_id,
                 restaurant_id: waiter.restaurant_id || null,
+                waiter_name: waiter.waiter_name,
+                currency: restaurants.default_currency
             };
 
             const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '12h'});
@@ -52,6 +59,8 @@ const wLogin = async (req, res) => {
                 message: 'Login successful!',
                 waiter_id: tokenPayload.waiter_id,
                 restaurant_id: tokenPayload.restaurant_id,
+                waiter_name: tokenPayload.waiter_name,
+                currency: tokenPayload.currency,
                 token,
             });
         } else {

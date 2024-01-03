@@ -34,6 +34,74 @@ const getPosMonthlyExpense = async (req, res) => {
     }
 }
 
+const getPosWeeklyExpense = async (req, res) => {
+    const { restaurantId } = req.params;
+    try {
+        const query = `
+        SELECT 
+            CONCAT(YEAR(po.time), '-', WEEK(po.time)) AS week,
+            SUM(poi.Quantity * mi.CostPrice) AS Expense,
+            SUM(po.total_amount) AS Income
+        FROM 
+            pos_orders po
+            JOIN pos_order_items poi ON po.PosOrderID = poi.PosOrderID
+            JOIN menuitems mi ON poi.MenuItemID = mi.MenuItemID
+        WHERE 
+            po.restaurant_id = ?
+        GROUP BY 
+            week
+        ORDER BY 
+            week, Expense DESC;
+    `;
+        const data = await poolConnection.query(query, [restaurantId]);
+
+        const formattedData = data.map(row => ({
+            name: row.week,
+            Expense: parseFloat(row.Expense.toFixed(2)),
+            Income: parseFloat(row.Income.toFixed(2))
+        }));
+
+        res.json(formattedData);
+    } catch (error) {
+        console.error(`Error fetching weekly report: ${error.message}`);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    }
+}
+
+const getPosDailyExpense = async (req, res) => {
+    const { restaurantId } = req.params;
+    try {
+        const query = `
+        SELECT 
+            DATE(po.time) AS day,
+            SUM(poi.Quantity * mi.CostPrice) AS Expense,
+            SUM(po.total_amount) AS Income
+        FROM 
+            pos_orders po
+            JOIN pos_order_items poi ON po.PosOrderID = poi.PosOrderID
+            JOIN menuitems mi ON poi.MenuItemID = mi.MenuItemID
+        WHERE 
+            po.restaurant_id = ?
+        GROUP BY 
+            day
+        ORDER BY 
+            day, Expense DESC;
+    `;
+        const data = await poolConnection.query(query, [restaurantId]);
+
+        const formattedData = data.map(row => ({
+            name: row.day,
+            Expense: parseFloat(row.Expense.toFixed(2)),
+            Income: parseFloat(row.Income.toFixed(2))
+        }));
+
+        res.json(formattedData);
+    } catch (error) {
+        console.error(`Error fetching daily report: ${error.message}`);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    }
+}
+
 const getWaiterMonthlyExpenseAdmin = async (req, res) => {
     const { restaurantId } = req.params;
     try {
