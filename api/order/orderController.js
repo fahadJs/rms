@@ -86,7 +86,7 @@ const getAllOrders = async (req, res) => {
                 orders.bill_status,
                 orders.total_amount,
                 orders.tid,
-                orders.paid_via
+                orders.paid_via,
                 JSON_ARRAYAGG(
                     JSON_OBJECT(
                         'OrderItemID', order_items.OrderItemID,
