@@ -43,7 +43,8 @@ const adLogin = async (req, res) => {
             const tokenPayload = {
                 admin_id: admin.admin_id,
                 restaurant_id: admin.restaurant_id || null,
-                currency: currencyResult.default_currency
+                currency: currencyResult[0].default_currency,
+                tax: currencyResult[0].tax
             };
 
             const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '12h'});
@@ -54,6 +55,7 @@ const adLogin = async (req, res) => {
                 admin_id: tokenPayload.admin_id,
                 restaurant_id: tokenPayload.restaurant_id,
                 currency: tokenPayload.currency,
+                tax: tokenPayload.tax,
                 token,
             });
         } else {
