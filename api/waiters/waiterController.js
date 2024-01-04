@@ -49,7 +49,9 @@ const wLogin = async (req, res) => {
                 waiter_id: waiter.waiter_id,
                 restaurant_id: waiter.restaurant_id || null,
                 waiter_name: waiter.waiter_name,
-                currency: restaurants.default_currency
+                currency: restaurants.default_currency,
+                restaurant_name: restaurants.name,
+                tax: restaurants.tax
             };
 
             const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '12h'});
@@ -61,7 +63,9 @@ const wLogin = async (req, res) => {
                 restaurant_id: tokenPayload.restaurant_id,
                 waiter_name: tokenPayload.waiter_name,
                 currency: tokenPayload.currency,
-                token,
+                restaurant_name: tokenPayload.restaurant_name,
+                tax: tokenPayload.tax,
+                token
             });
         } else {
             res.status(401).json({status: 401, message: 'Incorrect password!' });
