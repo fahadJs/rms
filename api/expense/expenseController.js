@@ -45,7 +45,7 @@ const getPosMonthlyExpense = async (req, res) => {
         });
 
         const formattedData = {
-            name: moment(startOfMonth).format('YYYY-MM'),
+            name: moment(startOfMonth).format('MMM'),
             Expense: 0,  // Set expense to 0 for now, we'll calculate it in the next step
             Income: parseFloat(totalIncome.toFixed(2))
         };
@@ -126,7 +126,7 @@ const getPosWeeklyExpense = async (req, res) => {
         });
 
         const formattedData = {
-            name: moment(startOfWeek).format('YYYY-MM-DD'),
+            name: moment(startOfWeek).format('ddd'),
             Expense: 0,  // Set expense to 0 for now, we'll calculate it in the next step
             Income: parseFloat(totalIncome.toFixed(2))
         };
@@ -205,7 +205,7 @@ const getPosDailyExpense = async (req, res) => {
         });
 
         const formattedData = {
-            name: moment(currentDate).format('YYYY-MM-DD'),
+            name: moment(currentDate).format('D'),
             Expense: 0,  // Set expense to 0 for now, we'll calculate it in the next step
             Income: parseFloat(totalIncome.toFixed(2))
         };
@@ -310,7 +310,7 @@ const getWaiterMonthlyExpenseAdmin = async (req, res) => {
         });
 
         const formattedData = {
-            name: moment(startOfMonth).format('YYYY-MM'),
+            name: moment(startOfMonth).format('MMM'),
             Expense: parseFloat(totalItemExpense.toFixed(2)),
             Income: parseFloat(totalOrderIncome.toFixed(2)),
         };
@@ -393,7 +393,7 @@ const getWaiterDailyExpenseAdmin = async (req, res) => {
         });
 
         const formattedData = {
-            name: moment(startOf24HoursAgo).format('YYYY-MM-DD HH:mm:ss'),
+            name: moment(startOf24HoursAgo).format('D'),
             Expense: parseFloat(totalItemExpense.toFixed(2)),
             Income: parseFloat(totalOrderIncome.toFixed(2)),
         };
@@ -476,7 +476,7 @@ const getWaiterWeeklyExpenseAdmin = async (req, res) => {
         });
 
         const formattedData = {
-            name: moment(startOfLastWeek).format('YYYY-MM-DD HH:mm:ss'),
+            name: moment(startOfLastWeek).format('ddd'),
             Expense: parseFloat(totalItemExpense.toFixed(2)),
             Income: parseFloat(totalOrderIncome.toFixed(2)),
         };
