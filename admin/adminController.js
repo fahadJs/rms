@@ -43,6 +43,7 @@ const adLogin = async (req, res) => {
             const tokenPayload = {
                 admin_id: admin.admin_id,
                 restaurant_id: admin.restaurant_id || null,
+                restaurant_name: currencyResult[0].name,
                 currency: currencyResult[0].default_currency,
                 tax: currencyResult[0].tax
             };
@@ -56,6 +57,7 @@ const adLogin = async (req, res) => {
                 restaurant_id: tokenPayload.restaurant_id,
                 currency: tokenPayload.currency,
                 tax: tokenPayload.tax,
+                restaurant_name: tokenPayload.restaurant_name,
                 token,
             });
         } else {
