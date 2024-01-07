@@ -23,10 +23,21 @@ const create = async (req, res) => {
           INSERT INTO pos_order_items (PosOrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
+        const orderExtrasInsertQuery = `INSERT INTO pos_order_extras (PosOrderItemID, extras_id) VALUES (?, ?)`;
+
         for (const item of items) {
-            const { menuitemID, name, price, quantity, kitchenID, categoryID, note } = item;
+            const { menuitemID, name, price, quantity, kitchenID, categoryID, note, extras } = item;
             const orderItemsValues = [posOrderId, menuitemID, name, price, quantity, kitchenID, categoryID, note];
-            await poolConnection.query(insertOrderItemsQuery, orderItemsValues);
+            const orderItemsResult = await poolConnection.query(insertOrderItemsQuery, orderItemsValues);
+
+            const posOrderItemID = orderItemsResult.insertId;
+
+            if (extras && extras.length > 0) {
+                for (const extra of extras) {
+                    const orderExtrasValues = [posOrderItemID, extra.extras_id];
+                    await poolConnection.query(orderExtrasInsertQuery, orderExtrasValues);
+                }
+            }
 
             const updateInventoryQuery = 'UPDATE inventory SET on_hand = GREATEST(on_hand - ?, 0) WHERE MenuItemID = ?';
             const updateInventoryValues = [quantity, menuitemID];
@@ -34,25 +45,25 @@ const create = async (req, res) => {
         }
 
         await poolConnection.query('COMMIT');
-        res.status(201).json({status: 201, message: 'POS order placed successfully!' });
+        res.status(201).json({ status: 201, message: 'POS order placed successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error(`Error placing POS order! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error placing POS order!' });
+        res.status(500).json({ status: 500, message: 'Error placing POS order!' });
     }
 }
 
 const mrkPaid = async (req, res) => {
     try {
-        const {orderId, tid, paidVia} = req.params;
+        const { orderId, tid, paidVia } = req.params;
 
         const updateOrderQuery = 'UPDATE pos_orders SET order_status = "paid", tid = ?, paid_via = ? WHERE PosOrderID = ?';
         await poolConnection.query(updateOrderQuery, [tid, paidVia, orderId]);
 
-        res.status(200).json({status: 200, message: 'POS Order status updated to "paid" successfully!' });
+        res.status(200).json({ status: 200, message: 'POS Order status updated to "paid" successfully!' });
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error updating order status and table status!'});
+        res.status(500).json({ status: 500, message: 'Error updating order status and table status!' });
     }
 }
 
@@ -63,7 +74,7 @@ const getOrderById = async (req, res) => {
         const order = await poolConnection.query(orderSql, [orderId]);
 
         if (!order.length) {
-            return res.status(404).json({status: 404, message: 'Order not found' });
+            return res.status(404).json({ status: 404, message: 'Order not found' });
         }
 
         const orderItemSql = 'SELECT * FROM pos_order_items WHERE PosOrderID = ?';
@@ -74,7 +85,7 @@ const getOrderById = async (req, res) => {
         res.status(200).json(orderWithItems);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error fetching order!' });
+        res.status(500).json({ status: 500, message: 'Error fetching order!' });
     }
 };
 
@@ -124,7 +135,7 @@ const getAllOrders = async (req, res) => {
         res.status(200).json(ordersData);
     } catch (error) {
         console.error(`Error fetching POS orders! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error fetching POS orders!' });
+        res.status(500).json({ status: 500, message: 'Error fetching POS orders!' });
     }
 
 };

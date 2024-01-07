@@ -21,11 +21,22 @@ const create = async (req, res) => {
         const orderID = orderResult.insertId;
 
         const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not-sent')`;
-        for (const item of items) {
-            const { menuitemID, name, price, quantity, kitchenID, categoryID, note } = item;
-            const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note];
-            await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
 
+        const orderExtrasInsertQuery = `INSERT INTO order_extras (OrderItemID, extras_id) VALUES (?, ?)`;
+
+        for (const item of items) {
+            const { menuitemID, name, price, quantity, kitchenID, categoryID, note, extras } = item;
+            const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note];
+            const orderItemsResult = await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
+
+            const orderItemID = orderItemsResult.insertId;
+
+            if (extras && extras.length > 0) {
+                for (const extra of extras) {
+                    const orderExtrasValues = [orderItemID, extra.extras_id];
+                    await poolConnection.query(orderExtrasInsertQuery, orderExtrasValues);
+                }
+            }
 
             const updateInventoryQuery = 'UPDATE inventory SET on_hand = GREATEST(on_hand - ?, 0) WHERE MenuItemID = ?';
             const updateInventoryValues = [quantity, menuitemID];
@@ -37,32 +48,6 @@ const create = async (req, res) => {
         await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
 
         await poolConnection.query('COMMIT');
-
-        // // Fetch kitchen information
-        // const kitchenInfoQuery = `
-        // SELECT wc.instance_id, wi.access_token, wi.instance_number, wgi.w_group_number
-        // FROM w_message_connection wc
-        // JOIN WhatsAppInstances wi ON wc.instance_id = wi.instance_id
-        // JOIN WGroupIds wgi ON wc.w_group_id = wgi.w_group_id
-        // WHERE wc.KitchenID = ?`;
-        // const kitchenInfo = await query(kitchenInfoQuery, [kitchenID]);
-        // console.log(kitchenInfo);
-
-        // if (kitchenInfo.length > 0) {
-        //     const instanceID = kitchenInfo[0].instance_name;
-        //     const accessToken = kitchenInfo[0].access_token;
-        //     const instanceNumber = kitchenInfo[0].instance_number;
-        //     const group_id = kitchenInfo[0].w_group_name;
-        //     // Prepare message
-        //     const message = `New order for table ${table_id} from waiter ${waiter_id}. Total: ${total_amount}.`;
-
-        //     // Prepare the URL
-        //     const apiUrl = `https://dash3.wabot.my/api/sendgroupmsg.php?group_id=${group_id}&type=text&message=${encodeURIComponent(message)}&instance_id=${instanceNumber}&access_token=${accessToken}`;
-
-        //     // Send message to the kitchen
-        //     const response = await axios.post(apiUrl);
-        //     console.log(`Message sent to kitchen. Response: ${JSON.stringify(response.data)}`);
-        // }
 
         res.status(201).json({ status: 201, message: 'Order created successfully!' });
     } catch (error) {
