@@ -80,6 +80,97 @@ const getPosMonthlyExpense = async (req, res) => {
         console.error(`Error fetching monthly report: ${error.message}`);
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
     }
+
+    // const { restaurantId } = req.params;
+    // try {
+    //     const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
+    //     const currentDateResult = await poolConnection.query(currentDateQuery, [restaurantId]);
+
+    //     if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
+    //         throw new Error("Time zone not available for the restaurant");
+    //     }
+
+    //     const timeZone = currentDateResult[0].time_zone;
+    //     const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+    //     console.log(`Current Date: ${currentDate}`);
+
+    //     // Calculate the start date of the current month
+    //     const startOfMonth = moment(currentDate).startOf('month').format('YYYY-MM-DD HH:mm:ss');
+
+    //     console.log('Start of the month: ', startOfMonth);
+
+    //     // Fetch orders within the current month
+    //     const ordersQuery = `
+    //     SELECT 
+    //         po.PosOrderID,
+    //         po.total_amount AS Income,
+    //         DATE_FORMAT(po.time, '%b') AS Month
+    //     FROM 
+    //         pos_orders po
+    //     WHERE 
+    //         po.restaurant_id = ?
+    //         AND po.time >= ?
+    // `;
+    //     const ordersData = await poolConnection.query(ordersQuery, [restaurantId, startOfMonth]);
+
+    //     console.log("Orders within the month:", ordersData);
+
+    //     // Initialize an array to store monthly data
+    //     const monthlyData = [];
+
+    //     // Loop through each month and calculate data
+    //     for (let i = 0; i < 12; i++) {
+    //         const monthStart = moment(currentDate).startOf('year').add(i, 'months');
+    //         const monthKey = monthStart.format('MMM');
+
+    //         const monthData = {
+    //             name: monthKey,
+    //             Expense: 0,
+    //             Income: 0
+    //         };
+
+    //         // Find data for the current month
+    //         const monthOrders = ordersData.filter(order => order.Month === monthKey);
+
+    //         // Calculate total Income for all orders in the month
+    //         monthOrders.forEach(order => {
+    //             monthData.Income += order.Income;
+    //         });
+
+    //         // Calculate total Expense for all orders in the month
+    //         const posOrderIds = monthOrders.map(order => order.PosOrderID);
+    //         if (posOrderIds.length > 0) {
+    //             const itemsQuery = `
+    //             SELECT 
+    //                 PosOrderID,
+    //                 SUM(poi.Quantity * mi.CostPrice) AS Expense
+    //             FROM 
+    //                 pos_order_items poi
+    //                 JOIN menuitems mi ON poi.MenuItemID = mi.MenuItemID
+    //             WHERE 
+    //                 PosOrderID IN (?)
+    //             GROUP BY 
+    //                 PosOrderID
+    //         `;
+    //             const itemsData = await poolConnection.query(itemsQuery, [posOrderIds]);
+
+    //             // Aggregate the expense for each order in the month
+    //             itemsData.forEach(item => {
+    //                 monthData.Expense += item.Expense;
+    //             });
+    //         }
+
+    //         // Add the monthData to the monthlyData array
+    //         monthlyData.push(monthData);
+    //     }
+
+    //     res.json(monthlyData);
+    // } catch (error) {
+    //     console.error(`Error fetching monthly report: ${error.message}`);
+    //     res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    // }
+
 }
 
 const getPosWeeklyExpense = async (req, res) => {
