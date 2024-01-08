@@ -3,7 +3,7 @@ const poolConnection = require('../../config/database');
 const getById = async (req, res) => {
     try {
         let id = req.params.id;
-        let sql = 'SELECT * FROM floor_plans JOIN floors ON floor_plans.restaurant_id = floors.restaurant_id LEFT JOIN tables ON floors.floor_id = tables.floor_id WHERE floor_plans.restaurant_id = ?';
+        let sql = `SELECT * FROM floor_plans JOIN floors ON floor_plans.restaurant_id = floors.restaurant_id LEFT JOIN tables ON floors.floor_id = tables.floor_id LEFT JOIN orders on tables.table_id = orders.table_id WHERE floor_plans.restaurant_id = ?`;
         let values = id;
         const result = await poolConnection.query(sql, values);
 
@@ -14,7 +14,8 @@ const getById = async (req, res) => {
                     tables: {
                         seats: results.seats,
                         status: results.status,
-                        table_id: results.table_name
+                        table_id: results.table_name,
+                        time: results.order_status === 'unpaid' ? results.time : null
                     }
                 }
             }
