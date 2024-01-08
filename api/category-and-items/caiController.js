@@ -1,33 +1,35 @@
 const poolConnection = require('../../config/database');
 
 const getAll = async (req, res) => {
+    const {restaurant_id} = req.params;
     try {
         let sql = `
-            SELECT 
-                categories.CategoryID AS category_id,
-                categories.CategoryName AS category_name,
-                subcategories.SubcategoryID AS subcategory_id,
-                subcategories.SubcategoryName AS subcategory_name,
-                (
-                    SELECT JSON_ARRAYAGG(
-                        JSON_OBJECT(
-                            'item_id', menuitems.MenuItemID,
-                            'item_name', menuitems.Name,
-                            'item_description', menuitems.Description,
-                            'item_price', menuitems.Price
-                        )
-                    )
-                    FROM menuitem_categories
-                    JOIN menuitems ON menuitem_categories.MenuItemID = menuitems.MenuItemID
-                    WHERE menuitem_categories.SubcategoryID = subcategories.SubcategoryID
-                ) AS menu
-            FROM 
-                categories
-                LEFT JOIN menuitem_categories ON categories.CategoryID = menuitem_categories.CategoryID
-                LEFT JOIN subcategories ON menuitem_categories.SubcategoryID = subcategories.SubcategoryID
-        `;
+        SELECT 
+        categories.CategoryID AS category_id,
+        categories.CategoryName AS category_name,
+        subcategories.SubcategoryID AS subcategory_id,
+        subcategories.SubcategoryName AS subcategory_name,
+        (
+            SELECT JSON_ARRAYAGG(
+                JSON_OBJECT(
+                    'item_id', menuitems.MenuItemID,
+                    'item_name', menuitems.Name,
+                    'item_description', menuitems.Description,
+                    'item_price', menuitems.Price
+                )
+            )
+            FROM menuitem_categories
+            JOIN menuitems ON menuitem_categories.MenuItemID = menuitems.MenuItemID
+            WHERE menuitem_categories.SubcategoryID = subcategories.SubcategoryID
+                AND menuitems.restaurant_id = ?
+        ) AS menu
+    FROM 
+        categories
+        LEFT JOIN menuitem_categories ON categories.CategoryID = menuitem_categories.CategoryID
+        LEFT JOIN subcategories ON menuitem_categories.SubcategoryID = subcategories.SubcategoryID
+`;
 
-        const result = await poolConnection.query(sql);
+        const result = await poolConnection.query(sql, [restaurant_id]);
 
         const categoriesData = result.map(row => ({
             category_id: row.category_id,
@@ -44,14 +46,14 @@ const getAll = async (req, res) => {
         res.status(200).json(categoriesData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while fetching categories!'});
+        res.status(500).json({ status: 500, message: 'Error while fetching categories!' });
     }
 }
 
 // const getAll2 = async (req, res) => {
 //     try {
 //         const { restaurant_id } = req.params;
-    
+
 //         let sql = `
 //             SELECT 
 //                 subcategories.SubcategoryID AS subcategory_id,
@@ -91,28 +93,28 @@ const getAll = async (req, res) => {
 //             GROUP BY
 //                 subcategory_id, subcategory_name, menuitems.MenuItemID;
 //         `;
-    
+
 //         const result = await poolConnection.query(sql, [restaurant_id]);
-    
+
 //         const subcategoriesData = result.map(row => ({
 //             subcategory_id: row.subcategory_id,
 //             subcategory_name: row.subcategory_name,
 //             items: JSON.parse(row.items),
 //         }));
-    
+
 //         res.status(200).json(subcategoriesData);
 //     } catch (error) {
 //         console.error(`Error executing query! Error: ${error}`);
 //         res.status(500).json({ status: 500, message: 'Error while fetching subcategories and items!' });
 //     }
-    
-    
+
+
 // }
 
 const getAll2 = async (req, res) => {
     try {
         const { restaurant_id } = req.params;
-    
+
         let sql = `
             SELECT 
                 subcategories.SubcategoryID AS subcategory_id,
@@ -136,11 +138,11 @@ const getAll2 = async (req, res) => {
             ORDER BY
                 subcategories.SubcategoryID, menuitems.MenuItemID;
         `;
-    
+
         const result = await poolConnection.query(sql, [restaurant_id]);
-    
+
         const groupedItems = {};
-    
+
         result.forEach(row => {
             const key = `${row.subcategory_id}_${row.subcategory_name}`;
             if (!groupedItems[key]) {
@@ -150,10 +152,10 @@ const getAll2 = async (req, res) => {
                     items: [],
                 };
             }
-    
+
             const itemKey = `${row.MenuItemID}_${row.item_name}`;
             const existingItem = groupedItems[key].items.find(item => item.key === itemKey);
-    
+
             if (!existingItem) {
                 const item = {
                     key: itemKey,
@@ -162,9 +164,9 @@ const getAll2 = async (req, res) => {
                     item_description: row.item_description,
                     item_price: row.item_price,
                     kitchen_id: row.kitchen_id,
-                    extras: [], 
+                    extras: [],
                 };
-    
+
                 if (row.extras_id) {
                     item.extras.push({
                         extras_id: row.extras_id,
@@ -172,7 +174,7 @@ const getAll2 = async (req, res) => {
                         extras_price: row.extras_price,
                     });
                 }
-    
+
                 groupedItems[key].items.push(item);
             } else {
                 if (row.extras_id) {
@@ -191,9 +193,9 @@ const getAll2 = async (req, res) => {
                 item.extras.sort((a, b) => a.extras_id - b.extras_id);
             });
         });
-    
+
         const subcategoriesData = Object.values(groupedItems);
-    
+
         res.status(200).json(subcategoriesData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
@@ -269,7 +271,7 @@ const getAll3 = async (req, res) => {
         res.status(200).json(subcategoriesData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while fetching subcategories and items!'});
+        res.status(500).json({ status: 500, message: 'Error while fetching subcategories and items!' });
     }
 }
 
@@ -297,7 +299,7 @@ const getAllSimpleV3 = async (req, res) => {
         const result = await poolConnection.query(sql, [subcategoryId]);
 
         if (result.length === 0) {
-            res.status(404).json({status: 404, message: 'Subcategory not found!' });
+            res.status(404).json({ status: 404, message: 'Subcategory not found!' });
             return;
         }
 
@@ -314,7 +316,7 @@ const getAllSimpleV3 = async (req, res) => {
         res.status(200).json(subcategoryData);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while fetching subcategory and items!'});
+        res.status(500).json({ status: 500, message: 'Error while fetching subcategory and items!' });
     }
 }
 

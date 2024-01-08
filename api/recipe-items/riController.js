@@ -2,7 +2,8 @@ const poolConnection = require("../../config/database");
 
 const getAll = async (req, res) => {
     try {
-        const rows = await poolConnection.query('SELECT * FROM recipe_items');
+        const {restaurant_id} = req.params;
+        const rows = await poolConnection.query('SELECT * FROM recipe_items WHERE restaurant_id = ?',[restaurant_id]);
         res.status(200).json(rows);
     } catch (error) {
         console.error(`Error fetching recipe items! ${error.message}`);
@@ -12,6 +13,7 @@ const getAll = async (req, res) => {
 
 const getAllWithIngredients = async (req, res) => {
     try {
+        const {restaurant_id} = req.params;
         const query = `
             SELECT
                 menuitems.MenuItemID,
@@ -24,11 +26,13 @@ const getAllWithIngredients = async (req, res) => {
                 recipe_items ON menuitems.MenuItemID = recipe_items.MenuItemID
             INNER JOIN
                 ingredients ON recipe_items.IngredientID = ingredients.IngredientID
+            WHERE
+                menuitems.restaurant_id = ?
             GROUP BY
                 menuitems.MenuItemID
         `;
     
-        const rows = await poolConnection.query(query);
+        const rows = await poolConnection.query(query, [restaurant_id]);
     
         // Parse the ingredients column to ensure proper JSON format
         const result = rows.map(row => ({
@@ -47,6 +51,7 @@ const getAllWithIngredients = async (req, res) => {
 
 const create = async (req, res) => {
     try {
+        const {restaurant_id} = req.params;
         const { MenuItemID, CostPrice, items } = req.body;
 
         // Start a transaction
@@ -54,8 +59,8 @@ const create = async (req, res) => {
 
         try {
             // Check if MenuItemID already exists
-            const checkMenuItemQuery = 'SELECT COUNT(*) AS count FROM recipe_items WHERE MenuItemID = ?';
-            const result = await poolConnection.query(checkMenuItemQuery, [MenuItemID]);
+            const checkMenuItemQuery = 'SELECT COUNT(*) AS count FROM recipe_items WHERE MenuItemID = ? AND restaurant_id = ?';
+            const result = await poolConnection.query(checkMenuItemQuery, [MenuItemID, restaurant_id]);
             const menuItemExists = result[0].count > 0;
 
             if (menuItemExists) {
@@ -64,15 +69,15 @@ const create = async (req, res) => {
             }
 
             // Update menuitems table with CostPrice
-            await poolConnection.query('UPDATE menuitems SET CostPrice = ? WHERE MenuItemID = ?', [CostPrice, MenuItemID]);
+            await poolConnection.query('UPDATE menuitems SET CostPrice = ? WHERE MenuItemID = ? AND restaurant_id = ?', [CostPrice, MenuItemID, restaurant_id]);
 
             // Insert items into recipe_items table
             for (const item of items) {
                 const { IngredientID, PerItemPrice, Grams } = item;
 
                 await poolConnection.query(
-                    'INSERT INTO recipe_items (MenuItemID, IngredientID, PerItemPrice, Grams) VALUES (?, ?, ?, ?)',
-                    [MenuItemID, IngredientID, PerItemPrice, Grams]
+                    'INSERT INTO recipe_items (MenuItemID, IngredientID, PerItemPrice, Grams, restaurant_id) VALUES (?, ?, ?, ?, ?)',
+                    [MenuItemID, IngredientID, PerItemPrice, Grams, restaurant_id]
                 );
             }
 

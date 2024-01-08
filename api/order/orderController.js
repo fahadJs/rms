@@ -60,6 +60,7 @@ const create = async (req, res) => {
 }
 
 const getAllOrders = async (req, res) => {
+    const {restaurant_id} = req.params;
     try {
         const sql = `
             SELECT
@@ -86,11 +87,13 @@ const getAllOrders = async (req, res) => {
                 orders
             JOIN
                 order_items ON orders.OrderID = order_items.OrderID
+            WHERE
+                orders.restaurant_id = ?
             GROUP BY
                 orders.OrderID;
         `;
 
-        const result = await poolConnection.query(sql);
+        const result = await poolConnection.query(sql, [restaurant_id]);
 
         const formattedResult = result.map(order => ({
             ...order,

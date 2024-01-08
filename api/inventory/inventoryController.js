@@ -2,6 +2,7 @@ const poolConnection = require('../../config/database');
 
 const getAll = async (req, res) => {
     try {
+        const {restaurant_id} = req.params;
         let sql = `
             SELECT 
                 inventory.InventoryID,
@@ -17,9 +18,11 @@ const getAll = async (req, res) => {
                 inventory
                 JOIN menuitems ON inventory.MenuItemID = menuitems.MenuItemID
                 LEFT JOIN categories ON inventory.CategoryID = categories.CategoryID
+            WHERE
+                inventory.restaurant_id = ?
         `;
 
-        const result = await poolConnection.query(sql);
+        const result = await poolConnection.query(sql, [restaurant_id]);
 
         const inventoryData = result.map(row => ({
             inventory_id: row.InventoryID,
@@ -44,14 +47,15 @@ const update = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
+        const {restaurant_id} = req.params;
         const { menuitem_id, on_hand } = req.body;
 
-        const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? FOR UPDATE';
-        const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id]);
+        const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? AND restaurant_id = ? FOR UPDATE';
+        const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id, restaurant_id]);
 
         if (existingInventory.length > 0) {
-            const updateInventoryQuery = 'UPDATE inventory SET on_hand = ? WHERE MenuItemID = ?';
-            await poolConnection.query(updateInventoryQuery, [on_hand, menuitem_id]);
+            const updateInventoryQuery = 'UPDATE inventory SET on_hand = ? WHERE MenuItemID = ? AND restaurant_id = ?';
+            await poolConnection.query(updateInventoryQuery, [on_hand, menuitem_id, restaurant_id]);
         }
 
         await poolConnection.query('COMMIT');
@@ -67,18 +71,19 @@ const create = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
+        const {restaurant_id} = req.params;
         const { menuitem_id, unit, on_hand } = req.body;
 
-        const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? FOR UPDATE';
-        const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id]);
+        const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? AND restaurant_id = ? FOR UPDATE';
+        const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id, restaurant_id]);
 
         if (existingInventory.length > 0) {
             await poolConnection.query('ROLLBACK');
             return res.status(400).json({status: 400, message: 'Inventory already exists for the specified menu item and category!' });
         }
 
-        const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, Unit, CategoryID, on_hand) VALUES (?, ?, 1, ?)';
-        await poolConnection.query(insertInventoryQuery, [menuitem_id, unit, on_hand]);
+        const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, Unit, CategoryID, on_hand, restaurant_id) VALUES (?, ?, 1, ?, ?)';
+        await poolConnection.query(insertInventoryQuery, [menuitem_id, unit, on_hand, restaurant_id]);
 
         await poolConnection.query('COMMIT');
         res.status(201).json({status: 201, message: 'Inventory created successfully!' });
@@ -93,15 +98,16 @@ const updateOnHand = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
+        const {restaurant_id} = req.params;
         const menuitem_id = req.params.mid;
         const on_hand = req.params.ohid
 
-        const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? FOR UPDATE';
-        const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id]);
+        const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? AND restaurant_id = ? FOR UPDATE';
+        const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id, restaurant_id]);
 
         if (existingInventory.length > 0) {
-            const updateInventoryQuery = 'UPDATE inventory SET on_hand = ? WHERE MenuItemID = ?';
-            await poolConnection.query(updateInventoryQuery, [on_hand, menuitem_id]);
+            const updateInventoryQuery = 'UPDATE inventory SET on_hand = ? WHERE MenuItemID = ? AND restaurant_id = ?';
+            await poolConnection.query(updateInventoryQuery, [on_hand, menuitem_id, restaurant_id]);
         }
 
         await poolConnection.query('COMMIT');
