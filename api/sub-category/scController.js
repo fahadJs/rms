@@ -2,10 +2,11 @@ const poolConnection = require('../../config/database');
 
 const create = async (req, res) => {
   try {
+    const {restaurant_id} = req.params;
     const { subcategoryName, description, categoryId } = req.body;
 
-    const query = 'INSERT INTO subcategories (SubCategoryName, Description, CategoryID) VALUES (?, ?, ?)';
-    const result = await poolConnection.query(query, [subcategoryName, description, categoryId]);
+    const query = 'INSERT INTO subcategories (SubCategoryName, Description, CategoryID, restaurant_id) VALUES (?, ?, ?, ?)';
+    const result = await poolConnection.query(query, [subcategoryName, description, categoryId, restaurant_id]);
 
     res.status(201).json({status: 201, message: 'Subcategory added successfully!' });
   } catch (error) {
@@ -16,8 +17,9 @@ const create = async (req, res) => {
 
 const getAll = async (req, res) => {
   try {
-    const query = 'SELECT * FROM subcategories';
-    const result = await poolConnection.query(query);
+    const {restaurant_id} = req.params;
+    const query = 'SELECT * FROM subcategories WHERE restaurant_id = ?';
+    const result = await poolConnection.query(query, [restaurant_id]);
     res.status(200).json(result);
   } catch (error) {
     console.error(`Error executing query! Error: ${error}`);

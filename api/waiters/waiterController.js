@@ -78,8 +78,9 @@ const wLogin = async (req, res) => {
 
 const getAll = async (req, res) => {
     try {
-        const getWaitersQuery = 'SELECT * FROM waiters';
-        const waiters = await poolConnection.query(getWaitersQuery);
+        const {restaurant_id} = req.params;
+        const getWaitersQuery = 'SELECT * FROM waiters WHERE restaurant_id = ?';
+        const waiters = await poolConnection.query(getWaitersQuery, [restaurant_id]);
 
         res.status(200).json(waiters);
     } catch (error) {
