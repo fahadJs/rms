@@ -2,8 +2,9 @@ const poolConnection = require("../../config/database");
 
 const getAll = async (req, res) => {
     try {
-        let query = 'SELECT * FROM menuitems';
-        const result = await poolConnection.query(query);
+        const {restaurant_id} = req.params;
+        let query = 'SELECT * FROM menuitems WHERE restaurant_id = ?';
+        const result = await poolConnection.query(query, [restaurant_id]);
 
         res.status(200).json(result);
     } catch (error) {
@@ -14,16 +15,17 @@ const getAll = async (req, res) => {
 
 const getForRecipeItems = async (req, res) => {
     try {
+        const {restaurant_id} = req.params;
         // Select menu items that do not exist in recipe_items
         let query = `
             SELECT *
             FROM menuitems
-            WHERE MenuItemID NOT IN (
+            WHERE restaurant_id = ? AND MenuItemID NOT IN (
                 SELECT DISTINCT MenuItemID
                 FROM recipe_items
             )`;
     
-        const result = await poolConnection.query(query);
+        const result = await poolConnection.query(query, [restaurant_id]);
     
         res.status(200).json(result);
     } catch (error) {
@@ -34,12 +36,13 @@ const getForRecipeItems = async (req, res) => {
 
 const create = async (req, res) => {
     try {
+        const {restaurant_id} = req.params;
         const { name, description, price, categoryId, kitchenId, subCategoryId } = req.body;
 
         await poolConnection.query('START TRANSACTION');
 
-        const insertMenuItemQuery = 'INSERT INTO menuitems (Name, Description, Price, CostPrice) VALUES (?, ?, ?, 0)';
-        const insertMenuItemValues = [name, description, price];
+        const insertMenuItemQuery = 'INSERT INTO menuitems (Name, Description, Price, CostPrice, restaurant_id) VALUES (?, ?, ?, 0, ?)';
+        const insertMenuItemValues = [name, description, price, restaurant_id];
         const menuItemResult = await poolConnection.query(insertMenuItemQuery, insertMenuItemValues);
 
         const menuItemId = menuItemResult.insertId;

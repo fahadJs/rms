@@ -2,8 +2,9 @@ const poolConnection = require('../../config/database');
 
 const getAll = async (req, res) => {
     try {
-        const selectQuery = 'SELECT * FROM ingredients';
-        const results = await poolConnection.query(selectQuery);
+        const {restaurant_id} = req.params;
+        const selectQuery = 'SELECT * FROM ingredients WHERE restaurant_id = ?';
+        const results = await poolConnection.query(selectQuery, [restaurant_id]);
 
         res.status(200).json(results);
     } catch (error) {
@@ -14,11 +15,12 @@ const getAll = async (req, res) => {
 
 const create = async (req, res) => {
     try {
+        const {restaurant_id} = req.params;
         const { IngredientName, PricePerGm } = req.body;
 
         // Check if the ingredient name already exists
-        const checkDuplicateQuery = 'SELECT COUNT(*) AS count FROM ingredients WHERE IngredientName = ?';
-        const result = await poolConnection.query(checkDuplicateQuery, [IngredientName]);
+        const checkDuplicateQuery = 'SELECT COUNT(*) AS count FROM ingredients WHERE IngredientName = ? AND restaurant_id = ?';
+        const result = await poolConnection.query(checkDuplicateQuery, [IngredientName, restaurant_id]);
         const isDuplicate = result[0].count > 0;
 
         if (isDuplicate) {
@@ -27,8 +29,8 @@ const create = async (req, res) => {
         }
 
         // If not a duplicate, insert the new ingredient
-        const insertQuery = 'INSERT INTO ingredients (IngredientName, PricePerGm) VALUES (?, ?)';
-        await poolConnection.query(insertQuery, [IngredientName, PricePerGm]);
+        const insertQuery = 'INSERT INTO ingredients (IngredientName, PricePerGm, restaurant_id) VALUES (?, ?, ?)';
+        await poolConnection.query(insertQuery, [IngredientName, PricePerGm, restaurant_id]);
 
         res.status(201).json({status: 201, message: 'Ingredient created successfully!' });
     } catch (error) {

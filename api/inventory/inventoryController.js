@@ -44,14 +44,14 @@ const update = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
-        const { menuitem_id, available, reserved, on_hand } = req.body;
+        const { menuitem_id, on_hand } = req.body;
 
         const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? FOR UPDATE';
         const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id]);
 
         if (existingInventory.length > 0) {
-            const updateInventoryQuery = 'UPDATE inventory SET available = ?, reserved = ?, on_hand = ? WHERE MenuItemID = ?';
-            await poolConnection.query(updateInventoryQuery, [available, reserved, on_hand, menuitem_id]);
+            const updateInventoryQuery = 'UPDATE inventory SET on_hand = ? WHERE MenuItemID = ?';
+            await poolConnection.query(updateInventoryQuery, [on_hand, menuitem_id]);
         }
 
         await poolConnection.query('COMMIT');
@@ -67,7 +67,7 @@ const create = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
-        const { menuitem_id, unit, available, reserved, on_hand } = req.body;
+        const { menuitem_id, unit, on_hand } = req.body;
 
         const existingInventoryQuery = 'SELECT * FROM inventory WHERE MenuItemID = ? FOR UPDATE';
         const existingInventory = await poolConnection.query(existingInventoryQuery, [menuitem_id]);
@@ -77,8 +77,8 @@ const create = async (req, res) => {
             return res.status(400).json({status: 400, message: 'Inventory already exists for the specified menu item and category!' });
         }
 
-        const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, Unit, CategoryID, available, reserved, on_hand) VALUES (?, ?, 1, ?, ?, ?)';
-        await poolConnection.query(insertInventoryQuery, [menuitem_id, unit, available, reserved, on_hand]);
+        const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, Unit, CategoryID, on_hand) VALUES (?, ?, 1, ?)';
+        await poolConnection.query(insertInventoryQuery, [menuitem_id, unit, on_hand]);
 
         await poolConnection.query('COMMIT');
         res.status(201).json({status: 201, message: 'Inventory created successfully!' });
