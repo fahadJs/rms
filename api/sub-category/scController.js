@@ -5,7 +5,7 @@ const create = async (req, res) => {
     const {restaurant_id} = req.params;
     const { subcategoryName, description } = req.body;
 
-    const query = 'INSERT INTO subcategories (SubCategoryName, Description, CategoryID, restaurant_id) VALUES (?, ?, -, ?)';
+    const query = 'INSERT INTO subcategories (SubCategoryName, Description, restaurant_id) VALUES (?, ?, ?)';
     const result = await poolConnection.query(query, [subcategoryName, description, restaurant_id]);
 
     res.status(201).json({status: 201, message: 'Subcategory added successfully!' });
