@@ -3,7 +3,7 @@ const poolConnection = require('../../config/database');
 const getAll = async (req, res) => {
     try {
         const { table_id, restaurant_id } = req.params;
-
+    
         const ordersQuery = `
             SELECT
                 OrderID,
@@ -25,6 +25,7 @@ const getAll = async (req, res) => {
             res.status(200).json({ status: 200, message: "Table is already PAID and AVAILABLE!" });
             return;
         }
+    
         const orderItemsQuery = `
             SELECT
                 oi.OrderID,
@@ -53,27 +54,42 @@ const getAll = async (req, res) => {
         const orderItemsResult = await poolConnection.query(orderItemsQuery, [orderIDs]);
     
         const orderItemsMap = new Map();
+    
         orderItemsResult.forEach(orderItem => {
             const orderID = orderItem.OrderID;
+            const orderItemID = orderItem.OrderItemID;
+    
             if (!orderItemsMap.has(orderID)) {
                 orderItemsMap.set(orderID, []);
             }
-            orderItemsMap.get(orderID).push({
-                MenuItemID: orderItem.MenuItemID,
-                ItemName: orderItem.ItemName,
-                Price: orderItem.Price,
-                Quantity: orderItem.Quantity,
-                KitchenID: orderItem.KitchenID,
-                CategoryID: orderItem.CategoryID,
-                Note: orderItem.Note,
-                extras: orderItem.extras_id ? [{
+    
+            const itemWithExtras = orderItemsMap.get(orderID).find(item => item.OrderItemID === orderItemID);
+    
+            if (!itemWithExtras) {
+                orderItemsMap.get(orderID).push({
+                    OrderItemID: orderItemID,
+                    MenuItemID: orderItem.MenuItemID,
+                    ItemName: orderItem.ItemName,
+                    Price: orderItem.Price,
+                    Quantity: orderItem.Quantity,
+                    KitchenID: orderItem.KitchenID,
+                    CategoryID: orderItem.CategoryID,
+                    Note: orderItem.Note,
+                    extras: orderItem.extras_id ? [{
+                        extras_name: orderItem.extras_name,
+                        extras_id: orderItem.extras_id,
+                        extras_price: orderItem.extras_price
+                    }] : []
+                });
+            } else {
+                itemWithExtras.extras.push({
                     extras_name: orderItem.extras_name,
                     extras_id: orderItem.extras_id,
                     extras_price: orderItem.extras_price
-                }] : null
-            });
+                });
+            }
         });
-
+    
         const formattedResult = ordersResult.map(order => ({
             OrderID: order.OrderID,
             waiter_id: order.waiter_id,
@@ -90,7 +106,6 @@ const getAll = async (req, res) => {
         console.error(`Error executing query! Error: ${error}`);
         res.status(500).json({ status: 500, message: 'Error while fetching order details!' });
     }    
-    
 };
 
 const removeItem = async (req, res) => {
