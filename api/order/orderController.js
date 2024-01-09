@@ -20,7 +20,7 @@ const create = async (req, res) => {
 
         const orderID = orderResult.insertId;
 
-        const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note, Status, TStatus, split_quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not-sent', 'not-send', ?)`;
+        const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note, Status, TStatus, PStatus, split_quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not-sent', 'not-sent', 'not-sent', ?)`;
 
         const orderExtrasInsertQuery = `INSERT INTO order_extras (OrderItemID, extras_id) VALUES (?, ?)`;
 

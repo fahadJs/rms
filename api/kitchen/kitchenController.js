@@ -72,7 +72,6 @@ const getById = async (req, res) => {
     try {
         const {kitchenId, restaurant_id} = req.params;
 
-        // Fetch the kitchen details by ID
         const getKitchenQuery = 'SELECT * FROM kitchens WHERE KitchenID = ? AND restaurant_id = ?';
         const kitchenResult = await poolConnection.query(getKitchenQuery, [kitchenId, restaurant_id]);
 
