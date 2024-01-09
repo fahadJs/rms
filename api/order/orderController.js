@@ -20,13 +20,13 @@ const create = async (req, res) => {
 
         const orderID = orderResult.insertId;
 
-        const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note, Status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not-sent')`;
+        const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note, Status, TStatus, split_quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not-sent', 'not-send', ?)`;
 
         const orderExtrasInsertQuery = `INSERT INTO order_extras (OrderItemID, extras_id) VALUES (?, ?)`;
 
         for (const item of items) {
             const { menuitemID, name, price, quantity, kitchenID, categoryID, note, extras } = item;
-            const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note];
+            const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note, quantity];
             const orderItemsResult = await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
 
             const orderItemID = orderItemsResult.insertId;
@@ -60,8 +60,9 @@ const create = async (req, res) => {
 }
 
 const getAllOrders = async (req, res) => {
-    const {restaurant_id} = req.params;
+    
     try {
+        const {restaurant_id} = req.params;
         const sql = `
             SELECT
                 orders.OrderID,

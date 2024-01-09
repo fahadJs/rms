@@ -2,55 +2,95 @@ const poolConnection = require('../../config/database');
 
 const getAll = async (req, res) => {
     try {
-        const tableId = req.params.id;
+        const { table_id, restaurant_id } = req.params;
 
-        const query = `
-        SELECT
-            orders.OrderID,
-            orders.waiter_id,
-            orders.table_id,
-            orders.time,
-            orders.order_status,
-            orders.bill_status,
-            orders.total_amount,
-            JSON_ARRAYAGG(
-              JSON_OBJECT(
-                'MenuItemID', order_items.MenuItemID,
-                'ItemName', order_items.ItemName,
-                'Price', order_items.Price,
-                'Quantity', order_items.Quantity,
-                'KitchenID', order_items.KitchenID,
-                'CategoryID', order_items.CategoryID,
-                'Note', order_items.Note
-              )
-            ) AS items
-        FROM
-            orders
-        JOIN
-            order_items ON orders.OrderID = order_items.OrderID
-        WHERE
-            orders.table_id = ? AND orders.order_status != 'paid'
-        GROUP BY
-            orders.OrderID;
-      `;
-
-        const result = await poolConnection.query(query, [tableId]);
-
-        if (result.length == 0) {
-            res.status(200).json({status: 200, message: "Table is already PAID and AVAILABLE!" });
-        } else {
-            const formattedResult = result.map(order => ({
-                ...order,
-                items: JSON.parse(order.items)
-            }));
-
-            res.status(200).json(formattedResult);
+        const ordersQuery = `
+            SELECT
+                OrderID,
+                waiter_id,
+                table_id,
+                time,
+                order_status,
+                bill_status,
+                total_amount
+            FROM
+                orders
+            WHERE
+                table_id = ? AND order_status != 'paid' AND restaurant_id = ?;
+        `;
+    
+        const ordersResult = await poolConnection.query(ordersQuery, [table_id, restaurant_id]);
+    
+        if (ordersResult.length === 0) {
+            res.status(200).json({ status: 200, message: "Table is already PAID and AVAILABLE!" });
+            return;
         }
+        const orderItemsQuery = `
+            SELECT
+                oi.OrderID,
+                oi.OrderItemID,
+                oi.MenuItemID,
+                oi.ItemName,
+                oi.Price,
+                oi.Quantity,
+                oi.KitchenID,
+                oi.CategoryID,
+                oi.Note,
+                oe.extras_id,
+                me.extras_name,
+                me.extras_price
+            FROM
+                order_items oi
+            LEFT JOIN
+                order_extras oe ON oi.OrderItemID = oe.OrderItemID
+            LEFT JOIN
+                menu_extras me ON oe.extras_id = me.extras_id
+            WHERE
+                oi.OrderID IN (?)
+        `;
+    
+        const orderIDs = ordersResult.map(order => order.OrderID);
+        const orderItemsResult = await poolConnection.query(orderItemsQuery, [orderIDs]);
+    
+        const orderItemsMap = new Map();
+        orderItemsResult.forEach(orderItem => {
+            const orderID = orderItem.OrderID;
+            if (!orderItemsMap.has(orderID)) {
+                orderItemsMap.set(orderID, []);
+            }
+            orderItemsMap.get(orderID).push({
+                MenuItemID: orderItem.MenuItemID,
+                ItemName: orderItem.ItemName,
+                Price: orderItem.Price,
+                Quantity: orderItem.Quantity,
+                KitchenID: orderItem.KitchenID,
+                CategoryID: orderItem.CategoryID,
+                Note: orderItem.Note,
+                extras: orderItem.extras_id ? [{
+                    extras_name: orderItem.extras_name,
+                    extras_id: orderItem.extras_id,
+                    extras_price: orderItem.extras_price
+                }] : null
+            });
+        });
 
+        const formattedResult = ordersResult.map(order => ({
+            OrderID: order.OrderID,
+            waiter_id: order.waiter_id,
+            table_id: order.table_id,
+            time: order.time,
+            order_status: order.order_status,
+            bill_status: order.bill_status,
+            total_amount: order.total_amount,
+            items: orderItemsMap.get(order.OrderID) || []
+        }));
+    
+        res.status(200).json(formattedResult);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while fetching order details!'});
-    }
+        res.status(500).json({ status: 500, message: 'Error while fetching order details!' });
+    }    
+    
 };
 
 const removeItem = async (req, res) => {
