@@ -2,13 +2,40 @@ const { query } = require('express');
 const poolConnection = require('../../config/database');
 
 const getAllInstances = async (req, res) => {
+    // try {
+    //     const rows = await poolConnection.query(`SELECT * FROM WhatsAppInstances WHERE status = 'available'`);
+    //     res.status(200).json(rows);
+    // } catch (error) {
+    //     console.error(`Error fetching WhatsAppInstances: ${error}`);
+    //     res.status(500).json({status: 500, message: 'Internal Server Error' });
+    // }
+
     try {
         const rows = await poolConnection.query(`SELECT * FROM WhatsAppInstances WHERE status = 'available'`);
-        res.status(200).json(rows);
+
+        const instancesByAccessToken = {};
+
+        rows.forEach(row => {
+            const { instance_id, instance_number, access_token, status } = row;
+    
+            if (!instancesByAccessToken[access_token]) {
+                instancesByAccessToken[access_token] = {
+                    access_token,
+                    instances: [{ instance_id, instance_number, status }]
+                };
+            } else {
+                instancesByAccessToken[access_token].instances.push({ instance_id, instance_number, status });
+            }
+        });
+
+        const groupedInstancesArray = Object.values(instancesByAccessToken);
+    
+        res.status(200).json(groupedInstancesArray);
     } catch (error) {
         console.error(`Error fetching WhatsAppInstances: ${error}`);
-        res.status(500).json({status: 500, message: 'Internal Server Error' });
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
     }
+    
 }
 
 const getAllGroups = async (req, res) => {
