@@ -1,4 +1,3 @@
-const { query } = require('express');
 const poolConnection = require('../../config/database');
 
 const getAllInstances = async (req, res) => {
