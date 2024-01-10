@@ -7,11 +7,11 @@ const create = async (req, res) => {
         const { login_id, login_pass, restaurant_id } = req.body;
 
         // Hash the password
-        const hashedPassword = await bcrypt.hash(login_pass, 10);
+        // const hashedPassword = await bcrypt.hash(login_pass, 10);
 
         // Insert admin into the database
         const insertAdminQuery = 'INSERT INTO admins (login_id, login_pass, restaurant_id) VALUES (?, ?, ?)';
-        const insertAdminValues = [login_id, hashedPassword, restaurant_id];
+        const insertAdminValues = [login_id, login_pass, restaurant_id];
         await poolConnection.query(insertAdminQuery, insertAdminValues);
 
         res.status(201).json({status: 201, message: 'Admin created successfully!' });
@@ -37,9 +37,9 @@ const adLogin = async (req, res) => {
         const getRestaurantCurrency = 'SELECT * FROM restaurants WHERE restaurant_id = ?';
         const currencyResult = await poolConnection.query(getRestaurantCurrency, [admin.restaurant_id]);
 
-        const passwordMatch = await bcrypt.compare(login_pass, admin.login_pass);
+        // const passwordMatch = await bcrypt.compare(login_pass, admin.login_pass);
 
-        if (passwordMatch) {
+        if (admin.login_pass === login_pass) {
             const tokenPayload = {
                 admin_id: admin.admin_id,
                 restaurant_id: admin.restaurant_id || null,
@@ -48,7 +48,7 @@ const adLogin = async (req, res) => {
                 tax: currencyResult[0].tax
             };
 
-            const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '12h'});
+            const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '6h'});
 
             res.status(200).json({
                 status: 200,

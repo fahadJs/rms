@@ -7,10 +7,10 @@ const create = async (req, res) => {
     try {
         const { waiter_name, login_id, login_pass, restaurant_id } = req.body;
 
-        const hashedPassword = await bcrypt.hash(login_pass, 10);
+        // const hashedPassword = await bcrypt.hash(login_pass, 10);
 
         const insertWaiterQuery = 'INSERT INTO waiters (waiter_name, login_id, login_pass, restaurant_id) VALUES (?, ?, ?, ?)';
-        const insertWaiterValues = [waiter_name, login_id, hashedPassword, restaurant_id];
+        const insertWaiterValues = [waiter_name, login_id, login_pass, restaurant_id];
         await poolConnection.query(insertWaiterQuery, insertWaiterValues);
 
         res.status(201).json({status: 201, message: 'Waiter created successfully!' });
@@ -30,7 +30,6 @@ const wLogin = async (req, res) => {
             res.status(404).json({status: 404, message: 'Waiter not found!' });
             return;
         }
-
         const waiter = result[0];
 
         const getRestaurantQuery = 'SELECT * FROM restaurants WHERE restaurant_id = ?';
@@ -46,9 +45,9 @@ const wLogin = async (req, res) => {
             return;
         }
 
-        const passwordMatch = await bcrypt.compare(login_pass, waiter.login_pass);
+        // const passwordMatch = await bcrypt.compare(login_pass, waiter.login_pass);
 
-        if (passwordMatch) {
+        if (waiter.login_pass === login_pass) {
             const tokenPayload = {
                 waiter_id: waiter.waiter_id,
                 restaurant_id: waiter.restaurant_id || null,
@@ -59,7 +58,7 @@ const wLogin = async (req, res) => {
                 time: time
             };
 
-            const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '12h'});
+            const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '6h'});
 
             res.status(200).json({
                 status: 200,
@@ -118,10 +117,10 @@ const update = async (req, res) => {
         const waiterId = req.params.id;
         const { waiter_name, login_id, login_pass, restaurant_id, status } = req.body;
 
-        const hashedPassword = await bcrypt.hash(login_pass, 10);
+        // const hashedPassword = await bcrypt.hash(login_pass, 10);
 
-        const updateWaiterQuery = 'UPDATE waiters SET waiter_name = ?, login_id = ?, login_pass = ?, restaurant_id = ?, status = ? WHERE waiter_id = ?';
-        const updateWaiterValues = [waiter_name, login_id, hashedPassword, restaurant_id, status, waiterId];
+        const updateWaiterQuery = 'UPDATE waiters SET waiter_name = ?, login_id = ?, login_pass = ?, status = ? WHERE waiter_id = ? AND restaurant_id = ?';
+        const updateWaiterValues = [waiter_name, login_id, login_pass, status, waiterId, restaurant_id];
         await poolConnection.query(updateWaiterQuery, updateWaiterValues);
 
         res.status(200).json({status: 200, message: 'Waiter updated successfully!' });
@@ -135,10 +134,10 @@ const passwordReset = async (req, res) => {
     try {
         const {waiter_id, restaurant_id, new_pass} = req.params;
 
-        const hashedPassword = await bcrypt.hash(new_pass, 10);
+        // const hashedPassword = await bcrypt.hash(new_pass, 10);
 
         const updatePassQuery = 'UPDATE waiters SET login_pass = ? WHERE waiter_id = ? AND restaurant_id = ?';
-        const updatePassValues = [hashedPassword, waiter_id, restaurant_id];
+        const updatePassValues = [new_pass, waiter_id, restaurant_id];
         await poolConnection.query(updatePassQuery, updatePassValues);
 
         res.status(200).json({status: 200, message: 'Password updated successfully!' });

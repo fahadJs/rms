@@ -9,6 +9,7 @@ function verifyToken(req, res, next) {
 
     try {
         const decoded = jwt.verify(token, 'RMSIDVERFY');
+        req.user = decoded;
         next();
     } catch (error) {
         if (error.name === 'TokenExpiredError') {
