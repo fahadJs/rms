@@ -69,29 +69,65 @@ const mrkPaid = async (req, res) => {
 
 const getOrderById = async (req, res) => {
     try {
-        const orderId = req.params.id;
-        const orderSql = 'SELECT * FROM pos_orders WHERE PosOrderID = ?';
-        const order = await poolConnection.query(orderSql, [orderId]);
-
-        if (!order.length) {
-            return res.status(404).json({ status: 404, message: 'Order not found' });
+        const posOrderId = req.params.id;
+    
+        const posOrderSql = 'SELECT * FROM pos_orders WHERE PosOrderID = ?';
+        const posOrder = await poolConnection.query(posOrderSql, [posOrderId]);
+    
+        if (!posOrder.length) {
+            return res.status(404).json({ status: 404, message: 'POS Order not found' });
         }
 
-        const orderItemSql = 'SELECT * FROM pos_order_items WHERE PosOrderID = ?';
-        const orderItems = await poolConnection.query(orderItemSql, [orderId]);
-
-        const orderWithItems = { ...order[0], items: orderItems };
-
-        res.status(200).json(orderWithItems);
+        const posOrderItemSql = `
+            SELECT
+                pos_order_items.*,
+                pos_order_extras.PosOrderExtrasID,
+                menu_extras.extras_id,
+                menu_extras.extras_name,
+                menu_extras.extras_price
+            FROM
+                pos_order_items
+            LEFT JOIN
+                pos_order_extras ON pos_order_items.PosOrderItemID = pos_order_extras.PosOrderItemID
+            LEFT JOIN
+                menu_extras ON pos_order_extras.extras_id = menu_extras.extras_id
+            WHERE
+                pos_order_items.PosOrderID = ?;
+        `;
+    
+        const posOrderItems = await poolConnection.query(posOrderItemSql, [posOrderId]);
+    
+        const groupedPosItems = posOrderItems.reduce((acc, item) => {
+            const foundItem = acc.find((groupedItem) => groupedItem.PosOrderItemID === item.PosOrderItemID);
+    
+            if (!foundItem) {
+                acc.push({
+                    ...item,
+                    Extras: item.extras_id ? [{ PosOrderExtrasID: item.PosOrderExtrasID, extras_id: item.extras_id, extras_name: item.extras_name, extras_price: item.extras_price }] : []
+                });
+            } else {
+                if (item.extras_id) {
+                    foundItem.Extras.push({ PosOrderExtrasID: item.PosOrderExtrasID, extras_id: item.extras_id, extras_name: item.extras_name, extras_price: item.extras_price });
+                }
+            }
+    
+            return acc;
+        }, []);
+    
+        const posOrderWithItemsAndExtras = { ...posOrder[0], items: groupedPosItems };
+    
+        res.status(200).json(posOrderWithItemsAndExtras);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error fetching order!' });
+        console.error(`Error executing POS order query! Error: ${error}`);
+        res.status(500).json({ status: 500, message: 'Error fetching POS order!' });
     }
+    
 };
 
 const getAllOrders = async (req, res) => {
     try {
-        const getOrdersQuery = `
+        const {restaurant_id} = req.params;
+        const getPosOrdersQuery = `
             SELECT 
                 pos_orders.PosOrderID,
                 pos_orders.time,
@@ -101,42 +137,101 @@ const getAllOrders = async (req, res) => {
                 pos_orders.bill_status,
                 pos_orders.tid,
                 pos_orders.paid_via,
-                JSON_ARRAYAGG(
-                    JSON_OBJECT(
-                        'PosOrderItemID', pos_order_items.PosOrderItemID,
-                        'MenuItemID', pos_order_items.MenuItemID,
-                        'ItemName', pos_order_items.ItemName,
-                        'Price', pos_order_items.Price,
-                        'Quantity', pos_order_items.Quantity,
-                        'KitchenID', pos_order_items.KitchenID,
-                        'CategoryID', pos_order_items.CategoryID,
-                        'Note', pos_order_items.Note,
-                        'Status', pos_order_items.Status
-                    )
-                ) AS order_items
+                pos_order_items.PosOrderItemID,
+                pos_order_items.MenuItemID,
+                pos_order_items.ItemName,
+                pos_order_items.Price,
+                pos_order_items.Quantity,
+                pos_order_items.KitchenID,
+                pos_order_items.CategoryID,
+                pos_order_items.Note,
+                pos_order_extras.PosOrderExtrasID,
+                menu_extras.extras_id,
+                menu_extras.extras_name,
+                menu_extras.extras_price
             FROM pos_orders
-            JOIN pos_order_items ON pos_orders.PosOrderID = pos_order_items.PosOrderID
-            GROUP BY pos_orders.PosOrderID;
+            LEFT JOIN pos_order_items ON pos_orders.PosOrderID = pos_order_items.PosOrderID
+            LEFT JOIN pos_order_extras ON pos_order_items.PosOrderItemID = pos_order_extras.PosOrderItemID
+            LEFT JOIN menu_extras ON pos_order_extras.extras_id = menu_extras.extras_id
+            WHERE pos_orders.restaurant_id = ?
+
         `;
-
-        const result = await poolConnection.query(getOrdersQuery);
-        const ordersData = result.map(row => ({
-            PosOrderID: row.PosOrderID,
-            time: row.time,
-            order_status: row.order_status,
-            total_amount: row.total_amount,
-            restaurant_id: row.restaurant_id,
-            bill_status: row.bill_status,
-            tid: row.tid,
-            paid_via: row.paid_via,
-            order_items: JSON.parse(row.order_items),
-        }));
-
-        res.status(200).json(ordersData);
+    
+        const posResult = await poolConnection.query(getPosOrdersQuery, [restaurant_id]);
+    
+        const posOrders = {};
+    
+        posResult.forEach(row => {
+            const {
+                PosOrderID,
+                time,
+                order_status,
+                total_amount,
+                restaurant_id,
+                bill_status,
+                tid,
+                paid_via,
+                PosOrderItemID,
+                MenuItemID,
+                ItemName,
+                Price,
+                Quantity,
+                KitchenID,
+                CategoryID,
+                Note,
+                extras_id,
+                extras_name,
+                extras_price
+            } = row;
+    
+            if (!posOrders[PosOrderID]) {
+                posOrders[PosOrderID] = {
+                    PosOrderID,
+                    time,
+                    order_status,
+                    total_amount,
+                    restaurant_id,
+                    bill_status,
+                    tid,
+                    paid_via,
+                    items: []
+                };
+            }
+    
+            const existingItem = posOrders[PosOrderID].items.find(item => item.PosOrderItemID === PosOrderItemID);
+    
+            if (!existingItem) {
+                const newItem = {
+                    PosOrderItemID,
+                    MenuItemID,
+                    ItemName,
+                    Price,
+                    Quantity,
+                    KitchenID,
+                    CategoryID,
+                    Note,
+                    Extras: []
+                };
+    
+                if (extras_id && extras_name && extras_price) {
+                    newItem.Extras.push({ extras_id, extras_name, extras_price });
+                }
+    
+                posOrders[PosOrderID].items.push(newItem);
+            } else {
+                if (extras_id && extras_name && extras_price) {
+                    existingItem.Extras.push({ extras_id, extras_name, extras_price });
+                }
+            }
+        });
+    
+        const formattedPosResult = Object.values(posOrders);
+    
+        res.status(200).json(formattedPosResult);
     } catch (error) {
-        console.error(`Error fetching POS orders! Error: ${error}`);
+        console.error(`Error executing POS query! Error: ${error}`);
         res.status(500).json({ status: 500, message: 'Error fetching POS orders!' });
-    }
+    }    
 
 };
 

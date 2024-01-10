@@ -61,8 +61,55 @@ const create = async (req, res) => {
 
 const getAllOrders = async (req, res) => {
     
+    // try {
+    //     const {restaurant_id} = req.params;
+    //     const sql = `
+    //         SELECT
+    //             orders.OrderID,
+    //             orders.waiter_id,
+    //             orders.table_id,
+    //             orders.time,
+    //             orders.order_status,
+    //             orders.bill_status,
+    //             orders.total_amount,
+    //             orders.tid,
+    //             orders.paid_via,
+    //             JSON_ARRAYAGG(
+    //                 JSON_OBJECT(
+    //                     'OrderItemID', order_items.OrderItemID,
+    //                     'MenuItemID', order_items.MenuItemID,
+    //                     'ItemName', order_items.ItemName,
+    //                     'Price', order_items.Price,
+    //                     'Quantity', order_items.Quantity,
+    //                     'Note', order_items.Note
+    //                 )
+    //             ) AS items
+    //         FROM
+    //             orders
+    //         JOIN
+    //             order_items ON orders.OrderID = order_items.OrderID
+    //         WHERE
+    //             orders.restaurant_id = ?
+    //         GROUP BY
+    //             orders.OrderID;
+    //     `;
+
+    //     const result = await poolConnection.query(sql, [restaurant_id]);
+
+    //     const formattedResult = result.map(order => ({
+    //         ...order,
+    //         items: JSON.parse(order.items)
+    //     }));
+
+    //     res.status(200).json(formattedResult);
+    // } catch (error) {
+    //     console.error(`Error executing query! Error: ${error}`);
+    //     res.status(500).json({ status: 500, message: 'Error fetching orders!' });
+    // }
+
+
     try {
-        const {restaurant_id} = req.params;
+        const { restaurant_id } = req.params;
         const sql = `
             SELECT
                 orders.OrderID,
@@ -74,60 +121,160 @@ const getAllOrders = async (req, res) => {
                 orders.total_amount,
                 orders.tid,
                 orders.paid_via,
-                JSON_ARRAYAGG(
-                    JSON_OBJECT(
-                        'OrderItemID', order_items.OrderItemID,
-                        'MenuItemID', order_items.MenuItemID,
-                        'ItemName', order_items.ItemName,
-                        'Price', order_items.Price,
-                        'Quantity', order_items.Quantity,
-                        'Note', order_items.Note
-                    )
-                ) AS items
+                order_items.OrderItemID,
+                order_items.MenuItemID,
+                order_items.ItemName,
+                order_items.Price,
+                order_items.Quantity,
+                order_items.Note,
+                menu_extras.extras_id,
+                menu_extras.extras_name,
+                menu_extras.extras_price
             FROM
                 orders
             JOIN
                 order_items ON orders.OrderID = order_items.OrderID
+            LEFT JOIN
+                order_extras ON order_items.OrderItemID = order_extras.OrderItemID
+            LEFT JOIN
+                menu_extras ON order_extras.extras_id = menu_extras.extras_id
             WHERE
-                orders.restaurant_id = ?
-            GROUP BY
-                orders.OrderID;
+                orders.restaurant_id = ?;
         `;
-
+    
         const result = await poolConnection.query(sql, [restaurant_id]);
-
-        const formattedResult = result.map(order => ({
-            ...order,
-            items: JSON.parse(order.items)
-        }));
-
+    
+        const orders = {};
+    
+        result.forEach(row => {
+            const {
+                OrderID,
+                waiter_id,
+                table_id,
+                time,
+                order_status,
+                bill_status,
+                total_amount,
+                tid,
+                paid_via,
+                OrderItemID,
+                MenuItemID,
+                ItemName,
+                Price,
+                Quantity,
+                Note,
+                extras_id,
+                extras_name,
+                extras_price
+            } = row;
+    
+            if (!orders[OrderID]) {
+                orders[OrderID] = {
+                    OrderID,
+                    waiter_id,
+                    table_id,
+                    time,
+                    order_status,
+                    bill_status,
+                    total_amount,
+                    tid,
+                    paid_via,
+                    items: []
+                };
+            }
+    
+            const existingItem = orders[OrderID].items.find(item => item.OrderItemID === OrderItemID);
+    
+            if (!existingItem) {
+                const newItem = {
+                    OrderItemID,
+                    MenuItemID,
+                    ItemName,
+                    Price,
+                    Quantity,
+                    Note,
+                    Extras: []
+                };
+    
+                if (extras_id && extras_name && extras_price) {
+                    newItem.Extras.push({ extras_id, extras_name, extras_price });
+                }
+    
+                orders[OrderID].items.push(newItem);
+            } else {
+                if (extras_id && extras_name && extras_price) {
+                    existingItem.Extras.push({ extras_id, extras_name, extras_price });
+                }
+            }
+        });
+    
+        const formattedResult = Object.values(orders);
+    
         res.status(200).json(formattedResult);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
         res.status(500).json({ status: 500, message: 'Error fetching orders!' });
     }
+    
+    
 };
 
 const getOrderById = async (req, res) => {
     try {
         const orderId = req.params.id;
+    
+        // Query to fetch order details
         const orderSql = 'SELECT * FROM orders WHERE OrderID = ?';
         const order = await poolConnection.query(orderSql, [orderId]);
-
+    
         if (!order.length) {
             return res.status(404).json({ status: 404, message: 'Order not found' });
         }
-
-        const orderItemSql = 'SELECT * FROM order_items WHERE OrderID = ?';
+    
+        // Query to fetch order items and their associated extras
+        const orderItemSql = `
+            SELECT
+                order_items.*,
+                menu_extras.extras_id,
+                menu_extras.extras_name,
+                menu_extras.extras_price
+            FROM
+                order_items
+            LEFT JOIN
+                order_extras ON order_items.OrderItemID = order_extras.OrderItemID
+            LEFT JOIN
+                menu_extras ON order_extras.extras_id = menu_extras.extras_id
+            WHERE
+                order_items.OrderID = ?;
+        `;
+    
         const orderItems = await poolConnection.query(orderItemSql, [orderId]);
-
-        const orderWithItems = { ...order[0], items: orderItems };
-
-        res.status(200).json(orderWithItems);
+    
+        // Group order items and their extras
+        const groupedItems = orderItems.reduce((acc, item) => {
+            const foundItem = acc.find((groupedItem) => groupedItem.OrderItemID === item.OrderItemID);
+    
+            if (!foundItem) {
+                acc.push({
+                    ...item,
+                    Extras: item.extras_id ? [{ extras_id: item.extras_id, extras_name: item.extras_name, extras_price: item.extras_price }] : []
+                });
+            } else {
+                if (item.extras_id) {
+                    foundItem.Extras.push({ extras_id: item.extras_id, extras_name: item.extras_name, extras_price: item.extras_price });
+                }
+            }
+    
+            return acc;
+        }, []);
+    
+        const orderWithItemsAndExtras = { ...order[0], items: groupedItems };
+    
+        res.status(200).json(orderWithItemsAndExtras);
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
         res.status(500).json({ status: 500, message: 'Error fetching order!' });
-    }
+    }    
 };
 
 
