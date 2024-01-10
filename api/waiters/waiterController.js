@@ -1,6 +1,7 @@
 const poolConnection = require('../../config/database');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const moment = require('moment-timezone');
 
 const create = async (req, res) => {
     try {
@@ -37,6 +38,9 @@ const wLogin = async (req, res) => {
 
         const restaurants = restaurantResult[0];
 
+        const timeZone = restaurants.time_zone;
+        const time = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
         if (waiter.status != "allowed" ) {
             res.status(400).json({status: 400, message: 'Waiter is not allowed!' });
             return;
@@ -51,7 +55,8 @@ const wLogin = async (req, res) => {
                 waiter_name: waiter.waiter_name,
                 currency: restaurants.default_currency,
                 restaurant_name: restaurants.name,
-                tax: restaurants.tax
+                tax: restaurants.tax,
+                time: time
             };
 
             const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '12h'});
@@ -65,6 +70,7 @@ const wLogin = async (req, res) => {
                 currency: tokenPayload.currency,
                 restaurant_name: tokenPayload.restaurant_name,
                 tax: tokenPayload.tax,
+                time: tokenPayload.time,
                 token
             });
         } else {
