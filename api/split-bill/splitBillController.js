@@ -71,17 +71,21 @@ const createItSplit = async (req, res) => {
         const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity) VALUES (?, ?, ?, ?, ?, ?, ?)';
         
         const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ?, split_status = CASE WHEN split_quantity = ? THEN "splitted" ELSE status END WHERE OrderID = ? AND MenuItemID = ?';
+
+        const updateRemainingQuery = `UPDATE order_items SET remaining = ? WHERE OrderID = ? AND MenuItemID = ?`;
     
         for (const item of items) {
             const itemDetails = itemDetailsResult.find(details => details.MenuItemID === item.menuitemID);
     
             if (itemDetails) {
                 const itemTotal = itemDetails.Price;
-                const itemSplitAmount = fetchedOrder.remaining - itemTotal;
+                const itemSplitAmount = (itemTotal / fetchedOrder.total_amount) * fetchedOrder.remaining;
     
                 const updatedQuantity = itemDetails.split_quantity - item.quantity;
                 if (updatedQuantity > 0) {
                     await poolConnection.query(updateOrderItemQuantityQuery, [updatedQuantity, updatedQuantity, orderId, item.menuitemID]);
+
+                    await poolConnection.query(updateRemainingQuery, [itemSplitAmount, orderId, item.menuitemID]);
                 } else {
                     await poolConnection.query(updateOrderItemQuantityQuery, [updatedQuantity, updatedQuantity, orderId, item.menuitemID]);
                 }
