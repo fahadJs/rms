@@ -72,7 +72,7 @@ const createItSplit = async (req, res) => {
         
         const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ?, split_status = CASE WHEN split_quantity = ? THEN "splitted" ELSE status END WHERE OrderID = ? AND MenuItemID = ?';
 
-        const updateRemainingQuery = `UPDATE order_items SET remaining = ? WHERE OrderID = ? AND MenuItemID = ?`;
+        const updateRemainingQuery = `UPDATE orders SET remaining = ? WHERE OrderID = ?`;
     
         for (const item of items) {
             const itemDetails = itemDetailsResult.find(details => details.MenuItemID === item.menuitemID);
@@ -85,7 +85,7 @@ const createItSplit = async (req, res) => {
                 if (updatedQuantity > 0) {
                     await poolConnection.query(updateOrderItemQuantityQuery, [updatedQuantity, updatedQuantity, orderId, item.menuitemID]);
 
-                    await poolConnection.query(updateRemainingQuery, [itemSplitAmount, orderId, item.menuitemID]);
+                    await poolConnection.query(updateRemainingQuery, [itemSplitAmount, orderId]);
                 } else {
                     await poolConnection.query(updateOrderItemQuantityQuery, [updatedQuantity, updatedQuantity, orderId, item.menuitemID]);
                 }
