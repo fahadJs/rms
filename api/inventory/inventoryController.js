@@ -87,7 +87,7 @@ const create = async (req, res) => {
 
         const category_id = getCategoryId[0].CategoryID;
 
-        const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, Unit, CategoryID, on_hand, restaurant_id) VALUES (?, ?, ?, ?, ?)';
+        const insertInventoryQuery = 'INSERT INTO inventory (MenuItemID, Unit, CategoryID, available, reserved, on_hand, restaurant_id) VALUES (?, ?, ?, 0, 0, ?, ?)';
         await poolConnection.query(insertInventoryQuery, [menuitem_id, unit, category_id, on_hand, restaurant_id]);
 
         await poolConnection.query('COMMIT');
