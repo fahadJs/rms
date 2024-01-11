@@ -9,8 +9,4 @@ router.get('/res/:restaurantId/waiter/monthly/admin', expenseController.getWaite
 router.get('/res/:restaurantId/waiter/weekly/admin', expenseController.getWaiterWeeklyExpenseAdmin);
 router.get('/res/:restaurantId/waiter/daily/admin', expenseController.getWaiterDailyExpenseAdmin);
 
-router.get('/res/:restaurantId/waiter/monthly', expenseController.getWaiterMonthlyExpense);
-router.get('/res/:restaurantId/waiter/weekly', expenseController.getWaiterWeeklyExpense);
-router.get('/res/:restaurantId/waiter/daily', expenseController.getWaiterDailyExpense);
-
 module.exports = router;
