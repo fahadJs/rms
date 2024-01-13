@@ -2,6 +2,7 @@ const poolConnection = require('../../config/database');
 const moment = require('moment-timezone');
 
 const getPosMonthlyExpense = async (req, res) => {
+
     const { restaurantId } = req.params;
     try {
         const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
@@ -17,40 +18,59 @@ const getPosMonthlyExpense = async (req, res) => {
         const startOfMonth = moment(currentDate).startOf('month').format('YYYY-MM-DD HH:mm:ss');
 
         const ordersQuery = `
-            SELECT 
-                po.PosOrderID,
-                po.total_amount AS Income
-            FROM 
-                pos_orders po
-            WHERE 
-                po.restaurant_id = ?
-                AND po.time >= ?
-        `;
+        SELECT 
+            po.PosOrderID,
+            po.total_amount AS Income,
+            DATE_FORMAT(po.time, '%b') AS Month
+        FROM 
+            pos_orders po
+        WHERE 
+            po.restaurant_id = ?
+            AND po.time >= ?
+    `;
         const ordersData = await poolConnection.query(ordersQuery, [restaurantId, startOfMonth]);
 
         if (ordersData.length === 0) {
-            const formattedData = {
-                name: moment(startOfMonth).format('MMM'),
+            const monthlyData = [];
+        
+            for (let i = 0; i < 12; i++) {
+                const monthStart = moment(currentDate).startOf('year').add(i, 'months');
+                const monthKey = monthStart.format('MMM');
+        
+                const formattedData = {
+                    name: monthKey,
+                    Expense: 0,
+                    Income: 0
+                };
+        
+                monthlyData.push(formattedData);
+            }
+        
+            res.json(monthlyData);
+            return;
+        }
+
+        const monthlyData = [];
+
+        for (let i = 0; i < 12; i++) {
+            const monthStart = moment(currentDate).startOf('year').add(i, 'months');
+            const monthKey = monthStart.format('MMM');
+
+            const monthData = {
+                name: monthKey,
                 Expense: 0,
                 Income: 0
             };
-            return res.json(formattedData);
-        }
-        let totalIncome = 0;
 
-        ordersData.forEach(order => {
-            totalIncome += order.Income;
-        });
+            const monthOrders = ordersData.filter(order => order.Month === monthKey);
 
-        const formattedData = {
-            name: moment(startOfMonth).format('MMM'),
-            Expense: 0,
-            Income: parseFloat(totalIncome.toFixed(2))
-        };
+            monthOrders.forEach(order => {
+                monthData.Income += order.Income;
+            });
 
-        const posOrderIds = ordersData.map(order => order.PosOrderID);
-        if (posOrderIds.length > 0) {
-            const itemsQuery = `
+            const posOrderIds = monthOrders.map(order => order.PosOrderID);
+            if (posOrderIds.length > 0) {
+                const itemsQuery = `
                 SELECT 
                     PosOrderID,
                     SUM(poi.Quantity * mi.CostPrice) AS Expense
@@ -62,14 +82,17 @@ const getPosMonthlyExpense = async (req, res) => {
                 GROUP BY 
                     PosOrderID
             `;
-            const itemsData = await poolConnection.query(itemsQuery, [posOrderIds]);
+                const itemsData = await poolConnection.query(itemsQuery, [posOrderIds]);
 
-            itemsData.forEach(item => {
-                formattedData.Expense += item.Expense;
-            });
+                itemsData.forEach(item => {
+                    monthData.Expense += item.Expense;
+                });
+            }
+
+            monthlyData.push(monthData);
         }
 
-        res.json(formattedData);
+        res.json(monthlyData);
     } catch (error) {
         console.error(`Error fetching monthly report: ${error.message}`);
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
