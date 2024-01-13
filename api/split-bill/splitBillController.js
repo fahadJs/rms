@@ -71,6 +71,12 @@ const createItSplit = async (req, res) => {
         const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity) VALUES (?, ?, ?, ?, ?, ?, ?)';
     
         const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ?, split_status = CASE WHEN split_quantity = ? THEN "splitted" ELSE status END WHERE OrderID = ? AND MenuItemID = ?';
+
+        const checkExtrasQuery = `SELECT * FROM order_extras WHERE OrderItemID = ?`;
+
+        const getExtrasQuery = `SELECT * FROM menu_extras WHERE extras_id = ?`
+
+        const getItemQuery = `SELECT * FROM menuitems WHERE MenuItemID = ?`
     
         const updateRemainingQuery = 'UPDATE orders SET remaining = ? WHERE OrderID = ?';
     
@@ -78,12 +84,25 @@ const createItSplit = async (req, res) => {
             const itemDetails = itemDetailsResult.find(details => details.MenuItemID === item.menuitemID);
     
             if (itemDetails) {
-                const itemTotal = itemDetails.Price * item.quantity;
-                const itemSplitAmount = (itemTotal / fetchedOrder.total_amount) * fetchedOrder.remaining;
+                const getItem = await poolConnection.query(getItemQuery, [item.menuitemID]);
+                let itemTotal = getItem.Price * item.quantity;
+                // const itemSplitAmount = (itemTotal / fetchedOrder.total_amount) * fetchedOrder.remaining; 
     
-                const updatedQuantity = itemDetails.split_quantity - item.quantity;
+                const updatedQuantity = itemDetails.split_quantity - item.quantity;   
     
                 if (updatedQuantity >= 0) {
+                    let extrasTotal = 0;
+                    const checkExtras = await poolConnection.query(checkExtrasQuery, [item.OrderItemID]);
+                    if (checkExtras.length > 0) {
+                        for(const extras of checkExtras){
+                            const extrasPrice = await poolConnection.query(getExtrasQuery, [extras.extras_id]);
+                            extrasTotal += extrasPrice.extras_price;
+                        }
+                        itemTotal + extrasTotal;
+                    }
+
+                    const itemSplitAmount = fetchedOrder.remaining - itemTotal;
+
                     // Update the order item quantity
                     await poolConnection.query(updateOrderItemQuantityQuery, [updatedQuantity, updatedQuantity, orderId, item.menuitemID]);
     
