@@ -18,7 +18,7 @@ const create = async (req, res) => {
 const getAll = async (req, res) => {
   try {
     const {restaurant_id} = req.params;
-    const query = 'SELECT * FROM subcategories WHERE restaurant_id = ?';
+    const query = `SELECT * FROM subcategories WHERE restaurant_id = ? AND visible = 'true'`;
     const result = await poolConnection.query(query, [restaurant_id]);
     res.status(200).json(result);
   } catch (error) {

@@ -4,7 +4,7 @@ const getAll = async (req, res) => {
     try {
 
         const {restaurant_id} = req.params;
-        const getKitchensQuery = 'SELECT * FROM kitchens WHERE restaurant_id = ?';
+        const getKitchensQuery = `SELECT * FROM kitchens WHERE restaurant_id = ? AND visible = 'true'`;
         const kitchens = await poolConnection.query(getKitchensQuery, [restaurant_id]);
 
         if (kitchens.length === 0) {
@@ -72,7 +72,7 @@ const getById = async (req, res) => {
     try {
         const {kitchenId, restaurant_id} = req.params;
 
-        const getKitchenQuery = 'SELECT * FROM kitchens WHERE KitchenID = ? AND restaurant_id = ?';
+        const getKitchenQuery = `SELECT * FROM kitchens WHERE KitchenID = ? AND restaurant_id = ? AND visible = 'true'`;
         const kitchenResult = await poolConnection.query(getKitchenQuery, [kitchenId, restaurant_id]);
 
         if (kitchenResult.length === 0) {

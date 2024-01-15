@@ -254,9 +254,6 @@ const mrkPaid = async (req, res) => {
         await poolConnection.query(rollbackTransactionQuery);
     
         res.status(500).json({ status: 500, message: 'Error updating order status and table status!' });
-    } finally {
-        // Make sure to release the connection after the transaction is completed
-        await poolConnection.release();
     }
 }
 

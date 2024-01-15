@@ -18,7 +18,7 @@ const create = async (req, res) => {
 const getAll = async (req, res) => {
     try {
         const {restaurant_id} = req.params;
-        const query = 'SELECT * FROM categories WHERE restaurant_id = ?';
+        const query = `SELECT * FROM categories WHERE restaurant_id = ? AND visible = 'true'`;
         const result = await poolConnection.query(query, restaurant_id);
         res.status(200).json(result);
     } catch (error) {
@@ -61,7 +61,6 @@ const del = async (req, res) => {
     try {
         const { categoryId } = req.params;
 
-        // Check if the category exists
         const checkCategoryQuery = 'SELECT * FROM categories WHERE CategoryID = ?';
         const checkResult = await poolConnection.query(checkCategoryQuery, [categoryId]);
 
@@ -69,7 +68,6 @@ const del = async (req, res) => {
             return res.status(404).json({status: 404, message: 'Category not found!' });
         }
 
-        // Delete the category
         const deleteCategoryQuery = 'DELETE FROM categories WHERE CategoryID = ?';
         await poolConnection.query(deleteCategoryQuery, [categoryId]);
 

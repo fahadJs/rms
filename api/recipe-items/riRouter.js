@@ -1,11 +1,12 @@
 const router = require('express').Router();
 const riController = require('./riController');
+const token = require('../../jwt/jwt');
 
-router.get('/res/:restaurant_id', riController.getAll);
-router.get('/res/:restaurant_id/ing', riController.getAllWithIngredients);
-router.post('/res/:restaurant_id', riController.create);
-router.get('/:id', riController.getById);
-router.patch('/:id', riController.update);
-router.delete('/:id', riController.deleteItem);
+router.get('/res/:restaurant_id', token.verifyToken, riController.getAll);
+router.get('/res/:restaurant_id/ing', token.verifyToken, riController.getAllWithIngredients);
+router.post('/res/:restaurant_id', token.verifyToken, riController.create);
+router.get('/:id', token.verifyToken, riController.getById);
+router.patch('/:id', token.verifyToken, riController.update);
+router.delete('/:id', token.verifyToken, riController.deleteItem);
 
 module.exports = router;

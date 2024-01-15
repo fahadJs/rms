@@ -3,7 +3,7 @@ const poolConnection = require("../../config/database");
 const getAll = async (req, res) => {
     try {
         const {restaurant_id} = req.params;
-        let query = 'SELECT * FROM menuitems WHERE restaurant_id = ?';
+        let query = `SELECT * FROM menuitems WHERE restaurant_id = ? AND visible = 'true'`;
         const result = await poolConnection.query(query, [restaurant_id]);
 
         res.status(200).json(result);
@@ -20,7 +20,7 @@ const getForRecipeItems = async (req, res) => {
         let query = `
             SELECT *
             FROM menuitems
-            WHERE restaurant_id = ? AND MenuItemID NOT IN (
+            WHERE restaurant_id = ? AND visible = 'true' AND MenuItemID NOT IN (
                 SELECT DISTINCT MenuItemID
                 FROM recipe_items
             )`;
@@ -92,7 +92,7 @@ const update = async (req, res) => {
 const getById = async (req, res) => {
     try {
         const itemId = req.params.id;
-        let sql = 'SELECT * FROM menuitems WHERE MenuItemID = ?';
+        let sql = `SELECT * FROM menuitems WHERE MenuItemID = ? AND visible = 'true'`;
         const result = await poolConnection.query(sql, [itemId]);
 
         if (result.length > 0) {

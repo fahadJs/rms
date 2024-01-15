@@ -58,7 +58,7 @@ const wLogin = async (req, res) => {
                 time: time
             };
 
-            const token = jwt.sign(tokenPayload, 'RMSIDVERFY', {expiresIn: '6h'});
+            const token = jwt.sign(tokenPayload, 'RMSIDVERFY', { expiresIn: '6h' });
 
             res.status(200).json({
                 status: 200,
