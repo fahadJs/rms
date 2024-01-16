@@ -49,77 +49,112 @@ const createEqSplit = async (req, res) => {
 const createItSplit = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
-    
+
         const { orderId, tid, paidVia, items } = req.body;
-    
+        const { restaurant_id } = req.params;
+
         const getOrderQuery = 'SELECT * FROM orders WHERE OrderID = ?';
         const orderResult = await poolConnection.query(getOrderQuery, [orderId]);
-    
+
         if (orderResult.length === 0) {
             throw new Error({ status: 404, message: 'Order not found!' });
         }
-    
+
         const fetchedOrder = orderResult[0];
-    
+
         if (fetchedOrder.order_status === 'paid') {
             throw new Error({ status: 401, message: 'Bill is already paid!' });
         }
-    
+
         const getItemDetailsQuery = 'SELECT * FROM order_items WHERE OrderID = ?';
         const itemDetailsResult = await poolConnection.query(getItemDetailsQuery, [orderId]);
-    
+
         const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity) VALUES (?, ?, ?, ?, ?, ?, ?)';
-    
-        const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ?, split_status = CASE WHEN split_quantity = ? THEN "splitted" ELSE status END WHERE OrderID = ? AND MenuItemID = ?';
-    
+
+        const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ? WHERE OrderID = ? AND MenuItemID = ?';
+
+        const getMenuItemDetailsQuery = `SELECT * FROM menuitems WHERE MenuItemID = ? AND restaurant_id = ?`;
+
+        const checkExtrasQuery = `SELECT * FROM order_extras WHERE OrderItemID = ?`;
+
+        const getExtrasDetailQuery = `SELECT * FROM menu_extras WHERE extras_id = ?`;
+
         const updateRemainingQuery = 'UPDATE orders SET remaining = ? WHERE OrderID = ?';
-    
+
         for (const item of items) {
             const itemDetails = itemDetailsResult.find(details => details.MenuItemID === item.menuitemID);
-    
+
             if (itemDetails) {
-                const itemTotal = itemDetails.Price;
-                const itemSplitAmount = (itemTotal / fetchedOrder.total_amount) * fetchedOrder.remaining;
-    
+
+                const getMenuItemDetailsResult = await poolConnection.query(getMenuItemDetailsQuery, [item.menuitemID, restaurant_id]);
+
+                let itemPrice = getMenuItemDetailsResult[0].Price * item.quantity;
+
+                console.log(`item Price: ${itemPrice}`);
+
+                const checkExtrasResult = await poolConnection.query(checkExtrasQuery, [itemDetails.OrderItemID]);
+
+                console.log(`extras: ${JSON.stringify(checkExtrasResult[0], null, 2)}`);
+
+                if (checkExtrasResult.length > 0) {
+                    for(const extra of checkExtrasResult){
+                        const getExtrasDetailResult = await poolConnection.query(getExtrasDetailQuery, [extra.extras_id]);
+
+                        let extrasPrice = getExtrasDetailResult[0].extras_price;
+                        itemPrice += extrasPrice;
+                        console.log(`extras price: ${extrasPrice}, updated item price: ${itemPrice}`);
+                    }
+                }
+
+                console.log(`With Extras conditional!: ${itemPrice}`);
+
+                const getTaxQuery = `SELECT tax FROM restaurants WHERE restaurant_id = ?`;
+                const getTaxResult = await poolConnection.query(getTaxQuery, [restaurant_id]);
+
+                const taxPercent = getTaxResult[0].tax;
+
+                const taxAmount = (taxPercent / 100) * itemPrice;
+
+                const afterTax = itemPrice + taxAmount;
+
+                const remainingAmount = fetchedOrder.remaining - afterTax;
+
+                console.log(remainingAmount, taxPercent, taxAmount, afterTax);
+
                 const updatedQuantity = itemDetails.split_quantity - item.quantity;
-    
-                if (updatedQuantity >= 0) {
-                    // Update the order item quantity
-                    await poolConnection.query(updateOrderItemQuantityQuery, [updatedQuantity, updatedQuantity, orderId, item.menuitemID]);
-    
-                    // Update the remaining amount for the order
-                    const remainingAmount = fetchedOrder.remaining - itemSplitAmount;
+
+                if (updatedQuantity >= 0 ) {
+                    await poolConnection.query(updateOrderItemQuantityQuery, [updatedQuantity, orderId, item.menuitemID]);
+
                     await poolConnection.query(updateRemainingQuery, [remainingAmount, orderId]);
-    
-                    // Insert the split item record
-                    await poolConnection.query(insertSplitItemQuery, [orderId, item.menuitemID, itemDetails.ItemName, itemSplitAmount, tid, paidVia, item.quantity]);
+
+                    await poolConnection.query(insertSplitItemQuery, [orderId, item.menuitemID, itemDetails.ItemName, afterTax, tid, paidVia, item.quantity]);
                 } else {
-                    // Handle the case where there's not enough quantity to split
                     console.error(`Not enough quantity to split for MenuItemID ${item.menuitemID}`);
                 }
             }
         }
-    
+
         const remainingItemsQuery = 'SELECT COUNT(*) AS remainingItems FROM order_items WHERE OrderID = ? AND split_status != "splitted"';
         const remainingItemsResult = await poolConnection.query(remainingItemsQuery, [orderId]);
         const remainingItemCount = remainingItemsResult[0].remainingItems;
-    
+
         if (remainingItemCount === 0) {
             const updateOrderStatusQuery = 'UPDATE orders SET order_status = "paid", tid = "itsplit", paid_via = "itsplit" WHERE OrderID = ?';
             await poolConnection.query(updateOrderStatusQuery, [orderId]);
-    
+
             const updateTableStatusQuery = 'UPDATE tables SET status = ? WHERE table_id = ?';
             const updateTableStatusValues = ['available', fetchedOrder.table_id];
             await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
         }
-    
+
         await poolConnection.query('COMMIT');
         res.status(201).json({ status: 201, message: 'Bill split successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error(`Error splitting bill! Error: ${error.message}`);
         res.status(500).json({ status: 500, message: `Error splitting bill! ${error.message}` });
-    }    
+    }
 }
 
 module.exports = {
