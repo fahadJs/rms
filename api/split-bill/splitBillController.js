@@ -66,25 +66,34 @@ const createItSplit = async (req, res) => {
             throw new Error({ status: 401, message: 'Bill is already paid!' });
         }
 
-        const getItemDetailsQuery = 'SELECT * FROM order_items WHERE OrderID = ?';
+        const getItemDetailsQuery = `SELECT * FROM order_items WHERE OrderID = ? AND split_status = 'unsplitted'`;
         const itemDetailsResult = await poolConnection.query(getItemDetailsQuery, [orderId]);
 
         const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity) VALUES (?, ?, ?, ?, ?, ?, ?)';
 
-        const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ? WHERE OrderID = ? AND MenuItemID = ?';
+        const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ? WHERE OrderID = ? AND OrderItemID = ?';
 
         const getMenuItemDetailsQuery = `SELECT * FROM menuitems WHERE MenuItemID = ? AND restaurant_id = ?`;
 
-        const checkExtrasQuery = `SELECT * FROM order_extras WHERE OrderItemID = ?`;
+        const checkExtrasQuery = `SELECT * FROM order_extras WHERE OrderItemID = ? AND split_status = 'unsplitted'`;
+
+        const updateExtrasStatusQuery = `UPDATE order_extras SET split_status = ? WHERE OrderExtrasID = ?`;
 
         const getExtrasDetailQuery = `SELECT * FROM menu_extras WHERE extras_id = ?`;
 
-        const updateRemainingQuery = 'UPDATE orders SET remaining = ? WHERE OrderID = ?';
+        const updateRemainingQuery = 'UPDATE orders SET remaining = ?, after_tax = after_tax + ? WHERE OrderID = ?';
+
+        const checkSpecificSplitQuantityQuery = 'SELECT split_quantity FROM order_items WHERE OrderItemID = ? AND MenuItemID = ?';
+
+        const markOrderItemSplittedQuery = 'UPDATE order_items SET split_status = "splitted" WHERE OrderID = ? AND OrderItemID = ?';
+
+        const markMenuItemSplittedQuery = 'UPDATE order_items SET split_status = "splitted" WHERE OrderID = ? AND MenuItemID = ?';
 
         for (const item of items) {
             const itemDetails = itemDetailsResult.find(details => details.MenuItemID === item.menuitemID);
 
             if (itemDetails) {
+                const { extras } = item;
 
                 const getMenuItemDetailsResult = await poolConnection.query(getMenuItemDetailsQuery, [item.menuitemID, restaurant_id]);
 
@@ -96,8 +105,8 @@ const createItSplit = async (req, res) => {
 
                 console.log(`extras: ${JSON.stringify(checkExtrasResult[0], null, 2)}`);
 
-                if (checkExtrasResult.length > 0) {
-                    for(const extra of checkExtrasResult){
+                if (extras && checkExtrasResult.length > 0) {
+                    for (const extra of checkExtrasResult) {
                         const getExtrasDetailResult = await poolConnection.query(getExtrasDetailQuery, [extra.extras_id]);
 
                         let extrasPrice = getExtrasDetailResult[0].extras_price;
@@ -105,8 +114,6 @@ const createItSplit = async (req, res) => {
                         console.log(`extras price: ${extrasPrice}, updated item price: ${itemPrice}`);
                     }
                 }
-
-                console.log(`With Extras conditional!: ${itemPrice}`);
 
                 const getTaxQuery = `SELECT tax FROM restaurants WHERE restaurant_id = ?`;
                 const getTaxResult = await poolConnection.query(getTaxQuery, [restaurant_id]);
@@ -117,20 +124,48 @@ const createItSplit = async (req, res) => {
 
                 const afterTax = itemPrice + taxAmount;
 
-                const remainingAmount = fetchedOrder.remaining - afterTax;
+                const remainingAmount = fetchedOrder.remaining - itemPrice;
 
-                console.log(remainingAmount, taxPercent, taxAmount, afterTax);
+                console.log(`remainingAmount: ${remainingAmount}, taxPercent: ${taxPercent}, taxAmount: ${taxAmount}, afterTax: ${afterTax}`);
 
                 const updatedQuantity = itemDetails.split_quantity - item.quantity;
 
-                if (updatedQuantity >= 0 ) {
-                    await poolConnection.query(updateOrderItemQuantityQuery, [updatedQuantity, orderId, item.menuitemID]);
+                if (updatedQuantity >= 0) {
+                    await poolConnection.query(updateOrderItemQuantityQuery, [updatedQuantity, orderId, itemDetails.OrderItemID]);
+                    console.log('Quantity updated!');
 
-                    await poolConnection.query(updateRemainingQuery, [remainingAmount, orderId]);
+                    await poolConnection.query(updateRemainingQuery, [remainingAmount, afterTax, orderId]);
+                    console.log('Remaining Updated!');
 
                     await poolConnection.query(insertSplitItemQuery, [orderId, item.menuitemID, itemDetails.ItemName, afterTax, tid, paidVia, item.quantity]);
+                    console.log('Data inserted in Split Bill!');
                 } else {
                     console.error(`Not enough quantity to split for MenuItemID ${item.menuitemID}`);
+                }
+
+                if (extras && checkExtrasResult.length > 0) {
+                    // If extras are present, check split_quantity before marking the specific order item as "splitted"
+                    const checkSplitQuantityResult = await poolConnection.query(checkSpecificSplitQuantityQuery, [itemDetails.OrderItemID, item.menuitemID]);
+                    const itemsWithZeroSplit = checkSplitQuantityResult[0].split_quantity;
+
+                    if (itemsWithZeroSplit === 0) {
+                        await poolConnection.query(markOrderItemSplittedQuery, [orderId, itemDetails.OrderItemID]);
+                        console.log('With extras item set splitted!');
+
+                        for (const extrasStatus of checkExtrasResult) {
+                            await poolConnection.query(updateExtrasStatusQuery, ['splitted', extrasStatus.OrderExtrasID])
+                            console.log('Extras Status marked splitted!');
+                        }
+                    }
+                } else {
+                    // If no extras are present, check split_quantity before marking the menu item as "splitted"
+                    const checkSplitQuantityResult = await poolConnection.query(checkSpecificSplitQuantityQuery, [itemDetails.OrderItemID, item.menuitemID]);
+                    const itemsWithZeroSplit = checkSplitQuantityResult[0].split_quantity;
+
+                    if (itemsWithZeroSplit === 0) {
+                        await poolConnection.query(markMenuItemSplittedQuery, [orderId, item.menuitemID]);
+                        console.log('Without extras item set splitted!');
+                    }
                 }
             }
         }
@@ -142,10 +177,12 @@ const createItSplit = async (req, res) => {
         if (remainingItemCount === 0) {
             const updateOrderStatusQuery = 'UPDATE orders SET order_status = "paid", tid = "itsplit", paid_via = "itsplit" WHERE OrderID = ?';
             await poolConnection.query(updateOrderStatusQuery, [orderId]);
+            console.log('Orders Marked Paid!');
 
             const updateTableStatusQuery = 'UPDATE tables SET status = ? WHERE table_id = ?';
             const updateTableStatusValues = ['available', fetchedOrder.table_id];
             await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
+            console.log('Table set available!');
         }
 
         await poolConnection.query('COMMIT');
