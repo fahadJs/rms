@@ -94,6 +94,7 @@ const createItSplit = async (req, res) => {
 
             if (itemDetails) {
                 const { extras } = item;
+                
 
                 const getMenuItemDetailsResult = await poolConnection.query(getMenuItemDetailsQuery, [item.menuitemID, restaurant_id]);
 

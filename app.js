@@ -35,6 +35,7 @@ const currencyRouter = require('./api/currency/currencyRouter');
 const expenseRouter = require('./api/expense/expenseRouter');
 const taxRouter = require('./api/tax/taxRouter');
 const paymentRouter = require('./api/payment/paymentRouter');
+const wcsRouter = require('./api/waiter-cash-sales/wcsRouter');
 
 // Parameter Testing
 const testRouter = require('./api/test/testRouter');
@@ -76,6 +77,7 @@ app.use('/api/currency', currencyRouter)
 app.use('/api/expense', expenseRouter);
 app.use('/api/tax', taxRouter);
 app.use('/api/payment', paymentRouter);
+app.use('/api/wcs', wcsRouter);
 
 // For Parameter Testing
 app.use('/api/test',testRouter);
