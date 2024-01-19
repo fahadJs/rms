@@ -37,7 +37,7 @@ const getAll = async (req, res) => {
                 waiters w ON o.waiter_id = w.waiter_id
             WHERE
                 o.restaurant_id = ? AND
-                o.waiter_closed = 'pending' AND
+                (o.waiter_closed = 'pending' OR o.waiter_closed = 'closed-r') AND
                 o.time >= ?;
         `;
 
@@ -58,23 +58,12 @@ const getAll = async (req, res) => {
         });
 
         await Promise.all(Object.keys(totalCashSales).map(async waiterId => {
-            const getCurrentRemainingQuery = `
-                SELECT closed_remaining
-                FROM waiters
-                WHERE waiter_id = ?;
-            `;
-            const currentRemainingResult = await poolConnection.query(getCurrentRemainingQuery, [waiterId]);
-
-            const currentRemaining = currentRemainingResult[0].closed_remaining;
-            totalCashSales[waiterId] += currentRemaining;
-
             const updateWaiterQuery = `
                 UPDATE waiters
-                SET closed_amount = ?,
-                    closed_remaining = ?
+                SET closed_remaining = ?
                 WHERE waiter_id = ?;
             `;
-            await poolConnection.query(updateWaiterQuery, [totalCashSales[waiterId], currentRemaining, waiterId]);
+            await poolConnection.query(updateWaiterQuery, [totalCashSales[waiterId], waiterId]);
         }));
 
         const formattedResults = Object.keys(totalCashSales).map(waiterId => ({
@@ -96,21 +85,27 @@ const closing = async (req, res) => {
         const getWaiterInfoQuery = `SELECT * FROM waiters WHERE restaurant_id = ? AND waiter_id = ?`;
         const getWaiterInfoResult = await poolConnection.query(getWaiterInfoQuery, [restaurant_id, waiter_id]);
 
-        const closedAmount = getWaiterInfoResult[0].closed_amount;
+        const closedAmount = getWaiterInfoResult[0].closed_remaining;
+
+        if (amount > closedAmount) {
+            return res.status(400).json({ status: 400, message: 'Amount exceeds!' });
+        }
 
         const closedRemaining = closedAmount - amount;
 
-        const setClosedRemianingQuery = `UPDATE waiters SET closed_remaining = ? WHERE waiter_id = ? AND restaurant_id = ?`;
+        const setClosedRemainingQuery = `UPDATE waiters SET closed_remaining = ? WHERE waiter_id = ? AND restaurant_id = ?`;
 
-        await poolConnection.query(setClosedRemianingQuery, [closedRemaining, waiter_id, restaurant_id]);
+        await poolConnection.query(setClosedRemainingQuery, [closedRemaining, waiter_id, restaurant_id]);
 
-        const setClosedRemainingQuery = `
+        const setClosedQuery = `
             UPDATE orders
-            SET waiter_closed = 'closed'
+            SET waiter_closed = ?
             WHERE waiter_id = ? AND restaurant_id = ?;
         `;
 
-        await poolConnection.query(setClosedRemainingQuery, [waiter_id, restaurant_id]);
+        const orderStatus = closedRemaining > 0 ? 'closed-r' : 'closed';
+
+        await poolConnection.query(setClosedQuery, [orderStatus, waiter_id, restaurant_id]);
 
         res.status(200).json({ status: 200, message: 'Closed Updated!' });
     } catch (error) {
