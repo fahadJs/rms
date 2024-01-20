@@ -192,6 +192,8 @@ const createItSplit = async (req, res) => {
     // }
 
     try {
+        await poolConnection.query('START TRANSACTION');
+
         const { orderId, tid, paidVia, items } = req.body;
         const { restaurant_id } = req.params;
 
@@ -223,7 +225,7 @@ const createItSplit = async (req, res) => {
 
             const menuItem = itemDetailsResult[0];
 
-            let itemPrice = menuItem.Price * item.quantity;
+            let itemPrice = menuItem.Price;
 
             if (getOrderExtrasResult.length > 0) {
                 for (const extra of getOrderExtrasResult) {
@@ -235,6 +237,8 @@ const createItSplit = async (req, res) => {
                     console.log(`extras price: ${extrasPrice}, updated item price: ${itemPrice}`);
                 }
             }
+
+            itemPrice * item.quantity;
 
             const getTaxQuery = `SELECT tax FROM restaurants WHERE restaurant_id = ?`;
             const getTaxResult = await poolConnection.query(getTaxQuery, [restaurant_id]);
@@ -248,13 +252,49 @@ const createItSplit = async (req, res) => {
             const remainingAmount = fetchedOrder.remaining - itemPrice;
 
             const updateOrderAfterTaxAndRemaining = `UPDATE orders SET remaining = ?, SET after_tax = after_tax + ? WHERE OrderID = ?`;
-
-            const updateOrderAfterTaxAndRemainingResult = await poolConnection.query(updateOrderAfterTaxAndRemaining, [remainingAmount, afterTax, orderId]);
+            await poolConnection.query(updateOrderAfterTaxAndRemaining, [remainingAmount, afterTax, orderId]);
 
             const splitQuantity = orderItem.split_quantity - item.quantity;
 
+            if (splitQuantity >= 0) {
+                const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ? WHERE OrderID = ? AND OrderItemID = ?';
+                await poolConnection.query(updateOrderItemQuantityQuery, [splitQuantity, orderId, item.OrderItemID]);
+
+                const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity) VALUES (?, ?, ?, ?, ?, ?, ?)';
+                await poolConnection.query(insertSplitItemQuery, [orderId, menuItem.MenuItemID, menuItem.Name, afterTax, tid, paidVia, item.quantity]);
+            }
+
+            const checkSpecificSplitQuantityQuery = 'SELECT split_quantity FROM order_items WHERE OrderID = ? AND OrderItemID = ?';
+            const checkSpecificSplitQuantity = await poolConnection.query(checkSpecificSplitQuantityQuery, [orderId, item.OrderItemID]);
+
+            const checkQuantity = checkSpecificSplitQuantity[0].split_quantity;
+
+            if (checkQuantity === 0) {
+                const markOrderItemSplittedQuery = 'UPDATE order_items SET split_status = "splitted" WHERE OrderID = ? AND OrderItemID = ?';
+                await poolConnection.query(markOrderItemSplittedQuery, [orderId, item.OrderItemID]);
+            }
+
         }
+
+        const remainingItemsQuery = 'SELECT COUNT(*) AS remainingItems FROM order_items WHERE OrderID = ? AND split_status != "splitted"';
+        const remainingItemsResult = await poolConnection.query(remainingItemsQuery, [orderId]);
+        const remainingItemCount = remainingItemsResult[0].remainingItems;
+
+        if (remainingItemCount === 0) {
+            const updateOrderStatusQuery = 'UPDATE orders SET order_status = "paid", tid = "itsplit", paid_via = "itsplit" WHERE OrderID = ?';
+            await poolConnection.query(updateOrderStatusQuery, [orderId]);
+            console.log('Orders Marked Paid!');
+
+            const updateTableStatusQuery = 'UPDATE tables SET status = ? WHERE table_id = ?';
+            const updateTableStatusValues = ['available', fetchedOrder.table_id];
+            await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
+            console.log('Table set available!');
+        }
+
+        await poolConnection.query('COMMIT');
+        res.status(201).json({ status: 201, message: 'Bill split successfully!' });
     } catch (error) {
+        await poolConnection.query('ROLLBACK');
         console.error(`Error splitting bill! Error: ${error.message}`);
         res.status(500).json({ status: 500, message: `Error splitting bill! ${error.message}` });
     }
