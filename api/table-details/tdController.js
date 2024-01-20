@@ -270,6 +270,9 @@ const cancel = async (req, res) => {
         const getOrderItemsQuery = 'SELECT MenuItemID, Quantity FROM order_items WHERE OrderID = ?';
         const orderItemsResult = await poolConnection.query(getOrderItemsQuery, [orderId]);
 
+        const deleteSplitOrderItemsQuery = 'DELETE FROM bill_split_item WHERE OrderID = ?';
+        await poolConnection.query(deleteSplitOrderItemsQuery, [orderId]);
+
         const deleteOrderItemsQuery = 'DELETE FROM order_items WHERE OrderID = ?';
         await poolConnection.query(deleteOrderItemsQuery, [orderId]);
 
