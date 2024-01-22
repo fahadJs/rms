@@ -37,7 +37,7 @@ const assignCustomerTask = async (req, res) => {
 
 const getAllByCust = async (req, res) => {
     try {
-        const {custId} = req.params;
+        const { custId } = req.params;
 
         const selectQuery =
             `SELECT cn.cust_id, cn.cust_number, tn.t_num FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ?`;
@@ -46,15 +46,14 @@ const getAllByCust = async (req, res) => {
 
         if (rows.length === 0) {
             res.status(404).json({ success: false, message: 'Customer not found or no assigned numbers' });
-        } else {
-            const customerDetails = {
-                cust_id: rows[0].cust_id,
-                cust_number: rows[0].cust_number,
-                assigned_numbers: rows.map((row) => row.t_num),
-            };
-
-            res.json({customerDetails });
         }
+
+        res.status(200).json({
+            cust_id: rows[0].cust_id,
+            cust_number: rows[0].cust_number,
+            assigned_numbers: rows.map((row) => row.t_num)
+        });
+
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
