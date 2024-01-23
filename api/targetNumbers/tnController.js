@@ -53,37 +53,21 @@ const getAllByCust = async (req, res) => {
         const { custId } = req.params;
 
         const selectQuery =
-            `SELECT cn.cust_id, cn.cust_number, tn.t_num FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ?`;
+            `SELECT cn.cust_id, cn.cust_number, tn.t_num, tn.t_id FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ?`;
 
         const rows = await poolConnection.query(selectQuery, [custId, 'assigned']);
 
         if (rows.length === 0) {
             res.status(404).json({ success: false, message: 'Customer not found or no assigned numbers' });
+            return;
         }
 
-        const numbersList = rows.map((row) => row.t_num).join('\n\n');
-        const message = `Paisay kamanay ka tareeqa yeh hai k:
-
-        step 1:
-        Humein "250" likh kar message karain.
-        
-        step 2:
-        Jo message aap ko receive ho, woh message diay gai neechay number per send kar dain.
-        
-        Step 3:
-        
-        Screen recording kr k 1 ghantay k baad humein bhej dena hai (bank account number or easypaisa or jazz cash)
-        
-        Inn numbers per click kar k "hi" ka message karna hai pahlay aur phir message forward karna hai picture k sath wala hai woh apko forward karna hai neechay diay gai number per.
-         
-         numbers: \n${numbersList}`;
-
-        console.log(message);
+        const assignedNumbers = rows.map(row => ({ id: row.t_id, number: row.t_num }));
 
         res.status(200).json({
             cust_id: rows[0].cust_id,
             cust_number: rows[0].cust_number,
-            assigned_numbers: rows.map((row) => row.t_num)
+            assigned_numbers: assignedNumbers
         });
 
     } catch (error) {
@@ -133,11 +117,45 @@ const sendMessage = async (req, res) => {
             console.log(apiCall.data);
         } catch (error) {
             console.log(`${error}! Error Making Api Call!`);
-            res.status(500).json({status: 500, message: `Error Making Api Call!`});
+            res.status(500).json({ status: 500, message: `Error Making Api Call!` });
+            return;
         }
 
-        res.status(200).json({status: 200, message: `Message succesfully sent!`});
-        
+        res.status(200).json({ status: 200, message: `Message succesfully sent!` });
+
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    }
+}
+
+const updateTargetNumbersStatus = async (req, res) => {
+    try {
+        const { custId } = req.params;
+        const { numbers } = req.body;
+
+        const getTargetNumbers = `SELECT * FROM target_numbers WHERE cust_id = ? AND t_status = 'assigned'`;
+        const getTargetNumbersResult = await poolConnection.query(getTargetNumbers, [custId]);
+
+        if (getTargetNumbersResult.length > 0) {
+            for (const number of numbers) {
+                try {
+                    const updateNumberStatus = `UPDATE target_numbers SET t_status = 'not-assigned' WHERE t_id = ? AND cust_id = ?`;
+                    await poolConnection.query(updateNumberStatus, [number.t_id, custId]);
+                    console.log(`Successfully marked not-assigned!`);
+                } catch (error) {
+                    console.error('Error:', error);
+                    res.status(500).json({ status: 500, message: 'Error Updating Number Status!' });
+                    return;
+                }
+            }
+        } else {
+            console.error('Error:', error);
+            res.status(404).json({ status: 404, message: 'No Target number found!' });
+            return;
+        }
+
+        res.status(200).json({status: 200, message: `Status Succesfully Marked not-assigned to all!`});
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
@@ -149,5 +167,6 @@ module.exports = {
     assignCustomerTask,
     getAllByCust,
     getAllTargetNumbers,
-    sendMessage
+    sendMessage,
+    updateTargetNumbersStatus
 }
