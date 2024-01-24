@@ -34,6 +34,8 @@ const assignCustomerTask = async (req, res) => {
     
         if (checkCustResult.length > 0) {
             res.status(409).json({ status: 409, message: 'Cust_number already exists' });
+            console.log('Cust_number already exists');
+            return;
         } else {
             const insertCustQuery = 'INSERT INTO cust_numbers (cust_number) VALUES (?)';
             const insertCustResult = await poolConnection.query(insertCustQuery, [cust_number]);
