@@ -8,6 +8,6 @@ router.get('/send/:custId', tnController.sendMessage);
 router.post('/updatestatus/:custId', tnController.updateTargetNumbersStatus);
 router.get('/resolve/:custId', tnController.resolveTask);
 router.get('/reassign/:custId', tnController.reAssignCustomerTask);
-router.get('/get/info', tnController.getAllInfo); 
+router.get('/info', tnController.getAllInfo); 
 
 module.exports = router;
