@@ -62,7 +62,7 @@ const getAllByCust = async (req, res) => {
         const { custId } = req.params;
 
         const selectQuery =
-            `SELECT cn.cust_id, cn.cust_number, tn.t_num, tn.t_id FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ?`;
+            `SELECT cn.cust_id, cn.cust_number, tn.t_num, tn.t_id, tn.sent_status FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ?`;
 
         const rows = await poolConnection.query(selectQuery, [custId, 'assigned']);
 
@@ -75,6 +75,7 @@ const getAllByCust = async (req, res) => {
         res.status(200).json({
             cust_id: rows[0].cust_id,
             cust_number: rows[0].cust_number,
+            sent_status: rows[0].sent_status,
             assigned_numbers: assignedNumbers
         });
 
