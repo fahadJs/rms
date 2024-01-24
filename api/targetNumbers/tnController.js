@@ -92,19 +92,13 @@ const sendMessage = async (req, res) => {
         const numbersList = rows.map((row) => row.t_num).join('\n\n');
         const message = `Paisay kamanay ka tareeqa yeh hai k:
 
-        step 1:
-        Humein "250" likh kar message karain.
-        
-        step 2:
-        Jo message aap ko receive ho, woh message diay gai neechay number per send kar dain.
-        
-        Step 3:
-        
-        Screen recording kr k 1 ghantay k baad humein bhej dena hai (bank account number or easypaisa or jazz cash)
-        
-        Inn numbers per click kar k "hi" ka message karna hai pahlay aur phir message forward karna hai picture k sath wala hai woh apko forward karna hai neechay diay gai number per.
-         
-         numbers: \n${numbersList}`;
+step 1%0aHumein "250" likh kar message karain.%0a%0a
+
+step 2%0aJo message aap ko receive ho, woh message diay gai neechay number per send kar dain.%0a%0a
+
+Step 3%0aScreen recording kr k 1 ghantay k baad humein bhej dena hai (bank account number or easypaisa or jazz cash)%0a%0aInn numbers per click kar k "hi" ka message karna hai pahlay aur phir message forward karna hai picture k sath wala hai woh apko forward karna hai neechay diay gai number per.%0a%0a
+
+numbers: %0a${numbersList}`;
 
         console.log(message);
 
