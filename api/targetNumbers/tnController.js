@@ -116,8 +116,8 @@ numbers: %0a%0a${numbersList}`;
             const apiCall = await axios.get(apiUrl);
             console.log(apiCall.data);
 
-            const updateSentStatus = `UPDATE target_numbers SET sent_status = ? WHERE cust_id = ?`;
-            await poolConnection.query(updateSentStatus, ['sent', custId]);
+            const updateSentStatus = `UPDATE target_numbers SET sent_status = 'sent' WHERE cust_id = ?`;
+            await poolConnection.query(updateSentStatus, [custId]);
 
             console.log(`Status updated to sent!`);
         } catch (error) {
