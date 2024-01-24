@@ -3,10 +3,21 @@ const axios = require('axios');
 
 const getAllCust = async (req, res) => {
     try {
-        const getAllNumbers = `SELECT * FROM cust_numbers`;
+        const getAllNumbers = `
+        SELECT cn.cust_id, cn.cust_number, tn.sent_status
+        FROM cust_numbers cn
+        LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id
+    `;
+
         const getAllNumbersResult = await poolConnection.query(getAllNumbers);
 
-        res.status(200).json(getAllNumbersResult);
+        const allCustomers = getAllNumbersResult.map(row => ({
+            cust_id: row.cust_id,
+            cust_number: row.cust_number,
+            sent_status: row.sent_status,
+        }));
+
+        res.status(200).json(allCustomers);
 
     } catch (error) {
         res.status(404).json({ status: 404, message: `Error fetching Customers!` });
@@ -28,10 +39,10 @@ const getAllTargetNumbers = async (req, res) => {
 const assignCustomerTask = async (req, res) => {
     try {
         const { cust_number } = req.body;
-    
+
         const checkCustQuery = 'SELECT cust_id FROM cust_numbers WHERE cust_number = ?';
         const checkCustResult = await poolConnection.query(checkCustQuery, [cust_number]);
-    
+
         if (checkCustResult.length > 0) {
             res.status(409).json({ status: 409, message: 'Cust_number already exists' });
             console.log('Cust_number already exists');
@@ -40,13 +51,13 @@ const assignCustomerTask = async (req, res) => {
             const insertCustQuery = 'INSERT INTO cust_numbers (cust_number) VALUES (?)';
             const insertCustResult = await poolConnection.query(insertCustQuery, [cust_number]);
             const custId = insertCustResult.insertId;
-    
+
             const selectQuery = 'SELECT * FROM target_numbers WHERE t_status = ? LIMIT 30';
             const rows = await poolConnection.query(selectQuery, ['not-assigned']);
-    
+
             const updateQuery = 'UPDATE target_numbers SET t_status = ?, cust_id = ? WHERE t_id IN (?)';
             const tIds = rows.map((row) => row.t_id);
-    
+
             await poolConnection.query(updateQuery, ['assigned', custId, tIds]);
             res.status(200).json({ status: 200, message: 'Numbers assigned successfully' });
         }
@@ -54,7 +65,7 @@ const assignCustomerTask = async (req, res) => {
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
         console.log(error);
     }
-    
+
 }
 
 const getAllByCust = async (req, res) => {
@@ -165,7 +176,7 @@ const updateTargetNumbersStatus = async (req, res) => {
             return;
         }
 
-        res.status(200).json({status: 200, message: `Status Succesfully Marked not-assigned to all!`});
+        res.status(200).json({ status: 200, message: `Status Succesfully Marked not-assigned to all!` });
     } catch (error) {
         console.error('Error:', error);
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
