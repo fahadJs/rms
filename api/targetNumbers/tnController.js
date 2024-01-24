@@ -4,7 +4,7 @@ const axios = require('axios');
 const getAllCust = async (req, res) => {
     try {
         const getAllNumbers = `
-        SELECT cn.cust_id, cn.cust_number, tn.sent_status
+        SELECT cn.cust_id, cn.cust_number, tn.sent_status, tn.t_status, tn.resolve_status
         FROM cust_numbers cn
         LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id
     `;
@@ -21,6 +21,8 @@ const getAllCust = async (req, res) => {
                     cust_id: custId,
                     cust_number: row.cust_number,
                     sent_status: row.sent_status,
+                    resolve_status: row.resolve_status,
+                    assign_status: row.t_status
                 });
             }
         });
@@ -76,6 +78,42 @@ const assignCustomerTask = async (req, res) => {
         console.log(error);
     }
 
+}
+
+const reAssignCustomerTask = async (req, res) => {
+    try {
+        const { custId } = req.params;
+
+        const selectQuery = 'SELECT * FROM target_numbers WHERE t_status = ? LIMIT 30';
+        const rows = await poolConnection.query(selectQuery, ['not-assigned']);
+
+        const updateQuery = 'UPDATE target_numbers SET t_status = ?, cust_id = ? WHERE t_id IN (?)';
+
+        const tIds = rows.map((row) => row.t_id);
+
+        await poolConnection.query(updateQuery, ['assigned', custId, tIds]);
+        res.status(200).json({ status: 200, message: 'Numbers assigned successfully' });
+
+    } catch (error) {
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(error);
+    }
+
+}
+
+const resolveTask = async (req, res) => {
+    try {
+        const { custId } = req.params;
+
+        const updateQuery = `UPDATE target_numbers SET resolve_status = 'resolved' WHERE cust_id = ?`;
+
+        await poolConnection.query(updateQuery, [custId]);
+        res.status(200).json({ status: 200, message: 'Numbers resolved successfully' });
+
+    } catch (error) {
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(error);
+    }
 }
 
 const getAllByCust = async (req, res) => {
@@ -199,5 +237,7 @@ module.exports = {
     getAllByCust,
     getAllTargetNumbers,
     sendMessage,
-    updateTargetNumbersStatus
+    updateTargetNumbersStatus,
+    resolveTask,
+    reAssignCustomerTask
 }
