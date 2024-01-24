@@ -1,3 +1,4 @@
+const { urlencoded } = require('body-parser');
 const poolConnection = require('../../config/db');
 const axios = require('axios');
 
@@ -97,7 +98,7 @@ const reAssignCustomerTask = async (req, res) => {
 
         const updateAssigned = `UPDATE cust_numbers SET t_status = 'assigned' WHERE cust_id = ?`;
         await poolConnection.query(updateAssigned, [custId]);
-        
+
         res.status(200).json({ status: 200, message: 'Numbers assigned successfully' });
 
     } catch (error) {
@@ -130,7 +131,7 @@ const getAllByCust = async (req, res) => {
         const { custId } = req.params;
 
         const selectQuery =
-            `SELECT cn.cust_id, cn.cust_number, tn.t_num, tn.t_id, tn.sent_status FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ?`;
+            `SELECT cn.cust_id, cn.cust_number, tn.t_num, tn.t_id FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ?`;
 
         const rows = await poolConnection.query(selectQuery, [custId, 'assigned']);
 
@@ -143,7 +144,6 @@ const getAllByCust = async (req, res) => {
         res.status(200).json({
             cust_id: rows[0].cust_id,
             cust_number: rows[0].cust_number,
-            sent_status: rows[0].sent_status,
             assigned_numbers: assignedNumbers
         });
 
@@ -158,12 +158,12 @@ const sendMessage = async (req, res) => {
         const { custId } = req.params;
 
         const selectQuery =
-            `SELECT cn.cust_id, cn.cust_number, tn.t_num FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ? AND tn.sent_status = ?`;
+            `SELECT cn.cust_id, cn.cust_number, tn.t_num FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ? AND tn.sent_status = ? AND tn.resolve_status = ?`;
 
-        const rows = await poolConnection.query(selectQuery, [custId, 'assigned', 'not-sent']);
+        const rows = await poolConnection.query(selectQuery, [custId, 'assigned', 'not-sent', 'not-resolved']);
 
         if (rows.length === 0) {
-            res.status(404).json({ success: false, message: 'Customer not found or no assigned numbers or sent task already!' });
+            res.status(404).json({ success: false, message: 'Customer not found or no assigned numbers or sent task already task not resolved!' });
             console.log('Customer not found or no assigned numbers or sent task already!');
             return;
         }
@@ -183,7 +183,7 @@ numbers: %0a%0a${numbersList}`;
 
         const custNum = rows[0].cust_number;
 
-        const apiUrl = `https://dash2.wabot.my/api/send.php?number=${custNum}&type=text&message=${message}&instance_id=65AE763FD8BEE&access_token=10cabf6587ee6a7f6f2d3c8659f56c9a`;
+        const apiUrl = `https://dash2.wabot.my/api/send.php?number=${custNum}&type=text&message=${encodeURIComponent(message)}&instance_id=65AE763FD8BEE&access_token=10cabf6587ee6a7f6f2d3c8659f56c9a`;
 
         try {
             const apiCall = await axios.get(apiUrl);
