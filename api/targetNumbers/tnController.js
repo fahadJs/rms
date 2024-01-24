@@ -33,7 +33,7 @@ const assignCustomerTask = async (req, res) => {
         const insertCustResult = await poolConnection.query(insertCustQuery, [cust_number]);
         const custId = insertCustResult.insertId;
 
-        const selectQuery = 'SELECT * FROM target_numbers WHERE t_status = ? LIMIT 10';
+        const selectQuery = 'SELECT * FROM target_numbers WHERE t_status = ? LIMIT 30';
         const rows = await poolConnection.query(selectQuery, ['not-assigned']);
 
         const updateQuery = 'UPDATE target_numbers SET t_status = ?, cust_id = ? WHERE t_id IN (?)';
