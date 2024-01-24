@@ -53,30 +53,40 @@ const assignCustomerTask = async (req, res) => {
     try {
         const { cust_number } = req.body;
 
+        await poolConnection.query('START TRANSACTION');
+
         const checkCustQuery = 'SELECT cust_id FROM cust_numbers WHERE cust_number = ?';
         const checkCustResult = await poolConnection.query(checkCustQuery, [cust_number]);
 
         if (checkCustResult.length > 0) {
             res.status(409).json({ status: 409, message: 'Cust_number already exists' });
             console.log('Cust_number already exists');
-            return;
-        } else {
+        } 
+        
+        try {
             const insertCustQuery = 'INSERT INTO cust_numbers (cust_number) VALUES (?)';
             const insertCustResult = await poolConnection.query(insertCustQuery, [cust_number]);
             const custId = insertCustResult.insertId;
 
             const selectQuery = 'SELECT * FROM target_numbers WHERE t_status = ? LIMIT 30';
             const rows = await poolConnection.query(selectQuery, ['not-assigned']);
-
+    
             const updateQuery = 'UPDATE target_numbers SET t_status = ?, cust_id = ? WHERE t_id IN (?)';
             const tIds = rows.map((row) => row.t_id);
             await poolConnection.query(updateQuery, ['assigned', custId, tIds]);
+    
+            const updateAssigned = 'UPDATE cust_numbers SET t_status = ? WHERE cust_id = ?';
+            await poolConnection.query(updateAssigned, ['assigned', custId]);
 
-            const updateAssigned = `UPDATE cust_numbers SET t_status = 'assigned' WHERE cust_id = ?`;
-            await poolConnection.query(updateAssigned, [custId]);
-
-            res.status(200).json({ status: 200, message: 'Numbers assigned successfully' });
+        } catch (error) {
+            await poolConnection.query('ROLLBACK');
+            console.log(error);
+            res.status(500).json({ status: 500, message: 'Internal Server Error' });
         }
+
+        await poolConnection.query('COMMIT');
+        res.status(200).json({ status: 200, message: 'Numbers assigned successfully' });
+        
     } catch (error) {
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
         console.log(error);
