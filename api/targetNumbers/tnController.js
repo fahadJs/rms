@@ -193,7 +193,7 @@ numbers: %0a%0a${numbersList}`;
 
         const custNum = rows[0].cust_number;
 
-        const apiUrl = `https://dash2.wabot.my/api/send.php?number=${custNum}&type=text&message=${encodeURIComponent(message)}&instance_id=65AE763FD8BEE&access_token=10cabf6587ee6a7f6f2d3c8659f56c9a`;
+        const apiUrl = `https://dash2.wabot.my/api/send.php?number=${custNum}&type=text&message=${message}&instance_id=65AE763FD8BEE&access_token=10cabf6587ee6a7f6f2d3c8659f56c9a`;
 
         try {
             const apiCall = await axios.get(apiUrl);
