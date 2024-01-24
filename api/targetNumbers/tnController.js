@@ -11,11 +11,21 @@ const getAllCust = async (req, res) => {
 
         const getAllNumbersResult = await poolConnection.query(getAllNumbers);
 
-        const allCustomers = getAllNumbersResult.map(row => ({
-            cust_id: row.cust_id,
-            cust_number: row.cust_number,
-            sent_status: row.sent_status,
-        }));
+        const customerMap = new Map();
+
+        getAllNumbersResult.forEach(row => {
+            const custId = row.cust_id;
+
+            if (!customerMap.has(custId)) {
+                customerMap.set(custId, {
+                    cust_id: custId,
+                    cust_number: row.cust_number,
+                    sent_status: row.sent_status,
+                });
+            }
+        });
+
+        const allCustomers = Array.from(customerMap.values());
 
         res.status(200).json(allCustomers);
 
