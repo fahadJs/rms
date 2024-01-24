@@ -28,24 +28,31 @@ const getAllTargetNumbers = async (req, res) => {
 const assignCustomerTask = async (req, res) => {
     try {
         const { cust_number } = req.body;
-
-        const insertCustQuery = 'INSERT INTO cust_numbers (cust_number) VALUES (?)';
-        const insertCustResult = await poolConnection.query(insertCustQuery, [cust_number]);
-        const custId = insertCustResult.insertId;
-
-        const selectQuery = 'SELECT * FROM target_numbers WHERE t_status = ? LIMIT 30';
-        const rows = await poolConnection.query(selectQuery, ['not-assigned']);
-
-        const updateQuery = 'UPDATE target_numbers SET t_status = ?, cust_id = ? WHERE t_id IN (?)';
-        const tIds = rows.map((row) => row.t_id);
-
-        await poolConnection.query(updateQuery, ['assigned', custId, tIds]);
-        res.status(200).json({ status: 200, message: 'Numbers assigned successfully' });
-
+    
+        const checkCustQuery = 'SELECT cust_id FROM cust_numbers WHERE cust_number = ?';
+        const checkCustResult = await poolConnection.query(checkCustQuery, [cust_number]);
+    
+        if (checkCustResult.length > 0) {
+            res.status(409).json({ status: 409, message: 'Cust_number already exists' });
+        } else {
+            const insertCustQuery = 'INSERT INTO cust_numbers (cust_number) VALUES (?)';
+            const insertCustResult = await poolConnection.query(insertCustQuery, [cust_number]);
+            const custId = insertCustResult.insertId;
+    
+            const selectQuery = 'SELECT * FROM target_numbers WHERE t_status = ? LIMIT 30';
+            const rows = await poolConnection.query(selectQuery, ['not-assigned']);
+    
+            const updateQuery = 'UPDATE target_numbers SET t_status = ?, cust_id = ? WHERE t_id IN (?)';
+            const tIds = rows.map((row) => row.t_id);
+    
+            await poolConnection.query(updateQuery, ['assigned', custId, tIds]);
+            res.status(200).json({ status: 200, message: 'Numbers assigned successfully' });
+        }
     } catch (error) {
-        res.status(404).json({ status: 404, message: `Error fetching Numbers!` });
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
         console.log(error);
     }
+    
 }
 
 const getAllByCust = async (req, res) => {
@@ -59,7 +66,6 @@ const getAllByCust = async (req, res) => {
 
         if (rows.length === 0) {
             res.status(404).json({ success: false, message: 'Customer not found or no assigned numbers' });
-            return;
         }
 
         const assignedNumbers = rows.map(row => ({ id: row.t_id, number: row.t_num }));
@@ -81,15 +87,15 @@ const sendMessage = async (req, res) => {
         const { custId } = req.params;
 
         const selectQuery =
-            `SELECT cn.cust_id, cn.cust_number, tn.t_num FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ?`;
+            `SELECT cn.cust_id, cn.cust_number, tn.t_num FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ? AND tn.sent_status = ?`;
 
-        const rows = await poolConnection.query(selectQuery, [custId, 'assigned']);
+        const rows = await poolConnection.query(selectQuery, [custId, 'assigned', 'not-sent']);
 
         if (rows.length === 0) {
-            res.status(404).json({ success: false, message: 'Customer not found or no assigned numbers' });
+            res.status(404).json({ success: false, message: 'Customer not found or no assigned numbers or sent task already!' });
         }
 
-        const numbersList = rows.map((row) => row.t_num).join('%0a');
+        const numbersList = rows.map((row) => row.t_num).join('%0a%0a');
         const message = `Paisay kamanay ka tareeqa yeh hai k:
 
 %0a%0astep 1%0aHumein "250" likh kar message karain.%0a%0a
@@ -98,7 +104,7 @@ step 2%0aJo message aap ko receive ho, woh message diay gai neechay number per s
 
 Step 3%0aScreen recording kr k 1 ghantay k baad humein bhej dena hai (bank account number or easypaisa or jazz cash)%0a%0aInn numbers per click kar k "hi" ka message karna hai pahlay aur phir message forward karna hai picture k sath wala hai woh apko forward karna hai neechay diay gai number per.%0a%0a
 
-numbers: %0a${numbersList}`;
+numbers: %0a%0a${numbersList}`;
 
         console.log(message);
 
@@ -109,6 +115,11 @@ numbers: %0a${numbersList}`;
         try {
             const apiCall = await axios.get(apiUrl);
             console.log(apiCall.data);
+
+            const updateSentStatus = `UPDATE target_numbers SET sent_status = ? WHERE cust_id = ?`;
+            await poolConnection.query(updateSentStatus, 'sent', custId);
+
+            console.log(`Status updated to sent!`);
         } catch (error) {
             console.log(`${error}! Error Making Api Call!`);
             res.status(500).json({ status: 500, message: `Error Making Api Call!` });
