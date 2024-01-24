@@ -1,6 +1,32 @@
-const { urlencoded } = require('body-parser');
 const poolConnection = require('../../config/db');
 const axios = require('axios');
+
+const getAllInfo = async (req, res) => {
+    try {
+        const assignedCount = await poolConnection.query(`SELECT COUNT(t_status) FROM target_numbers WHERE t_status = 'assigned'`);
+        const sentCount = await poolConnection.query(`SELECT COUNT(sent_status) FROM target_numbers WHERE sent_status = 'sent`);
+        const resolvedCount = await poolConnection.query(`SELECT COUNT(resolve_status) FROM target_numbers WHERE resolve_status = 'resolved'`);
+
+        const notAssignedCount = await poolConnection.query(`SELECT COUNT(t_status) FROM target_numbers WHERE t_status = 'not-assigned'`);
+        const notSentCount = await poolConnection.query(`SELECT COUNT(sent_status) FROM target_numbers WHERE sent_status = 'not-sent`);
+        const notResolvedCount = await poolConnection.query(`SELECT COUNT(resolve_status) FROM target_numbers WHERE resolve_status = 'not-resolved'`);
+
+        const total = await poolConnection.query(`SELECT COUNT(t_id) FROM target_numbers`);
+
+        res.status(200).json({
+            assigned: assignedCount,
+            sent: sentCount,
+            resolved: resolvedCount,
+            notAssigned: notAssignedCount,
+            notSent: notSentCount,
+            notResolved: notResolvedCount,
+            total: total
+        });
+        
+    } catch (error) {
+        res.status(404).json({ status: 404, message: `Error fetching info!` });
+    }
+}
 
 const getAllCust = async (req, res) => {
     try {
@@ -267,5 +293,6 @@ module.exports = {
     sendMessage,
     updateTargetNumbersStatus,
     resolveTask,
-    reAssignCustomerTask
+    reAssignCustomerTask,
+    getAllInfo
 }
