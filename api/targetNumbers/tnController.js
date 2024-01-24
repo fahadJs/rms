@@ -89,10 +89,10 @@ const sendMessage = async (req, res) => {
             res.status(404).json({ success: false, message: 'Customer not found or no assigned numbers' });
         }
 
-        const numbersList = rows.map((row) => row.t_num).join('\n\n');
+        const numbersList = rows.map((row) => row.t_num).join('%0a');
         const message = `Paisay kamanay ka tareeqa yeh hai k:
 
-step 1%0aHumein "250" likh kar message karain.%0a%0a
+%0a%0astep 1%0aHumein "250" likh kar message karain.%0a%0a
 
 step 2%0aJo message aap ko receive ho, woh message diay gai neechay number per send kar dain.%0a%0a
 
