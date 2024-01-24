@@ -4,7 +4,7 @@ const axios = require('axios');
 const getAllCust = async (req, res) => {
     try {
         const getAllNumbers = `
-        SELECT cn.cust_id, cn.cust_number, tn.sent_status, tn.t_status, tn.resolve_status
+        SELECT cn.cust_id, cn.cust_number, tn.sent_status, cn.t_status, tn.resolve_status
         FROM cust_numbers cn
         LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id
     `;
@@ -69,8 +69,11 @@ const assignCustomerTask = async (req, res) => {
 
             const updateQuery = 'UPDATE target_numbers SET t_status = ?, cust_id = ? WHERE t_id IN (?)';
             const tIds = rows.map((row) => row.t_id);
-
             await poolConnection.query(updateQuery, ['assigned', custId, tIds]);
+
+            const updateAssigned = `UPDATE cust_numbers SET t_status = 'assigned' WHERE cust_id = ?`;
+            await poolConnection.query(updateAssigned, [custId]);
+
             res.status(200).json({ status: 200, message: 'Numbers assigned successfully' });
         }
     } catch (error) {
@@ -90,8 +93,11 @@ const reAssignCustomerTask = async (req, res) => {
         const updateQuery = 'UPDATE target_numbers SET t_status = ?, cust_id = ? WHERE t_id IN (?)';
 
         const tIds = rows.map((row) => row.t_id);
-
         await poolConnection.query(updateQuery, ['assigned', custId, tIds]);
+
+        const updateAssigned = `UPDATE cust_numbers SET t_status = 'assigned' WHERE cust_id = ?`;
+        await poolConnection.query(updateAssigned, [custId]);
+        
         res.status(200).json({ status: 200, message: 'Numbers assigned successfully' });
 
     } catch (error) {
@@ -106,8 +112,11 @@ const resolveTask = async (req, res) => {
         const { custId } = req.params;
 
         const updateQuery = `UPDATE target_numbers SET resolve_status = 'resolved' WHERE cust_id = ?`;
-
         await poolConnection.query(updateQuery, [custId]);
+
+        const updateAssigned = `UPDATE cust_numbers SET t_status = 'not-assigned' WHERE cust_id = ?`;
+        await poolConnection.query(updateAssigned, [custId]);
+
         res.status(200).json({ status: 200, message: 'Numbers resolved successfully' });
 
     } catch (error) {
