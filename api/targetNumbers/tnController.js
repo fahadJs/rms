@@ -4,11 +4,11 @@ const axios = require('axios');
 const getAllInfo = async (req, res) => {
     try {
         const assignedCount = await poolConnection.query(`SELECT COUNT(t_status) FROM target_numbers WHERE t_status = 'assigned'`);
-        const sentCount = await poolConnection.query(`SELECT COUNT(sent_status) FROM target_numbers WHERE sent_status = 'sent`);
+        const sentCount = await poolConnection.query(`SELECT COUNT(sent_status) FROM target_numbers WHERE sent_status = 'sent'`);
         const resolvedCount = await poolConnection.query(`SELECT COUNT(resolve_status) FROM target_numbers WHERE resolve_status = 'resolved'`);
 
         const notAssignedCount = await poolConnection.query(`SELECT COUNT(t_status) FROM target_numbers WHERE t_status = 'not-assigned'`);
-        const notSentCount = await poolConnection.query(`SELECT COUNT(sent_status) FROM target_numbers WHERE sent_status = 'not-sent`);
+        const notSentCount = await poolConnection.query(`SELECT COUNT(sent_status) FROM target_numbers WHERE sent_status = 'not-sent'`);
         const notResolvedCount = await poolConnection.query(`SELECT COUNT(resolve_status) FROM target_numbers WHERE resolve_status = 'not-resolved'`);
 
         const total = await poolConnection.query(`SELECT COUNT(t_id) FROM target_numbers`);
