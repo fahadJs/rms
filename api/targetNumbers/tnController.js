@@ -117,7 +117,7 @@ numbers: %0a%0a${numbersList}`;
             console.log(apiCall.data);
 
             const updateSentStatus = `UPDATE target_numbers SET sent_status = ? WHERE cust_id = ?`;
-            await poolConnection.query(updateSentStatus, 'sent', custId);
+            await poolConnection.query(updateSentStatus, ['sent', custId]);
 
             console.log(`Status updated to sent!`);
         } catch (error) {
