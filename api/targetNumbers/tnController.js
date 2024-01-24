@@ -61,8 +61,8 @@ const assignCustomerTask = async (req, res) => {
         if (checkCustResult.length > 0) {
             res.status(409).json({ status: 409, message: 'Cust_number already exists' });
             console.log('Cust_number already exists');
-        } 
-        
+        }
+
         try {
             const insertCustQuery = 'INSERT INTO cust_numbers (cust_number) VALUES (?)';
             const insertCustResult = await poolConnection.query(insertCustQuery, [cust_number]);
@@ -70,11 +70,11 @@ const assignCustomerTask = async (req, res) => {
 
             const selectQuery = 'SELECT * FROM target_numbers WHERE t_status = ? LIMIT 30';
             const rows = await poolConnection.query(selectQuery, ['not-assigned']);
-    
+
             const updateQuery = 'UPDATE target_numbers SET t_status = ?, cust_id = ? WHERE t_id IN (?)';
             const tIds = rows.map((row) => row.t_id);
             await poolConnection.query(updateQuery, ['assigned', custId, tIds]);
-    
+
             const updateAssigned = 'UPDATE cust_numbers SET t_status = ? WHERE cust_id = ?';
             await poolConnection.query(updateAssigned, ['assigned', custId]);
 
@@ -199,10 +199,19 @@ numbers: %0a%0a${numbersList}`;
             const apiCall = await axios.get(apiUrl);
             console.log(apiCall.data);
 
-            const updateSentStatus = `UPDATE target_numbers SET sent_status = 'sent' WHERE cust_id = ?`;
-            await poolConnection.query(updateSentStatus, [custId]);
+            if (apiCall.data.status === 'success') {
+                const updateSentStatus = `UPDATE target_numbers SET sent_status = 'sent' WHERE cust_id = ?`;
+                await poolConnection.query(updateSentStatus, [custId]);
 
-            console.log(`Status updated to sent!`);
+                console.log(`Status updated to sent!`);
+                res.status(200).json({ status: 200, message: `Message successfully sent!` });
+            } else {
+                const updateSentStatus = `UPDATE target_numbers SET sent_status = 'not-sent' WHERE cust_id = ?`;
+                await poolConnection.query(updateSentStatus, [custId]);
+
+                console.log(`Error Making Api Call - Status not success!`);
+                res.status(500).json({ status: 500, message: `Error Making Api Call - Status not success!` });
+            }
         } catch (error) {
             console.log(`${error}! Error Making Api Call!`);
             res.status(500).json({ status: 500, message: `Error Making Api Call!` });
