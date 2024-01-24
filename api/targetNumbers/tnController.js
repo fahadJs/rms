@@ -93,6 +93,8 @@ const sendMessage = async (req, res) => {
 
         if (rows.length === 0) {
             res.status(404).json({ success: false, message: 'Customer not found or no assigned numbers or sent task already!' });
+            console.log('Customer not found or no assigned numbers or sent task already!');
+            return;
         }
 
         const numbersList = rows.map((row) => row.t_num).join('%0a%0a');
