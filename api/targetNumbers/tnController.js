@@ -113,7 +113,7 @@ const sendMessage = async (req, res) => {
         const apiUrl = `https://dash2.wabot.my/api/send.php?number=${custNum}&type=text&message=${message}&instance_id=65AE763FD8BEE&access_token=10cabf6587ee6a7f6f2d3c8659f56c9a`;
 
         try {
-            const apiCall = await axios.get(url);
+            const apiCall = await axios.get(apiUrl);
             console.log(apiCall.data);
         } catch (error) {
             console.log(`${error}! Error Making Api Call!`);
