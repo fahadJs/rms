@@ -152,9 +152,6 @@ const resolveTask = async (req, res) => {
         const updateQuery = `UPDATE target_numbers SET resolve_status = 'resolved' WHERE cust_id = ?`;
         await poolConnection.query(updateQuery, [custId]);
 
-        const updateAssigned = `UPDATE cust_numbers SET t_status = 'not-assigned' WHERE cust_id = ?`;
-        await poolConnection.query(updateAssigned, [custId]);
-
         res.status(200).json({ status: 200, message: 'Numbers resolved successfully' });
 
     } catch (error) {
