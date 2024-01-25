@@ -171,9 +171,9 @@ const getAllByCust = async (req, res) => {
         const { custId } = req.params;
 
         const selectQuery =
-            `SELECT cn.cust_id, cn.cust_number, tn.t_num, tn.t_id FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ?`;
+            `SELECT cn.cust_id, cn.cust_number, tn.t_num, tn.t_id FROM cust_numbers cn LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.cust_id = ? AND tn.t_status = ? AND tn.resolve_status = ?`;
 
-        const rows = await poolConnection.query(selectQuery, [custId, 'assigned']);
+        const rows = await poolConnection.query(selectQuery, [custId, 'assigned', 'not-resolved']);
 
         if (rows.length === 0) {
             res.status(404).json({ success: false, message: 'Customer not found or no assigned numbers' });
