@@ -125,6 +125,8 @@ const reAssignCustomerTask = async (req, res) => {
     try {
         const { custId } = req.params;
 
+        await poolConnection.query('START TRANSACTION');
+
         const selectQuery = 'SELECT * FROM target_numbers WHERE t_status = ? LIMIT 30';
         const rows = await poolConnection.query(selectQuery, ['not-assigned']);
 
@@ -137,8 +139,9 @@ const reAssignCustomerTask = async (req, res) => {
         await poolConnection.query(updateAssigned, [custId]);
 
         res.status(200).json({ status: 200, message: 'Numbers assigned successfully' });
-
+        await poolConnection.query('COMMIT');
     } catch (error) {
+        await poolConnection.query('ROLLBACK');
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
         console.log(error);
     }
@@ -151,6 +154,9 @@ const resolveTask = async (req, res) => {
 
         const updateQuery = `UPDATE target_numbers SET resolve_status = 'resolved' WHERE cust_id = ?`;
         await poolConnection.query(updateQuery, [custId]);
+
+        const updateAssigned = `UPDATE cust_numbers SET t_status = 'not-assigned' WHERE cust_id = ?`;
+        await poolConnection.query(updateAssigned, [custId]);
 
         res.status(200).json({ status: 200, message: 'Numbers resolved successfully' });
 
