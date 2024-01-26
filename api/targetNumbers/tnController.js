@@ -204,7 +204,7 @@ const resolveTask = async (req, res) => {
     try {
         const { custId } = req.params;
 
-        const updateQuery = `UPDATE target_numbers SET resolve_status = 'resolved', SET visible_status = 'hidden' WHERE cust_id = ?`;
+        const updateQuery = `UPDATE target_numbers SET resolve_status = 'resolved', visible_status = 'hidden' WHERE cust_id = ?`;
         await poolConnection.query(updateQuery, [custId]);
 
         const updateAssigned = `UPDATE cust_numbers SET t_status = 'not-assigned' WHERE cust_id = ?`;
