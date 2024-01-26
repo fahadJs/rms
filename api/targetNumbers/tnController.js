@@ -92,7 +92,7 @@ const getAllCust = async (req, res) => {
         // Now, make a separate query to get both statuses
         const getStatuses = `
     SELECT cust_id, sent_status, resolve_status
-    FROM another_table
+    FROM target_numbers
     WHERE cust_id IN (${Array.from(customerMap.keys()).join(',')})
 `;
 
