@@ -22,7 +22,7 @@ const getAllInfo = async (req, res) => {
             notResolved: notResolvedCount,
             total: total
         });
-        
+
     } catch (error) {
         res.status(404).json({ status: 404, message: `Error fetching info!` });
     }
@@ -30,11 +30,39 @@ const getAllInfo = async (req, res) => {
 
 const getAllCust = async (req, res) => {
     try {
+        //     const getAllNumbers = `
+        //     SELECT cn.cust_id, cn.cust_number, tn.sent_status, cn.t_status, tn.resolve_status
+        //     FROM cust_numbers cn
+        //     LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id
+        // `;
+
+        //     const getAllNumbersResult = await poolConnection.query(getAllNumbers);
+
+        //     const customerMap = new Map();
+
+        //     getAllNumbersResult.forEach(row => {
+        //         const custId = row.cust_id;
+
+        //         if (!customerMap.has(custId)) {
+        //             customerMap.set(custId, {
+        //                 cust_id: custId,
+        //                 cust_number: row.cust_number,
+        //                 sent_status: row.sent_status,
+        //                 resolve_status: row.resolve_status,
+        //                 assign_status: row.t_status
+        //             });
+        //         }
+        //     });
+
+        //     const allCustomers = Array.from(customerMap.values());
+
+        //     res.status(200).json(allCustomers);
+
         const getAllNumbers = `
-        SELECT cn.cust_id, cn.cust_number, tn.sent_status, cn.t_status, tn.resolve_status
-        FROM cust_numbers cn
-        LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.visible_status = 'visible'
-    `;
+    SELECT cn.cust_id, cn.cust_number, tn.sent_status, cn.t_status, tn.resolve_status, tn.visible_status
+    FROM cust_numbers cn
+    LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id
+`;
 
         const getAllNumbersResult = await poolConnection.query(getAllNumbers);
 
@@ -47,11 +75,35 @@ const getAllCust = async (req, res) => {
                 customerMap.set(custId, {
                     cust_id: custId,
                     cust_number: row.cust_number,
-                    sent_status: row.sent_status,
-                    resolve_status: row.resolve_status,
+                    sent_status: null, // Initialize to null
+                    resolve_status: null, // Initialize to null
                     assign_status: row.t_status
                 });
             }
+
+            // Update statuses if visible_status is 'visible'
+            const existingEntry = customerMap.get(custId);
+            if (row.visible_status === 'visible') {
+                existingEntry.sent_status = row.sent_status;
+                existingEntry.resolve_status = row.resolve_status;
+            }
+        });
+
+        // Now, make a separate query to get both statuses
+        const getStatuses = `
+    SELECT cust_id, sent_status, resolve_status
+    FROM another_table
+    WHERE cust_id IN (${Array.from(customerMap.keys()).join(',')})
+`;
+
+        const getStatusesResult = await poolConnection.query(getStatuses);
+
+        // Update the existing entries in customerMap with the new statuses
+        getStatusesResult.forEach(row => {
+            const custId = row.cust_id;
+            const existingEntry = customerMap.get(custId);
+            existingEntry.sent_status = row.sent_status;
+            existingEntry.resolve_status = row.resolve_status;
         });
 
         const allCustomers = Array.from(customerMap.values());
