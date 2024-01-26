@@ -33,7 +33,7 @@ const getAllCust = async (req, res) => {
         const getAllNumbers = `
         SELECT cn.cust_id, cn.cust_number, tn.sent_status, cn.t_status, tn.resolve_status
         FROM cust_numbers cn
-        LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id
+        LEFT JOIN target_numbers tn ON cn.cust_id = tn.cust_id WHERE tn.visible_status = 'visible'
     `;
 
         const getAllNumbersResult = await poolConnection.query(getAllNumbers);
@@ -152,7 +152,7 @@ const resolveTask = async (req, res) => {
     try {
         const { custId } = req.params;
 
-        const updateQuery = `UPDATE target_numbers SET resolve_status = 'resolved' WHERE cust_id = ?`;
+        const updateQuery = `UPDATE target_numbers SET resolve_status = 'resolved', SET visible_status = 'hidden' WHERE cust_id = ?`;
         await poolConnection.query(updateQuery, [custId]);
 
         const updateAssigned = `UPDATE cust_numbers SET t_status = 'not-assigned' WHERE cust_id = ?`;
