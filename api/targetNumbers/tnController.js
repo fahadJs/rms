@@ -75,8 +75,8 @@ const getAllCust = async (req, res) => {
                 customerMap.set(custId, {
                     cust_id: custId,
                     cust_number: row.cust_number,
-                    sent_status: null, // Initialize to null
-                    resolve_status: null, // Initialize to null
+                    sent_status: 'sent', // Initialize to null
+                    resolve_status: 'resolved', // Initialize to null
                     assign_status: row.t_status
                 });
             }
