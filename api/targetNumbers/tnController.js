@@ -75,13 +75,12 @@ const getAllCust = async (req, res) => {
                 customerMap.set(custId, {
                     cust_id: custId,
                     cust_number: row.cust_number,
-                    sent_status: 'sent', // Initialize to null
-                    resolve_status: 'resolved', // Initialize to null
+                    sent_status: 'sent', // Initialize to sent
+                    resolve_status: 'resolved', // Initialize to resolved
                     assign_status: row.t_status
                 });
             }
 
-            // Update statuses if visible_status is 'visible'
             const existingEntry = customerMap.get(custId);
             if (row.visible_status === 'visible') {
                 existingEntry.sent_status = row.sent_status;
@@ -89,7 +88,6 @@ const getAllCust = async (req, res) => {
             }
         });
 
-        // Now, make a separate query to get both statuses
         const getStatuses = `
     SELECT cust_id, sent_status, resolve_status
     FROM target_numbers
@@ -98,7 +96,6 @@ const getAllCust = async (req, res) => {
 
         const getStatusesResult = await poolConnection.query(getStatuses);
 
-        // Update the existing entries in customerMap with the new statuses
         getStatusesResult.forEach(row => {
             const custId = row.cust_id;
             const existingEntry = customerMap.get(custId);
