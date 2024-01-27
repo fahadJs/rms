@@ -231,10 +231,11 @@ const mrkPaid = async (req, res) => {
 
         console.log(orderTotal, taxPercent, taxAmount, afterTax);
 
-        const tidValue = tid || 'CASH';
+        const tidValue = tid.toUpperCase();
+        const paidViaValue = paidVia.toUpperCase();
 
         const updateOrderQuery = 'UPDATE orders SET order_status = "paid", tid = ?, paid_via = ?, after_tax = ? WHERE OrderID = ?';
-        await poolConnection.query(updateOrderQuery, [tidValue, paidVia, afterTax, orderId]);
+        await poolConnection.query(updateOrderQuery, [tidValue, paidViaValue, afterTax, orderId]);
 
         const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = (SELECT table_id FROM orders WHERE OrderID = ?)';
         await poolConnection.query(updateTableQuery, [orderId]);
