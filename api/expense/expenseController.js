@@ -32,20 +32,20 @@ const getPosMonthlyExpense = async (req, res) => {
 
         if (ordersData.length === 0) {
             const monthlyData = [];
-        
+
             for (let i = 0; i < 12; i++) {
                 const monthStart = moment(currentDate).startOf('year').add(i, 'months');
                 const monthKey = monthStart.format('MMM');
-        
+
                 const formattedData = {
                     name: monthKey,
                     Expense: 0,
                     Income: 0
                 };
-        
+
                 monthlyData.push(formattedData);
             }
-        
+
             res.json(monthlyData);
             return;
         }
@@ -480,6 +480,361 @@ const getWaiterWeeklyExpenseAdmin = async (req, res) => {
     }
 }
 
+const getPosMonthlyExpenseData = async (restaurantId) => {
+    try {
+        const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateResult = await poolConnection.query(currentDateQuery, [restaurantId]);
+
+        if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
+            throw new Error("Time zone not available for the restaurant");
+        }
+
+        const timeZone = currentDateResult[0].time_zone;
+        const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+        const startOfMonth = moment(currentDate).startOf('month').format('YYYY-MM-DD HH:mm:ss');
+
+        const ordersQuery = `
+            SELECT 
+                po.PosOrderID,
+                po.time,
+                po.total_amount AS OrderIncome
+            FROM 
+                pos_orders po
+            WHERE 
+                po.restaurant_id = ?
+                AND po.time >= ?
+            ORDER BY 
+                po.time;
+        `;
+        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, startOfMonth]);
+
+        if (ordersData.length === 0) {
+            const formattedData = {
+                name: moment(startOfMonth).format('MMM'),
+                Expense: 0,
+                Income: 0
+            };
+            return res.json(formattedData);
+        }
+
+        let totalOrderIncome = 0;
+        let totalItemExpense = 0;
+
+        ordersData.forEach(order => {
+            totalOrderIncome += order.OrderIncome;
+        });
+
+        const itemsQuery = `
+            SELECT 
+                poi.PosOrderID,
+                SUM(poi.Quantity * mi.CostPrice) AS ItemExpense
+            FROM 
+                pos_order_items poi
+                JOIN menuitems mi ON poi.MenuItemID = mi.MenuItemID
+            WHERE 
+                poi.PosOrderID IN (?)
+            GROUP BY 
+                poi.PosOrderID;
+        `;
+        const itemsData = await poolConnection.query(itemsQuery, [ordersData.map(order => order.PosOrderID)]);
+
+        itemsData.forEach(item => {
+            totalItemExpense += item.ItemExpense;
+        });
+
+        const formattedData = {
+            name: moment(startOfMonth).format('MMM'),
+            Expense: parseFloat(totalItemExpense.toFixed(2)),
+            Income: parseFloat(totalOrderIncome.toFixed(2)),
+        };
+
+        return formattedData;
+    } catch (error) {
+        console.error(`Error fetching monthly report: ${error.message}`);
+        return error;
+    }
+}
+
+const getWaiterMonthlyExpenseAdminData = async (restaurantId) => {
+    try {
+        const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateResult = await poolConnection.query(currentDateQuery, [restaurantId]);
+
+        if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
+            throw new Error("Time zone not available for the restaurant");
+        }
+
+        const timeZone = currentDateResult[0].time_zone;
+        const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+        const startOfMonth = moment(currentDate).startOf('month').format('YYYY-MM-DD HH:mm:ss');
+
+        const ordersQuery = `
+            SELECT 
+                o.OrderID,
+                o.time,
+                o.total_amount AS OrderIncome
+            FROM 
+                orders o
+            WHERE 
+                o.restaurant_id = ?
+                AND o.time >= ?
+            ORDER BY 
+                o.time;
+        `;
+        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, startOfMonth]);
+
+        if (ordersData.length === 0) {
+            const formattedData = {
+                name: moment(startOfMonth).format('MMM'),
+                Expense: 0,
+                Income: 0
+            };
+            return res.json(formattedData);
+        }
+
+        let totalOrderIncome = 0;
+        let totalItemExpense = 0;
+
+        ordersData.forEach(order => {
+            totalOrderIncome += order.OrderIncome;
+        });
+
+        const itemsQuery = `
+            SELECT 
+                oi.OrderID,
+                SUM(oi.Quantity * mi.CostPrice) AS ItemExpense
+            FROM 
+                order_items oi
+                JOIN menuitems mi ON oi.MenuItemID = mi.MenuItemID
+            WHERE 
+                oi.OrderID IN (?)
+            GROUP BY 
+                oi.OrderID;
+        `;
+        const itemsData = await poolConnection.query(itemsQuery, [ordersData.map(order => order.OrderID)]);
+
+        itemsData.forEach(item => {
+            totalItemExpense += item.ItemExpense;
+        });
+
+        const formattedData = {
+            name: moment(startOfMonth).format('MMM'),
+            Expense: parseFloat(totalItemExpense.toFixed(2)),
+            Income: parseFloat(totalOrderIncome.toFixed(2)),
+        };
+
+        return formattedData;
+    } catch (error) {
+        console.error(`Error fetching monthly report: ${error.message}`);
+        return error;
+    }
+}
+
+const getCombinedMonthlyExpense = async (req, res) => {
+    const { restaurantId } = req.params;
+
+    try {
+        const posMonthlyExpense = await getPosMonthlyExpenseData(restaurantId);
+
+        console.log(posMonthlyExpense);
+
+        const waiterMonthlyExpense = await getWaiterMonthlyExpenseAdminData(restaurantId);
+
+        console.log(waiterMonthlyExpense);
+
+        const combinedData = {
+            name: 'monthly',
+            Expense: parseFloat((posMonthlyExpense.Expense + waiterMonthlyExpense.Expense).toFixed(2)),
+            Income: parseFloat((posMonthlyExpense.Income + waiterMonthlyExpense.Income).toFixed(2))
+        };
+
+        res.json(combinedData);
+    } catch (error) {
+        console.error(`Error fetching combined monthly data: ${error.message}`);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    }
+}
+
+
+
+const getPosDailyExpenseData = async (restaurantId) => {
+    // const { restaurantId } = req.params;
+    try {
+        const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateResult = await poolConnection.query(currentDateQuery, [restaurantId]);
+
+        if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
+            throw new Error("Time zone not available for the restaurant");
+        }
+
+        const timeZone = currentDateResult[0].time_zone;
+        const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+        const twentyFourHoursAgo = moment(currentDate).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
+
+        const ordersQuery = `
+                SELECT 
+                    po.PosOrderID,
+                    po.total_amount AS Income
+                FROM 
+                    pos_orders po
+                WHERE 
+                    po.restaurant_id = ?
+                    AND po.time >= ?
+            `;
+        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, twentyFourHoursAgo]);
+
+        if (ordersData.length === 0) {
+            const formattedData = {
+                name: moment(currentDate).format('D'),
+                Expense: 0,
+                Income: 0
+            };
+            return res.json(formattedData);
+        }
+
+        let totalIncome = 0;
+
+        ordersData.forEach(order => {
+            totalIncome += order.Income;
+        });
+
+        const formattedData = {
+            name: moment(currentDate).format('D'),
+            Expense: 0,
+            Income: parseFloat(totalIncome.toFixed(2))
+        };
+
+        const itemsQuery = `
+                SELECT 
+                    PosOrderID,
+                    SUM(poi.Quantity * mi.CostPrice) AS Expense
+                FROM 
+                    pos_order_items poi
+                    JOIN menuitems mi ON poi.MenuItemID = mi.MenuItemID
+                WHERE 
+                    PosOrderID IN (?)
+                GROUP BY 
+                    PosOrderID
+            `;
+        const posOrderIds = ordersData.map(order => order.PosOrderID);
+        const itemsData = await poolConnection.query(itemsQuery, [posOrderIds]);
+
+        itemsData.forEach(item => {
+            formattedData.Expense += item.Expense;
+        });
+
+        return formattedData;
+    } catch (error) {
+        console.error(`Error fetching current daily data: ${error.message}`);
+        return error;
+    }
+}
+
+const getWaiterDailyExpenseAdminData = async (restaurantId) => {
+    try {
+        const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateResult = await poolConnection.query(currentDateQuery, [restaurantId]);
+
+        if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
+            throw new Error("Time zone not available for the restaurant");
+        }
+
+        const timeZone = currentDateResult[0].time_zone;
+        const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+        const startOf24HoursAgo = moment(currentDate).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
+
+        const ordersQuery = `
+            SELECT 
+                o.OrderID,
+                o.time,
+                o.total_amount AS OrderIncome
+            FROM 
+                orders o
+            WHERE 
+                o.restaurant_id = ?
+                AND o.time >= ?
+            ORDER BY 
+                o.time;
+        `;
+        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, startOf24HoursAgo]);
+
+        if (ordersData.length === 0) {
+            const formattedData = {
+                name: moment(startOf24HoursAgo).format('D'),
+                Expense: 0,
+                Income: 0
+            };
+            return res.json(formattedData);
+        }
+        let totalOrderIncome = 0;
+
+        ordersData.forEach(order => {
+            totalOrderIncome += order.OrderIncome;
+        });
+
+        const itemsQuery = `
+            SELECT 
+                oi.OrderID,
+                SUM(oi.Quantity * mi.CostPrice) AS ItemExpense
+            FROM 
+                order_items oi
+                JOIN menuitems mi ON oi.MenuItemID = mi.MenuItemID
+            WHERE 
+                oi.OrderID IN (?)
+            GROUP BY 
+                oi.OrderID;
+        `;
+        const itemsData = await poolConnection.query(itemsQuery, [ordersData.map(order => order.OrderID)]);
+
+        let totalItemExpense = 0;
+
+        itemsData.forEach(item => {
+            totalItemExpense += item.ItemExpense;
+        });
+
+        const formattedData = {
+            name: moment(startOf24HoursAgo).format('D'),
+            Expense: parseFloat(totalItemExpense.toFixed(2)),
+            Income: parseFloat(totalOrderIncome.toFixed(2)),
+        };
+
+        return formattedData;
+    } catch (error) {
+        console.error(`Error fetching daily report for admin: ${error.message}`);
+        return error;
+    }
+}
+
+const getCombinedDailyExpense = async (req, res) => {
+    const { restaurantId } = req.params;
+
+    try {
+        const posDailyExpense = await getPosDailyExpenseData(restaurantId);
+
+        console.log(posDailyExpense);
+
+        const waiterDailyExpense = await getWaiterDailyExpenseAdminData(restaurantId);
+
+        console.log(waiterDailyExpense);
+
+        const combinedData = {
+            name: 'daily',
+            Expense: parseFloat((posDailyExpense.Expense + waiterDailyExpense.Expense).toFixed(2)),
+            Income: parseFloat((posDailyExpense.Income + waiterDailyExpense.Income).toFixed(2))
+        };
+
+        res.json(combinedData);
+    } catch (error) {
+        console.error(`Error fetching combined daily data: ${error.message}`);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    }
+}
+
+
 
 module.exports = {
     getPosMonthlyExpense,
@@ -488,5 +843,8 @@ module.exports = {
 
     getWaiterMonthlyExpenseAdmin,
     getWaiterWeeklyExpenseAdmin,
-    getWaiterDailyExpenseAdmin
+    getWaiterDailyExpenseAdmin,
+
+    getCombinedDailyExpense,
+    getCombinedMonthlyExpense
 }

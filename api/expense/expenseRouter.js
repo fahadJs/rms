@@ -10,4 +10,8 @@ router.get('/res/:restaurantId/waiter/monthly/admin', token.verifyToken, expense
 router.get('/res/:restaurantId/waiter/weekly/admin', token.verifyToken, expenseController.getWaiterWeeklyExpenseAdmin);
 router.get('/res/:restaurantId/waiter/daily/admin', token.verifyToken, expenseController.getWaiterDailyExpenseAdmin);
 
+router.get('/res/:restaurantId/combined/daily', expenseController.getCombinedDailyExpense);
+
+router.get('/res/:restaurantId/combined/monthly', expenseController.getCombinedMonthlyExpense);
+
 module.exports = router;
