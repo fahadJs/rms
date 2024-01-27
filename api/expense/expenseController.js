@@ -249,6 +249,107 @@ const getPosDailyExpense = async (req, res) => {
     }
 }
 
+const getWaiterMonthlyExpenseAdminAllMonths = async (req, res) => {
+    const { restaurantId } = req.params;
+    try {
+        const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateResult = await poolConnection.query(currentDateQuery, [restaurantId]);
+
+        if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
+            throw new Error("Time zone not available for the restaurant");
+        }
+
+        const timeZone = currentDateResult[0].time_zone;
+        const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+        const startOfMonth = moment(currentDate).startOf('month').format('YYYY-MM-DD HH:mm:ss');
+
+        const ordersQuery = `
+        SELECT 
+            o.OrderID,
+            o.after_tax AS Income,
+            DATE_FORMAT(o.time, '%b') AS Month
+        FROM 
+            orders o
+        WHERE 
+            o.restaurant_id = ?
+            AND o.time >= ?
+    `;
+        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, startOfMonth]);
+
+        if (ordersData.length === 0) {
+            const monthlyData = [];
+
+            for (let i = 0; i < 12; i++) {
+                const monthStart = moment(currentDate).startOf('year').add(i, 'months');
+                const monthKey = monthStart.format('MMM');
+
+                const formattedData = {
+                    name: monthKey,
+                    Expense: 0,
+                    Income: 0
+                };
+
+                monthlyData.push(formattedData);
+            }
+
+            res.json(monthlyData);
+            return;
+        }
+
+        const monthlyData = [];
+
+        for (let i = 0; i < 12; i++) {
+            const monthStart = moment(currentDate).startOf('year').add(i, 'months');
+            const monthKey = monthStart.format('MMM');
+
+            const monthData = {
+                name: monthKey,
+                Expense: 0,
+                Income: 0
+            };
+
+            const monthOrders = ordersData.filter(order => order.Month === monthKey);
+
+            monthOrders.forEach(order => {
+                monthData.Income += order.Income;
+            });
+
+            const OrderIds = monthOrders.map(order => order.OrderID);
+            if (OrderIds.length > 0) {
+                const itemsQuery = `
+                SELECT 
+                    OrderID,
+                    SUM(oi.Quantity * mi.CostPrice) AS Expense
+                FROM 
+                    order_items oi
+                    JOIN menuitems mi ON oi.MenuItemID = mi.MenuItemID
+                WHERE 
+                    OrderID IN (?)
+                GROUP BY 
+                    OrderID
+            `;
+                const itemsData = await poolConnection.query(itemsQuery, [OrderIds]);
+
+                itemsData.forEach(item => {
+                    monthData.Expense += item.Expense;
+                });
+            }
+
+            monthlyData.push(monthData);
+        }
+
+        res.json(monthlyData);
+    } catch (error) {
+        console.error(`Error fetching monthly report: ${error.message}`);
+        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+    }
+}
+
+
+
+
+
 const getWaiterMonthlyExpenseAdmin = async (req, res) => {
     const { restaurantId } = req.params;
     try {
@@ -268,7 +369,7 @@ const getWaiterMonthlyExpenseAdmin = async (req, res) => {
             SELECT 
                 o.OrderID,
                 o.time,
-                o.total_amount AS OrderIncome
+                o.after_tax AS OrderIncome
             FROM 
                 orders o
             WHERE 
@@ -345,7 +446,7 @@ const getWaiterDailyExpenseAdmin = async (req, res) => {
             SELECT 
                 o.OrderID,
                 o.time,
-                o.total_amount AS OrderIncome
+                o.after_tax AS OrderIncome
             FROM 
                 orders o
             WHERE 
@@ -422,7 +523,7 @@ const getWaiterWeeklyExpenseAdmin = async (req, res) => {
             SELECT 
                 o.OrderID,
                 o.time,
-                o.total_amount AS OrderIncome
+                o.after_tax AS OrderIncome
             FROM 
                 orders o
             WHERE 
@@ -479,6 +580,10 @@ const getWaiterWeeklyExpenseAdmin = async (req, res) => {
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
     }
 }
+
+
+
+
 
 const getPosMonthlyExpenseData = async (restaurantId) => {
     try {
@@ -574,7 +679,7 @@ const getWaiterMonthlyExpenseAdminData = async (restaurantId) => {
             SELECT 
                 o.OrderID,
                 o.time,
-                o.total_amount AS OrderIncome
+                o.after_tax AS OrderIncome
             FROM 
                 orders o
             WHERE 
@@ -656,6 +761,9 @@ const getCombinedMonthlyExpense = async (req, res) => {
         res.status(500).json({ status: 500, message: 'Internal Server Error' });
     }
 }
+
+
+
 
 
 
@@ -751,7 +859,7 @@ const getWaiterDailyExpenseAdminData = async (restaurantId) => {
             SELECT 
                 o.OrderID,
                 o.time,
-                o.total_amount AS OrderIncome
+                o.after_tax AS OrderIncome
             FROM 
                 orders o
             WHERE 
@@ -846,5 +954,7 @@ module.exports = {
     getWaiterDailyExpenseAdmin,
 
     getCombinedDailyExpense,
-    getCombinedMonthlyExpense
+    getCombinedMonthlyExpense,
+
+    getWaiterMonthlyExpenseAdminAllMonths
 }
