@@ -14,7 +14,8 @@ const getById = async (req, res) => {
                     tables: {
                         seats: results.seats,
                         status: results.status,
-                        table_id: results.table_name,
+                        table_id: results.table_id,
+                        table_name: results.table_name,
                         time: results.order_status === 'unpaid' ? results.time : null
                     }
                 }

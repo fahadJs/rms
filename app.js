@@ -37,6 +37,7 @@ const taxRouter = require('./api/tax/taxRouter');
 const paymentRouter = require('./api/payment/paymentRouter');
 const wcsRouter = require('./api/waiter-cash-sales/wcsRouter');
 const tnRouter = require('./api/targetNumbers/tnRouter');
+const cowRouter = require('./api/customer-orders-woo/cowRouter');
 
 // Parameter Testing
 const testRouter = require('./api/test/testRouter');
@@ -80,6 +81,7 @@ app.use('/api/tax', taxRouter);
 app.use('/api/payment', paymentRouter);
 app.use('/api/wcs', wcsRouter);
 app.use('/api/tasksoftware/numbers', tnRouter);
+app.use('/api/woo', cowRouter);
 
 // For Parameter Testing
 app.use('/api/test',testRouter);
