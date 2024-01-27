@@ -17,7 +17,19 @@ const getAllOrders = async (req, res) => {
         })
             .then(response => {
                 const order = response.data;
-                console.log('Data:', order);
+
+                order.forEach(order => {
+                    console.log('Order ID:', order.id);
+
+                    order.line_items.forEach(item => {
+                        const sku = item.sku;
+                        const trimmedSku = sku.substring(sku.indexOf('k') + 1);
+                        console.log('SKU:', trimmedSku);
+                    });
+
+                    console.log('\n');
+                });
+                // console.log('Data:', order);
                 res.json(order);
             })
             .catch(error => {
