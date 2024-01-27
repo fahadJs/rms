@@ -6,17 +6,23 @@ const moment = require('moment-timezone');
 const create = async (req, res) => {
     try {
         const { waiter_name, login_id, login_pass, restaurant_id } = req.body;
-
-        // const hashedPassword = await bcrypt.hash(login_pass, 10);
-
-        const insertWaiterQuery = 'INSERT INTO waiters (waiter_name, login_id, login_pass, restaurant_id) VALUES (?, ?, ?, ?)';
-        const insertWaiterValues = [waiter_name, login_id, login_pass, restaurant_id];
-        await poolConnection.query(insertWaiterQuery, insertWaiterValues);
-
-        res.status(201).json({status: 201, message: 'Waiter created successfully!' });
+    
+        const checkWaiterQuery = 'SELECT COUNT(*) AS count FROM waiters WHERE login_id = ?';
+        const checkWaiterValues = [login_id];
+        const result = await poolConnection.query(checkWaiterQuery, checkWaiterValues);
+        
+        if (result[0].count > 0) {
+            res.status(409).json({ status: 409, message: 'Waiter with the same login_id already exists' });
+        } else {
+            const insertWaiterQuery = 'INSERT INTO waiters (waiter_name, login_id, login_pass, restaurant_id) VALUES (?, ?, ?, ?)';
+            const insertWaiterValues = [waiter_name, login_id, login_pass, restaurant_id];
+            await poolConnection.query(insertWaiterQuery, insertWaiterValues);
+    
+            res.status(201).json({ status: 201, message: 'Waiter created successfully!' });
+        }
     } catch (error) {
         console.error(`Error creating waiter! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error creating waiter!' });
+        res.status(500).json({ status: 500, message: 'Error creating waiter!' });
     }
 }
 
