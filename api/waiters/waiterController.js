@@ -12,6 +12,7 @@ const create = async (req, res) => {
         const result = await poolConnection.query(checkWaiterQuery, checkWaiterValues);
         
         if (result[0].count > 0) {
+            console.log('Waiter with the same login_id already exists');
             res.status(409).json({ status: 409, message: 'Waiter with the same login_id already exists' });
         } else {
             const insertWaiterQuery = 'INSERT INTO waiters (waiter_name, login_id, login_pass, restaurant_id) VALUES (?, ?, ?, ?)';
