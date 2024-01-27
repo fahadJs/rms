@@ -119,6 +119,7 @@ const getAllOrders = async (req, res) => {
                 orders.order_status,
                 orders.bill_status,
                 orders.after_tax,
+                orders.total_amount,
                 orders.tid,
                 orders.paid_via,
                 order_items.OrderItemID,
