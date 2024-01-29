@@ -285,8 +285,14 @@ const createItSplit = async (req, res) => {
             await poolConnection.query(updateOrderStatusQuery, [orderId]);
             console.log('Orders Marked Paid!');
 
-            const updateTableStatusQuery = 'UPDATE tables SET status = ? WHERE table_id = ?';
-            const updateTableStatusValues = ['available', fetchedOrder.table_id];
+            const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+            const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+
+            const timeZone = timeZoneResult[0].time_zone;
+            const orderPayTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+            const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_time = ? WHERE table_id = ?';
+            const updateTableStatusValues = ['available', orderPayTime, fetchedOrder.table_id];
             await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
             console.log('Table set available!');
         }

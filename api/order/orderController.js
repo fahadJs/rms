@@ -43,8 +43,8 @@ const create = async (req, res) => {
             await poolConnection.query(updateInventoryQuery, updateInventoryValues);
         }
 
-        const updateTableStatusQuery = 'UPDATE tables SET status = ? WHERE table_id = ?';
-        const updateTableStatusValues = ['reserved', table_id];
+        const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_status = ? WHERE table_id = ?';
+        const updateTableStatusValues = ['reserved', 'not-vacant',table_id];
         await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
 
         await poolConnection.query('COMMIT');

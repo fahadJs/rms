@@ -16,6 +16,7 @@ const getById = async (req, res) => {
                         status: results.status,
                         table_id: results.table_id,
                         table_name: results.table_name,
+                        payTime: results.pay_status === 'not-vacant' ? results.pay_time: null,
                         time: results.order_status === 'unpaid' ? results.time : null
                     }
                 }

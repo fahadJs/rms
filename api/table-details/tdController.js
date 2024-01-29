@@ -229,16 +229,20 @@ const mrkPaid = async (req, res) => {
 
         const afterTax = orderTotal + taxAmount;
 
-        console.log(orderTotal, taxPercent, taxAmount, afterTax);
-
         const tidValue = tid.toUpperCase();
         const paidViaValue = paidVia.toUpperCase();
+
+        const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+        const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+
+        const timeZone = timeZoneResult[0].time_zone;
+        const orderPayTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
         const updateOrderQuery = 'UPDATE orders SET order_status = "paid", tid = ?, paid_via = ?, after_tax = ? WHERE OrderID = ?';
         await poolConnection.query(updateOrderQuery, [tidValue, paidViaValue, afterTax, orderId]);
 
-        const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = (SELECT table_id FROM orders WHERE OrderID = ?)';
-        await poolConnection.query(updateTableQuery, [orderId]);
+        const updateTableQuery = 'UPDATE tables SET status = "available", pay_time = ? WHERE table_id = (SELECT table_id FROM orders WHERE OrderID = ?)';
+        await poolConnection.query(updateTableQuery, [orderPayTime, orderId]);
 
         const commitTransactionQuery = 'COMMIT';
         await poolConnection.query(commitTransactionQuery);
@@ -306,7 +310,7 @@ const markAvailable = async (req, res) => {
     try {
         const { table_id } = req.params;
 
-        const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = ?';
+        const updateTableQuery = 'UPDATE tables SET status = "available", pay_status = "vacant" WHERE table_id = ?';
         await poolConnection.query(updateTableQuery, [table_id]);
         
         res.status(200).json({ status: 200, message: 'Table status set to "available"!' });
