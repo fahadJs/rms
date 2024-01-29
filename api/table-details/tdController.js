@@ -302,10 +302,25 @@ const cancel = async (req, res) => {
     }
 }
 
+const markAvailable = async (req, res) => {
+    try {
+        const { table_id } = req.params;
+
+        const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = ?';
+        await poolConnection.query(updateTableQuery, [table_id]);
+        
+        res.status(200).json({ status: 200, message: 'Table status set to "available"!' });
+    } catch (error) {
+        console.error(`Error executing query! Error: ${error}`);
+        res.status(500).json({ status: 500, message: 'Error updating table status!' });
+    }
+}
+
 module.exports = {
     getAll,
     mrkPaid,
     cancel,
     removeItem,
-    updateItemQuantity
+    updateItemQuantity,
+    markAvailable
 }
