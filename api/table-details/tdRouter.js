@@ -7,6 +7,6 @@ router.patch('/res/:restaurant_id/:orderId/paid/:tid/:paidVia', token.verifyToke
 router.delete('/:id', token.verifyToken, tdController.cancel);
 router.delete('/:orderId/:menuItemId', token.verifyToken, tdController.removeItem);
 router.patch('/:orderId/:menuItemId/:receivedQuantity/:receivedPrice', token.verifyToken, tdController.updateItemQuantity);
-router.patch('/available/:table_id', tdController.markAvailable);
+router.patch('/available/:table_id', token.verifyToken, tdController.markAvailable);
 
 module.exports = router;

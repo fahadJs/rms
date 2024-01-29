@@ -4,8 +4,8 @@ const axios = require('axios');
 const getAllOrders = async (req, res) => {
     try {
         const apiUrl = 'https://anunziointernational.com/tanah/wp-json/wc/v3/orders';
-        const consumerKey = 'ck_c15d5285e465d6db719d968294686266e9cce582';
-        const consumerSecret = 'cs_20aa3433dd0742f26a7eb6b867b4834a3287a9f9';
+        const consumerKey = 'ck_d02faf8414ff73ce9be2c97df738aa4419d65266';
+        const consumerSecret = 'cs_b335e4e1ea326c697cee0079271870d197477b4d';
 
         const authString = Buffer.from(`${consumerKey}:${consumerSecret}`).toString('base64');
 
@@ -18,14 +18,59 @@ const getAllOrders = async (req, res) => {
             .then(response => {
                 const order = response.data;
 
-                order.forEach(order => {
-                    // For Order
-                    const tableId = 1;
-                    const orderStatus = order.status;
+                const orderId = order.id;
+
+                    const updatedOrderStatus = 'pending';
+                    const updateOrderStatusUrl = `https://anunziointernational.com/tanah/wp-json/wc/v3/orders/${orderId}`;
+
+                    axios.put(updateOrderStatusUrl, {
+                        status: updatedOrderStatus,
+                    }, {
+                        headers: {
+                            Authorization: `Basic ${authString}`,
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                        .then(response => {
+                            console.log(`Order ${orderId} status updated successfully!`);
+                        })
+                        .catch(error => {
+                            console.error(`Error updating order ${orderId} status:`, error.message);
+                        });
+
+                const nonCompletedOrders = order.filter(order => order.status !== 'completed');
+
+                nonCompletedOrders.forEach(order => {
+                    if (order.coupon_lines.length > 0) {
+                        const coupon = order.coupon_lines[0];
+                        console.log(coupon);
+                        tableId = coupon.code;
+                    }
+                    let tableId = 0
                     const totalAmount = order.total;
                     const restaurantId = 3;
                     const tId = 'un-paid';
                     const paidVia = 'un-paid';
+
+                    const orderId = order.id;
+
+                    const updatedOrderStatus = 'completed';
+                    const updateOrderStatusUrl = `https://anunziointernational.com/tanah/wp-json/wc/v3/orders/${orderId}`;
+
+                    axios.put(updateOrderStatusUrl, {
+                        status: updatedOrderStatus,
+                    }, {
+                        headers: {
+                            Authorization: `Basic ${authString}`,
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                        .then(response => {
+                            console.log(`Order ${orderId} status updated successfully!`);
+                        })
+                        .catch(error => {
+                            console.error(`Error updating order ${orderId} status:`, error.message);
+                        });
 
                     order.line_items.forEach(item => {
                         // For OrderItems
@@ -33,24 +78,37 @@ const getAllOrders = async (req, res) => {
                         const itemName = item.name;
                         const price = item.subtotal;
                         const quantity = item.quantity;
+                        let kitchenId = 1
 
                         const sku = item.sku;
                         const trimmedSku = sku.substring(sku.indexOf('k') + 1);
                         console.log('Trimmed SKU:', trimmedSku);
 
-                        if (trimmedSku == 1) {
-                            const kitchenId = 10;
+                        if (trimmedSku == '1') {
+                            kitchenId = 10;
                         }
-                        if (trimmedSku == 2) {
-                            const kitchenId = 9;
+                        if (trimmedSku == '2') {
+                            kitchenId = 9;
                         }
                         const categoryId = 1;
-                    });
 
-                    console.log('\n');
+                        console.log(`
+                        table: ${tableId}
+                        total: ${totalAmount}
+                        restaurant: ${restaurantId}
+                        tid: ${tId}
+                        paidVia: ${paidVia}
+
+                        menuitem: ${MenuItemID}
+                        item: ${itemName}
+                        price: ${price}
+                        quantity: ${quantity}
+                        kitchen: ${kitchenId}
+                        category: ${categoryId}
+                    `);
+                    });
                 });
-                // console.log('Data:', order);
-                res.json(order);
+                res.json('done!');
             })
             .catch(error => {
                 console.error('Error fetching data:', error.message);
