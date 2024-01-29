@@ -876,7 +876,7 @@ const getWaiterDailyExpenseAdminData = async (restaurantId) => {
                 Expense: 0,
                 Income: 0
             };
-            return res.json(formattedData);
+            return (formattedData);
         }
         let totalOrderIncome = 0;
 

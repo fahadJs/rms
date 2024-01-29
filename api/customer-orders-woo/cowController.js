@@ -24,12 +24,12 @@ const getAllOrders = async (req, res) => {
                     order.line_items.forEach(item => {
                         const sku = item.sku;
                         const trimmedSku = sku.substring(sku.indexOf('k') + 1);
-                        console.log('SKU:', trimmedSku);
+                        console.log('Trimmed SKU:', trimmedSku);
                     });
 
                     console.log('\n');
                 });
-                // console.log('Data:', order);
+                console.log('Data:', order);
                 res.json(order);
             })
             .catch(error => {
