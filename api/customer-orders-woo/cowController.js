@@ -19,28 +19,32 @@ const getAllOrders = async (req, res) => {
                 const order = response.data;
 
                 order.forEach(order => {
-                    console.log('Order ID:', order.id);
+                    // For Order
+                    const tableId = 1;
+                    const orderStatus = order.status;
+                    const totalAmount = order.total;
+                    const restaurantId = 3;
+                    const tId = 'un-paid';
+                    const paidVia = 'un-paid';
 
                     order.line_items.forEach(item => {
-                        // For Order
-                        const tableId = 1;
-                        const orderStatus = item.status;
-                        const totalAmount = item.total;
-                        const restaurantId = 3;
-                        const tId = 'un-paid';
-                        const paidVia = 'un-paid';
-
                         // For OrderItems
                         const MenuItemID = 34;
                         const itemName = item.name;
                         const price = item.subtotal;
                         const quantity = item.quantity;
 
-
                         const sku = item.sku;
                         const trimmedSku = sku.substring(sku.indexOf('k') + 1);
                         console.log('Trimmed SKU:', trimmedSku);
-                        const kitchenID;
+
+                        if (trimmedSku == 1) {
+                            const kitchenId = 10;
+                        }
+                        if (trimmedSku == 2) {
+                            const kitchenId = 9;
+                        }
+                        const categoryId = 1;
                     });
 
                     console.log('\n');
