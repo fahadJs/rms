@@ -31,27 +31,22 @@ const getAllOrders = async (req, res) => {
                     const totalAmount = order.total;
                     const restaurantId = 3;
                     const tId = 'un-paid';
-                    const paidVia = 'un-paid';
-
+                    const paidVia = 'un-paid';            
                     const orderId = order.id;
 
-                    const updatedOrderStatus = 'completed';
-                    const updateOrderStatusUrl = `https://anunziointernational.com/tanah/wp-json/wc/v3/orders/${orderId}`;
+                    const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+                    const timeZoneResult = poolConnection.query(timeZoneQuery, [restaurantId]);
 
-                    axios.put(updateOrderStatusUrl, {
-                        status: updatedOrderStatus,
-                    }, {
-                        headers: {
-                            Authorization: `Basic ${authString}`,
-                            'Content-Type': 'application/json',
-                        },
-                    })
-                        .then(response => {
-                            console.log(`Order ${orderId} status updated successfully!`);
-                        })
-                        .catch(error => {
-                            console.error(`Error updating order ${orderId} status:`, error.message);
-                        });
+                    const timeZone = timeZoneResult[0].time_zone;
+                    const orderTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+                    const orderInsertQuery = 'INSERT INTO orders (waiter_id, table_id, time, total_amount, restaurant_id, tid, paid_via, remaining) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+                    const orderValues = [1, tableId, orderTime, totalAmount, restaurantId, 'un-paid', 'un-paid', totalAmount];
+                    const orderResult = poolConnection.query(orderInsertQuery, orderValues);
+
+                    const orderInsertID = orderResult.insertId;
+
+                    const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note, Status, TStatus, PStatus, split_quantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'not-sent', 'not-sent', 'not-sent', ?)`;
 
                     order.line_items.forEach(item => {
                         // For OrderItems
@@ -85,16 +80,43 @@ const getAllOrders = async (req, res) => {
                         price: ${price}
                         quantity: ${quantity}
                         kitchen: ${kitchenId}
-                        category: ${categoryId}
-                    `);
+                        category: ${categoryId}`);
+
+                        const orderItemsValues = [orderInsertID, MenuItemID, itemName, price, quantity, kitchenId, categoryId, quantity];
+                        const orderItemsResult = poolConnection.query(orderItemsInsertQuery, orderItemsValues);
                     });
+
+                    const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_status = ? WHERE table_id = ?';
+                    const updateTableStatusValues = ['reserved', 'not-vacant', tableId];
+                    poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
+
+                    const updatedOrderStatus = 'completed';
+                    const updateOrderStatusUrl = `https://anunziointernational.com/tanah/wp-json/wc/v3/orders/${orderId}`;
+
+                    axios.put(updateOrderStatusUrl, {
+                        status: updatedOrderStatus,
+                    }, {
+                        headers: {
+                            Authorization: `Basic ${authString}`,
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                        .then(response => {
+                            console.log(`Order ${orderId} status updated successfully!`);
+                        })
+                        .catch(error => {
+                            console.error(`Error updating order ${orderId} status:`, error.message);
+                        });
                 });
-                res.json({status: 200, message: 'done!'});
+
+                poolConnection.query('COMMIT');
+                res.json({ status: 200, message: 'done!' });
             })
             .catch(error => {
                 console.error('Error fetching data:', error.message);
             });
     } catch (error) {
+        await poolConnection.query('ROLLBACK');
         console.log(`Error! Fetching Orders! ${error}`);
         res.status(500).json({ status: 500, message: 'Internal Server Error!' });
     }
