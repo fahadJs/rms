@@ -250,12 +250,12 @@ const mrkPaid = async (req, res) => {
 
         try {
             const getTheOrder = `SELECT * FROM orders WHERE OrderID = ?`;
-            const getTheOrderRes = await poolConnection.query(getTheOrder, ['2479']);
+            const getTheOrderRes = await poolConnection.query(getTheOrder, [orderId]);
 
             const orderDetails = getTheOrderRes[0];
 
             const getTheOrderItems = `SELECT * FROM order_items WHERE OrderID = ?`;
-            const getTheOrderItemsRes = await poolConnection.query(getTheOrderItems, ['2479']);
+            const getTheOrderItemsRes = await poolConnection.query(getTheOrderItems, [orderId]);
 
             const orderItems = getTheOrderItemsRes;
 
