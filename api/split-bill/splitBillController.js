@@ -260,8 +260,11 @@ const createItSplit = async (req, res) => {
                 const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ? WHERE OrderID = ? AND OrderItemID = ?';
                 await poolConnection.query(updateOrderItemQuantityQuery, [splitQuantity, orderId, item.OrderItemID]);
 
+                const tidValue = tid.toUpperCase();
+                const paidViaValue = paidVia.toUpperCase();
+
                 const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity) VALUES (?, ?, ?, ?, ?, ?, ?)';
-                await poolConnection.query(insertSplitItemQuery, [orderId, menuItem.MenuItemID, menuItem.Name, afterTax, tid, paidVia, item.quantity]);
+                await poolConnection.query(insertSplitItemQuery, [orderId, menuItem.MenuItemID, menuItem.Name, afterTax, tidValue, paidViaValue, item.quantity]);
             }
 
             const checkSpecificSplitQuantityQuery = 'SELECT split_quantity FROM order_items WHERE OrderID = ? AND OrderItemID = ?';

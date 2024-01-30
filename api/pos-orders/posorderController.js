@@ -57,8 +57,11 @@ const mrkPaid = async (req, res) => {
     try {
         const { orderId, tid, paidVia } = req.params;
 
+        const tidValue = tid.toUpperCase();
+        const paidViaValue = paidVia.toUpperCase();
+
         const updateOrderQuery = 'UPDATE pos_orders SET order_status = "paid", tid = ?, paid_via = ? WHERE PosOrderID = ?';
-        await poolConnection.query(updateOrderQuery, [tid, paidVia, orderId]);
+        await poolConnection.query(updateOrderQuery, [tidValue, paidViaValue, orderId]);
 
         res.status(200).json({ status: 200, message: 'POS Order status updated to "paid" successfully!' });
     } catch (error) {
@@ -70,10 +73,10 @@ const mrkPaid = async (req, res) => {
 const getOrderById = async (req, res) => {
     try {
         const posOrderId = req.params.id;
-    
+
         const posOrderSql = 'SELECT * FROM pos_orders WHERE PosOrderID = ?';
         const posOrder = await poolConnection.query(posOrderSql, [posOrderId]);
-    
+
         if (!posOrder.length) {
             return res.status(404).json({ status: 404, message: 'POS Order not found' });
         }
@@ -94,12 +97,12 @@ const getOrderById = async (req, res) => {
             WHERE
                 pos_order_items.PosOrderID = ?;
         `;
-    
+
         const posOrderItems = await poolConnection.query(posOrderItemSql, [posOrderId]);
-    
+
         const groupedPosItems = posOrderItems.reduce((acc, item) => {
             const foundItem = acc.find((groupedItem) => groupedItem.PosOrderItemID === item.PosOrderItemID);
-    
+
             if (!foundItem) {
                 acc.push({
                     ...item,
@@ -110,23 +113,23 @@ const getOrderById = async (req, res) => {
                     foundItem.Extras.push({ PosOrderExtrasID: item.PosOrderExtrasID, extras_id: item.extras_id, extras_name: item.extras_name, extras_price: item.extras_price });
                 }
             }
-    
+
             return acc;
         }, []);
-    
+
         const posOrderWithItemsAndExtras = { ...posOrder[0], items: groupedPosItems };
-    
+
         res.status(200).json(posOrderWithItemsAndExtras);
     } catch (error) {
         console.error(`Error executing POS order query! Error: ${error}`);
         res.status(500).json({ status: 500, message: 'Error fetching POS order!' });
     }
-    
+
 };
 
 const getAllOrders = async (req, res) => {
     try {
-        const {restaurant_id} = req.params;
+        const { restaurant_id } = req.params;
         const getPosOrdersQuery = `
             SELECT 
                 pos_orders.PosOrderID,
@@ -156,11 +159,11 @@ const getAllOrders = async (req, res) => {
             WHERE pos_orders.restaurant_id = ?
 
         `;
-    
+
         const posResult = await poolConnection.query(getPosOrdersQuery, [restaurant_id]);
-    
+
         const posOrders = {};
-    
+
         posResult.forEach(row => {
             const {
                 PosOrderID,
@@ -183,7 +186,7 @@ const getAllOrders = async (req, res) => {
                 extras_name,
                 extras_price
             } = row;
-    
+
             if (!posOrders[PosOrderID]) {
                 posOrders[PosOrderID] = {
                     PosOrderID,
@@ -197,9 +200,9 @@ const getAllOrders = async (req, res) => {
                     items: []
                 };
             }
-    
+
             const existingItem = posOrders[PosOrderID].items.find(item => item.PosOrderItemID === PosOrderItemID);
-    
+
             if (!existingItem) {
                 const newItem = {
                     PosOrderItemID,
@@ -212,11 +215,11 @@ const getAllOrders = async (req, res) => {
                     Note,
                     Extras: []
                 };
-    
+
                 if (extras_id && extras_name && extras_price) {
                     newItem.Extras.push({ extras_id, extras_name, extras_price });
                 }
-    
+
                 posOrders[PosOrderID].items.push(newItem);
             } else {
                 if (extras_id && extras_name && extras_price) {
@@ -224,14 +227,14 @@ const getAllOrders = async (req, res) => {
                 }
             }
         });
-    
+
         const formattedPosResult = Object.values(posOrders);
-    
+
         res.status(200).json(formattedPosResult);
     } catch (error) {
         console.error(`Error executing POS query! Error: ${error}`);
         res.status(500).json({ status: 500, message: 'Error fetching POS orders!' });
-    }    
+    }
 
 };
 
