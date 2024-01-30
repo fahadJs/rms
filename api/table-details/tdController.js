@@ -1,5 +1,8 @@
 const poolConnection = require('../../config/database');
 const moment = require('moment-timezone');
+const nodemailer = require('nodemailer');
+const fs = require('fs');
+const PDFDocument = require('pdfkit');
 
 const getAll = async (req, res) => {
     try {
@@ -245,6 +248,134 @@ const mrkPaid = async (req, res) => {
         const updateTableQuery = 'UPDATE tables SET status = "available", pay_time = ? WHERE table_id = (SELECT table_id FROM orders WHERE OrderID = ?)';
         await poolConnection.query(updateTableQuery, [orderPayTime, orderId]);
 
+        try {
+            const getTheOrder = `SELECT * FROM orders WHERE OrderID = ?`;
+            const getTheOrderRes = await poolConnection.query(getTheOrder, ['2479']);
+
+            const orderDetails = getTheOrderRes[0];
+
+            const getTheOrderItems = `SELECT * FROM order_items WHERE OrderID = ?`;
+            const getTheOrderItemsRes = await poolConnection.query(getTheOrderItems, ['2479']);
+
+            const orderItems = getTheOrderItemsRes;
+
+            const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+            const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+
+            const timeZone = timeZoneResult[0].time_zone;
+
+            const formattedDate = moment.tz(timeZone).format('YYYY-MM-DD');
+            const formattedTime = moment.tz(timeZone).format('HH:mm:ss');
+
+            const orderTotal = orderDetails.total_amount;
+            const afterTax = orderDetails.after_tax;
+            const paidVia = orderDetails.paid_via;
+            const tid = orderDetails.tid;
+            const orderId = orderDetails.OrderID;
+            let KitchenID;
+
+            const restaurant_id = orderDetails.restaurant_id;
+            const waiter_id = orderDetails.waiter_id;
+
+            const table_id = orderDetails.table_id;
+
+            const waiterQuery = `SELECT * FROM waiters WHERE waiter_id = ?`;
+            const waiterRes = await poolConnection.query(waiterQuery, [waiter_id]);
+
+            const waiterName = waiterRes[0].waiter_name;
+
+            const tableQuery = `SELECT table_name FROM tables WHERE table_id = ?`;
+            const tableRes = await poolConnection.query(tableQuery, [table_id]);
+
+            const tableName = `Table: ${tableRes[0].table_name}`
+
+            const restaurantQuery = `SELECT * FROM restaurants WHERE restaurant_id = ?`;
+            const restaurantResult = await poolConnection.query(restaurantQuery, [restaurant_id]);
+
+            const restaurantName = restaurantResult[0].name;
+            const tax = restaurantResult[0].tax;
+            const currency = restaurantResult[0].default_currency;
+
+            const itemsArray = [];
+
+            for (const item of orderItems) {
+                KitchenID = item.KitchenID;
+                const itemPrice = item.Price;
+
+                const itemId = item.OrderItemID;
+                const itemName = item.ItemName;
+                const quantity = item.Quantity;
+
+                itemsArray.push({ itemId, itemName, quantity, waiterName, tableName, restaurantName, itemPrice });
+
+            }
+
+            let messageMap = itemsArray.map(async (item) => {
+                // const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
+                //                     JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
+                //                     WHERE order_extras.OrderItemID = ?`;
+                // const extrasResult = await poolConnection.query(extrasQuery, [item.OrderItemID]);
+
+                // const extrasList = extrasResult.map(extra => extra.extras_name).join(`, `);
+
+                return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}\n`;
+            });
+
+            messageMap = await Promise.all(messageMap);
+            const message = `\n***************\n${restaurantName}\n***************\nOrderID: ${orderId}\n${waiterName}\n${tableName}\n***************\n${formattedDate}  ${formattedTime}\n***************\n${messageMap.join('\n')}***************\nOrder Total: ${orderTotal}\nTax: ${tax}\nAfter Tax: ${afterTax}\nPaid Via: ${paidVia}\ntid: ${tid}\n***************\nTHANKYOU\n***************\n`;
+
+            console.log(message);
+
+            try {
+                const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+
+                const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
+                const paperWidth = 303;
+
+                const pdf = new PDFDocument({
+                    size: [paperWidth, 592],
+                    margin: 15,
+                });
+                pdf.pipe(fs.createWriteStream(pdfPath));
+                pdf.fontSize(16);
+                pdf.text(message);
+                pdf.end();
+
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        user: 'siddiquiboy360@gmail.com',
+                        pass: 'gkop jksn urdi dgvv'
+                    }
+                });
+
+                const mailOptions = {
+                    from: 'siddiquiboy360@gmail.com',
+                    to,
+                    attachments: [
+                        {
+                            filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+                            path: pdfPath,
+                            encoding: 'base64'
+                        }
+                    ]
+                };
+
+                const info = await transporter.sendMail(mailOptions);
+                const setSentQuery = `UPDATE order_items SET PStatus = 'sent' WHERE OrderID = ? AND KitchenID = ?`;
+                await poolConnection.query(setSentQuery, [orderId, KitchenID]);
+
+                console.log('Email Sent! and Status updated!: ', info);
+
+                fs.unlinkSync(pdfPath);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+        } catch (error) {
+            console.log(error);
+        }
+
         const commitTransactionQuery = 'COMMIT';
         await poolConnection.query(commitTransactionQuery);
 
@@ -313,7 +444,7 @@ const markAvailable = async (req, res) => {
 
         const updateTableQuery = 'UPDATE tables SET status = "available", pay_status = "vacant" WHERE table_id = ?';
         await poolConnection.query(updateTableQuery, [table_id]);
-        
+
         res.status(200).json({ status: 200, message: 'Table status set to "available"!' });
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
