@@ -322,7 +322,7 @@ const mrkPaid = async (req, res) => {
             });
 
             messageMap = await Promise.all(messageMap);
-            const message = `\n***************\n${restaurantName}\n***************\nOrderID: ${orderId}\n${waiterName}\n${tableName}\n***************\n${formattedDate}  ${formattedTime}\n***************\n${messageMap.join('\n')}***************\nOrder Total: ${orderTotal}\nTax: ${tax}\nAfter Tax: ${afterTax}\nPaid Via: ${paidVia}\ntid: ${tid}\n***************\nTHANKYOU\n***************\n`;
+            const message = `\n-------------------------------------------------------------------------------\n${restaurantName}\n-------------------------------------------------------------------------------\nOrderID: ${orderId}\n${waiterName}\n${tableName}\n-------------------------------------------------------------------------------\n${formattedDate}  ${formattedTime}\n-------------------------------------------------------------------------------\n${messageMap.join('\n')}-------------------------------------------------------------------------------\nOrder Total: ${orderTotal}\nTax: ${tax}\nAfter Tax: ${afterTax}\nPaid Via: ${paidVia}\ntid: ${tid}\n-------------------------------------------------------------------------------\nTHANKYOU\n-------------------------------------------------------------------------------\n`;
 
             console.log(message);
 

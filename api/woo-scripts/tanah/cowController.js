@@ -177,7 +177,9 @@ const getAllOrders = async (req, res) => {
             const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note, Status, TStatus, PStatus, split_quantity) VALUES (?, ?, ?, ?, ?, ?, ?, 'none', 'not-sent', 'not-sent', 'not-sent', ?)`;
 
             for (const item of order.line_items) {
-                const MenuItemID = 34;
+                const getMenuItem = `SELECT MenuItemID FROM menuitems WHERE Name = ? AND restaurant_id = ?`;
+                const getMenuItemRes = await poolConnection.query(getMenuItem, [item.name, restaurantId]);
+                const MenuItemID = getMenuItemRes[0].MenuItemID;
                 const itemName = item.name;
                 const price = item.subtotal;
                 const quantity = item.quantity;
@@ -196,6 +198,10 @@ const getAllOrders = async (req, res) => {
 
                 const orderItemsValues = [orderInsertID, MenuItemID, itemName, price, quantity, kitchenId, categoryId, quantity];
                 await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
+
+                const updateInventoryQuery = 'UPDATE inventory SET on_hand = GREATEST(on_hand - ?, 0) WHERE MenuItemID = ?';
+                const updateInventoryValues = [quantity, MenuItemID];
+                await poolConnection.query(updateInventoryQuery, updateInventoryValues);
             }
 
             // Update table status in the database
