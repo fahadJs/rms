@@ -222,7 +222,7 @@ const getAllOrders = async (req, res) => {
         }
 
         await poolConnection.query('COMMIT');
-        res.redirect('https://anunziointernational.com/tanah/');
+        res.redirect('https://anunziointernational.com/tanah/home/');
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error('Error fetching data:', error.message);
