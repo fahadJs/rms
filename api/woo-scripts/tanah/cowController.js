@@ -174,10 +174,10 @@ const getAllOrders = async (req, res) => {
             const orderInsertID = orderInsertResult.insertId;
 
             // Insert order items into the database
-            const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Note, Status, TStatus, PStatus, split_quantity) VALUES (?, ?, ?, ?, ?, ?, ?, 'none', 'not-sent', 'not-sent', 'not-sent', ?)`;
+            const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Status, TStatus, PStatus, split_quantity) VALUES (?, ?, ?, ?, ?, ?, ?, 'not-sent', 'not-sent', 'not-sent', ?)`;
 
             for (const item of order.line_items) {
-                const getMenuItem = `SELECT MenuItemID FROM menuitems WHERE Name = ? AND restaurant_id = ?`;
+                const getMenuItem = `SELECT * FROM menuitems WHERE Name = ? AND restaurant_id = ?`;
                 const getMenuItemRes = await poolConnection.query(getMenuItem, [item.name, restaurantId]);
                 const MenuItemID = getMenuItemRes[0].MenuItemID;
                 const itemName = item.name;
