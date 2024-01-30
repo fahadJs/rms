@@ -274,7 +274,7 @@ const mrkPaid = async (req, res) => {
             const orderId = orderDetails.OrderID;
             let KitchenID;
 
-            const restaurant_id = orderDetails.restaurant_id;
+            // const restaurant_id = orderDetails.restaurant_id;
             const waiter_id = orderDetails.waiter_id;
 
             const table_id = orderDetails.table_id;
