@@ -142,18 +142,21 @@ const getAllOrders = async (req, res) => {
 
         const orders = response.data;
 
+        // console.log(orders);
+
         for (const order of orders) {
-            // Check if the order is already completed, if yes, skip it
             if (order.status === 'completed') {
                 continue;
             }
 
-            // Extract data from the order
-            let tableId = 0;
+            let tableId = 1;
             if (order.coupon_lines.length > 0) {
                 const coupon = order.coupon_lines[0];
                 tableId = coupon.code;
             }
+
+            // console.log(tableId);
+            // console.log(order.coupon_lines);
 
             const totalAmount = order.total;
             const restaurantId = 3;
@@ -161,19 +164,16 @@ const getAllOrders = async (req, res) => {
             const paidVia = 'un-paid';
             const orderId = order.id;
 
-            // Get time zone and format order time
             const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
             const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurantId]);
             const timeZone = timeZoneResult[0].time_zone;
             const orderTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
-            // Insert order into the database
             const orderInsertQuery = 'INSERT INTO orders (waiter_id, table_id, time, total_amount, restaurant_id, tid, paid_via, remaining) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
             const orderValues = [21, tableId, orderTime, totalAmount, restaurantId, 'un-paid', 'un-paid', totalAmount];
             const orderInsertResult = await poolConnection.query(orderInsertQuery, orderValues);
             const orderInsertID = orderInsertResult.insertId;
 
-            // Insert order items into the database
             const orderItemsInsertQuery = `INSERT INTO order_items (OrderID, MenuItemID, ItemName, Price, Quantity, KitchenID, CategoryID, Status, TStatus, PStatus, split_quantity) VALUES (?, ?, ?, ?, ?, ?, ?, 'not-sent', 'not-sent', 'not-sent', ?)`;
 
             for (const item of order.line_items) {
@@ -204,12 +204,10 @@ const getAllOrders = async (req, res) => {
                 await poolConnection.query(updateInventoryQuery, updateInventoryValues);
             }
 
-            // Update table status in the database
             const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_status = ? WHERE table_id = ?';
             const updateTableStatusValues = ['reserved', 'not-vacant', tableId];
             await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
 
-            // Update order status in WooCommerce
             const updatedOrderStatus = 'completed';
             const updateOrderStatusUrl = `https://anunziointernational.com/tanah/wp-json/wc/v3/orders/${orderId}`;
 
@@ -228,7 +226,10 @@ const getAllOrders = async (req, res) => {
         }
 
         await poolConnection.query('COMMIT');
-        res.redirect('https://anunziointernational.com/tanah/home/');
+        console.log('Data Inserted Woo! redirecting...');
+        setTimeout(() => {
+            res.redirect('https://anunziointernational.com/tanah/home/');
+        }, 3000);
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error('Error fetching data:', error.message);

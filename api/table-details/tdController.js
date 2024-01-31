@@ -318,11 +318,16 @@ const mrkPaid = async (req, res) => {
 
                 // const extrasList = extrasResult.map(extra => extra.extras_name).join(`, `);
 
-                return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}\n`;
+                return [item.quantity, item.itemName, `${currency} ${item.itemPrice}`];
             });
 
             messageMap = await Promise.all(messageMap);
-            const message = `\n-------------------------------------------------------------------------------\n${restaurantName}\n-------------------------------------------------------------------------------\nOrderID: ${orderId}\n${waiterName}\n${tableName}\n-------------------------------------------------------------------------------\n${formattedDate}  ${formattedTime}\n-------------------------------------------------------------------------------\n${messageMap.join('\n')}-------------------------------------------------------------------------------\nOrder Total: ${orderTotal}\nTax: ${tax}\nAfter Tax: ${afterTax}\nPaid Via: ${paidVia}\ntid: ${tid}\n-------------------------------------------------------------------------------\nTHANKYOU\n-------------------------------------------------------------------------------\n`;
+
+            const messageTop = `\n-------------------------------------------------------------------------------\n${restaurantName}\n-------------------------------------------------------------------------------\nOrderID: ${orderId}\n${waiterName}\n${tableName}\n-------------------------------------------------------------------------------\n${formattedDate}  ${formattedTime}\n-------------------------------------------------------------------------------\n$`;
+
+            const message = `${messageMap.join('\n')}-------------------------------------------------------------------------------\n`;
+
+            const messageBottom = `Order Total: ${orderTotal}\nTax: ${tax}\nAfter Tax: ${afterTax}\nPaid Via: ${paidVia}\ntid: ${tid}\n-------------------------------------------------------------------------------\nTHANKYOU\n-------------------------------------------------------------------------------\n`;
 
             console.log(message);
 
