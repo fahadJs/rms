@@ -273,9 +273,7 @@ const mrkPaid = async (req, res) => {
             const paidVia = orderDetails.paid_via;
             const tid = orderDetails.tid;
             const orderId = orderDetails.OrderID;
-            let KitchenID;
 
-            // const restaurant_id = orderDetails.restaurant_id;
             const waiter_id = orderDetails.waiter_id;
 
             const table_id = orderDetails.table_id;
@@ -300,7 +298,6 @@ const mrkPaid = async (req, res) => {
             const itemsArray = [];
 
             for (const item of orderItems) {
-                KitchenID = item.KitchenID;
                 const itemPrice = item.Price;
 
                 const itemId = item.OrderItemID;
@@ -312,41 +309,91 @@ const mrkPaid = async (req, res) => {
             }
 
             let messageMap = itemsArray.map(async (item) => {
-                // const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
-                //                     JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
-                //                     WHERE order_extras.OrderItemID = ?`;
-                // const extrasResult = await poolConnection.query(extrasQuery, [item.OrderItemID]);
-
-                // const extrasList = extrasResult.map(extra => extra.extras_name).join(`, `);
-
-                return [item.quantity, item.itemName, `${currency} ${item.itemPrice}`];
+                const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
+                                    JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
+                                    WHERE order_extras.OrderItemID = ?`;
+                const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
+    
+                const extrasList = extrasResult.length > 0
+                ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
+                : '';
+    
+                return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}\n${extrasList}`;
             });
-
+    
             messageMap = await Promise.all(messageMap);
-
-            const messageTop = `\n-------------------------------------------------------------------------------\n${restaurantName}\n-------------------------------------------------------------------------------\nOrderID: ${orderId}\n${waiterName}\n${tableName}\n-------------------------------------------------------------------------------\n${formattedDate}  ${formattedTime}\n-------------------------------------------------------------------------------\n$`;
-
-            const message = `${messageMap.join('\n')}-------------------------------------------------------------------------------\n`;
-
-            const messageBottom = `Order Total: ${orderTotal}\nTax: ${tax}\nAfter Tax: ${afterTax}\nPaid Via: ${paidVia}\ntid: ${tid}\n-------------------------------------------------------------------------------\nTHANKYOU\n-------------------------------------------------------------------------------\n`;
-
-            console.log(message);
-
+    
+            const resName = `${restaurantName}`.toUpperCase();
+            const messageTop = `OrderID: ${orderId}\n${waiterName}\n${tableName}\nDate: ${formattedDate}\nTime: ${formattedTime}\n`;
+    
+            const message = `${messageMap.join('\n')}`;
+    
+            const messageBottom = `Order Total: ${orderTotal}\nTax: ${tax}%\nAfter Tax: ${afterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}`;
+    
+            const thank = `THNAK YOU`;
+    
             try {
-                const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
-
+                // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+                const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
+    
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
                 const paperWidth = 303;
-
+    
                 const pdf = new PDFDocument({
-                    size: [paperWidth, 592],
+                    size: [paperWidth, 792],
                     margin: 15,
                 });
+    
+                function drawDottedLine(yPosition, length) {
+                    const startX = pdf.x;
+                    const endX = pdf.x + length;
+                    const y = yPosition;
+    
+                    for (let i = startX; i <= endX; i += 5) {
+                        pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
+                    }
+                }
+    
+                function centerText(text, fontSize) {
+                    const textWidth = pdf.widthOfString(text, { fontSize });
+                    const xPosition = (paperWidth - textWidth) / 2;
+                    const currentX = pdf.x;
+                    pdf.text(text, xPosition, pdf.y);
+                    pdf.x = currentX;
+                }
+    
                 pdf.pipe(fs.createWriteStream(pdfPath));
                 pdf.fontSize(16);
+    
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+                pdf.moveDown();
+                centerText(resName, 16);
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+    
+                pdf.moveDown();
+                pdf.text(messageTop);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+    
+                pdf.moveDown();
                 pdf.text(message);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+    
+                pdf.moveDown();
+                pdf.text(messageBottom);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+    
+                pdf.moveDown();
+                centerText(thank, 16);
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+    
                 pdf.end();
-
+    
                 const transporter = nodemailer.createTransport({
                     service: 'gmail',
                     auth: {
@@ -354,7 +401,7 @@ const mrkPaid = async (req, res) => {
                         pass: 'gkop jksn urdi dgvv'
                     }
                 });
-
+    
                 const mailOptions = {
                     from: 'siddiquiboy360@gmail.com',
                     to,
@@ -366,13 +413,11 @@ const mrkPaid = async (req, res) => {
                         }
                     ]
                 };
-
+    
                 const info = await transporter.sendMail(mailOptions);
-                const setSentQuery = `UPDATE order_items SET PStatus = 'sent' WHERE OrderID = ? AND KitchenID = ?`;
-                await poolConnection.query(setSentQuery, [orderId, KitchenID]);
-
+    
                 console.log('Email Sent! and Status updated!: ', info);
-
+    
                 fs.unlinkSync(pdfPath);
             } catch (error) {
                 console.log(error);
@@ -380,6 +425,7 @@ const mrkPaid = async (req, res) => {
             }
         } catch (error) {
             console.log(error);
+            return;
         }
 
         const commitTransactionQuery = 'COMMIT';
@@ -392,7 +438,7 @@ const mrkPaid = async (req, res) => {
         const rollbackTransactionQuery = 'ROLLBACK';
         await poolConnection.query(rollbackTransactionQuery);
 
-        res.status(500).json({ status: 500, message: 'Error updating order status and table status!' });
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 

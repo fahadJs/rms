@@ -266,8 +266,8 @@ const createItSplit = async (req, res) => {
                 const tidValue = tid.toUpperCase();
                 const paidViaValue = paidVia.toUpperCase();
 
-                const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity) VALUES (?, ?, ?, ?, ?, ?, ?)';
-                await poolConnection.query(insertSplitItemQuery, [orderId, menuItem.MenuItemID, menuItem.Name, afterTax, tidValue, paidViaValue, item.quantity]);
+                const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity, before_tax) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+                await poolConnection.query(insertSplitItemQuery, [orderId, menuItem.MenuItemID, menuItem.Name, afterTax, tidValue, paidViaValue, item.quantity, itemPrice]);
 
                 console.log('inserted into bill split.');
             }
@@ -310,6 +310,188 @@ const createItSplit = async (req, res) => {
         }
 
         await poolConnection.query('COMMIT');
+
+        try {
+            const getTheOrder = `SELECT * FROM bill_split_item WHERE OrderID = ? AND receipt = 'false'`;
+            const getTheOrderRes = await poolConnection.query(getTheOrder, [orderId]);
+
+            const orderDetails = getTheOrderRes[0];
+
+            const getTheMainOrder = `SELECT * FROM orders WHERE OrderID = ?`;
+            const getTheMainOrderRes = await poolConnection.query(getTheMainOrder, [orderId]);
+
+            const mainOrderDetails = getTheMainOrderRes[0];
+
+            const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+            const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+
+            const timeZone = timeZoneResult[0].time_zone;
+
+            const formattedDate = moment.tz(timeZone).format('YYYY-MM-DD');
+            const formattedTime = moment.tz(timeZone).format('HH:mm:ss');
+
+            // const orderTotal = orderDetails.before_tax;
+            // const afterTax = orderDetails.splitAmount;
+            const paidVia = orderDetails.paid_via;
+            const tid = orderDetails.tid;
+            // const orderId = mainOrderDetails.OrderID;
+
+            const waiter_id = mainOrderDetails.waiter_id;
+
+            const table_id = mainOrderDetails.table_id;
+
+            const waiterQuery = `SELECT * FROM waiters WHERE waiter_id = ?`;
+            const waiterRes = await poolConnection.query(waiterQuery, [waiter_id]);
+
+            const waiterName = waiterRes[0].waiter_name;
+
+            const tableQuery = `SELECT table_name FROM tables WHERE table_id = ?`;
+            const tableRes = await poolConnection.query(tableQuery, [table_id]);
+
+            const tableName = `Table: ${tableRes[0].table_name}`
+
+            const restaurantQuery = `SELECT * FROM restaurants WHERE restaurant_id = ?`;
+            const restaurantResult = await poolConnection.query(restaurantQuery, [restaurant_id]);
+
+            const restaurantName = restaurantResult[0].name;
+            const tax = restaurantResult[0].tax;
+            const currency = restaurantResult[0].default_currency;
+
+            const itemsArray = [];
+
+            let totalBeforeTax;
+            let totalAfterTax;
+
+            for (const item of orderDetails) {
+                const itemPrice = item.before_tax;
+                const itemName = item.ItemName;
+                const quantity = item.quantity;
+                totalBeforeTax += itemPrice;
+                totalAfterTax += item.SplitAmount;
+
+                itemsArray.push({ itemName, quantity, waiterName, tableName, restaurantName, itemPrice });
+
+            }
+
+            let messageMap = itemsArray.map(async (item) => {
+                // const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
+                //                     JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
+                //                     WHERE order_extras.OrderItemID = ?`;
+                // const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
+
+                // const extrasList = extrasResult.length > 0
+                //     ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
+                //     : '';
+
+                return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}`;
+            });
+
+            messageMap = await Promise.all(messageMap);
+
+            const resName = `${restaurantName}`.toUpperCase();
+            const messageTop = `OrderID: ${orderId}\n${waiterName}\n${tableName}\nDate: ${formattedDate}\nTime: ${formattedTime}\n`;
+
+            const message = `${messageMap.join('\n')}`;
+
+            const messageBottom = `Order Total: ${totalBeforeTax}\nTax: ${tax}%\nAfter Tax: ${totalAfterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}`;
+
+            const thank = `THNAK YOU`;
+
+            try {
+                // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+                const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
+
+                const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
+                const paperWidth = 303;
+
+                const pdf = new PDFDocument({
+                    size: [paperWidth, 792],
+                    margin: 15,
+                });
+
+                function drawDottedLine(yPosition, length) {
+                    const startX = pdf.x;
+                    const endX = pdf.x + length;
+                    const y = yPosition;
+
+                    for (let i = startX; i <= endX; i += 5) {
+                        pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
+                    }
+                }
+
+                function centerText(text, fontSize) {
+                    const textWidth = pdf.widthOfString(text, { fontSize });
+                    const xPosition = (paperWidth - textWidth) / 2;
+                    const currentX = pdf.x;
+                    pdf.text(text, xPosition, pdf.y);
+                    pdf.x = currentX;
+                }
+
+                pdf.pipe(fs.createWriteStream(pdfPath));
+                pdf.fontSize(16);
+
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+                pdf.moveDown();
+                centerText(resName, 16);
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+
+                pdf.moveDown();
+                pdf.text(messageTop);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+
+                pdf.moveDown();
+                pdf.text(message);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+
+                pdf.moveDown();
+                pdf.text(messageBottom);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+
+                pdf.moveDown();
+                centerText(thank, 16);
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+
+                pdf.end();
+
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        user: 'siddiquiboy360@gmail.com',
+                        pass: 'gkop jksn urdi dgvv'
+                    }
+                });
+
+                const mailOptions = {
+                    from: 'siddiquiboy360@gmail.com',
+                    to,
+                    attachments: [
+                        {
+                            filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+                            path: pdfPath,
+                            encoding: 'base64'
+                        }
+                    ]
+                };
+
+                const info = await transporter.sendMail(mailOptions);
+
+                console.log('Email Sent! and Status updated!: ', info);
+
+                fs.unlinkSync(pdfPath);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+        } catch (error) {
+            console.log(error);
+            return;
+        }
         res.status(201).json({ status: 201, message: 'Bill split successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
