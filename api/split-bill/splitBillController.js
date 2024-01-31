@@ -368,7 +368,7 @@ const createItSplit = async (req, res) => {
             for (const item of orderDetails) {
                 const itemPrice = item.before_tax;
                 const itemName = item.ItemName;
-                const quantity = item.quantity;
+                const quantity = item.SplitQuantity;
                 totalBeforeTax += item.before_tax;
                 totalAfterTax += item.SplitAmount;
 
