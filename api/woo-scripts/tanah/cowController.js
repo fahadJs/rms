@@ -228,7 +228,7 @@ const getAllOrders = async (req, res) => {
         await poolConnection.query('COMMIT');
         console.log('Data Inserted Woo! redirecting...');
         setTimeout(() => {
-            res.redirect('https://anunziointernational.com/tanah/home/');
+            res.redirect('https://www.google.com');
         }, 3000);
     } catch (error) {
         await poolConnection.query('ROLLBACK');
