@@ -335,8 +335,8 @@ const createItSplit = async (req, res) => {
 
             // const orderTotal = orderDetails.before_tax;
             // const afterTax = orderDetails.splitAmount;
-            const paidVia = orderDetails.paid_via;
-            const tid = orderDetails.tid;
+            const paidVia = orderDetails[0].paid_via;
+            const tid = orderDetails[0].tid;
             // const orderId = mainOrderDetails.OrderID;
 
             const waiter_id = mainOrderDetails.waiter_id;
@@ -362,18 +362,17 @@ const createItSplit = async (req, res) => {
 
             const itemsArray = [];
 
-            let totalBeforeTax;
-            let totalAfterTax;
+            let totalBeforeTax = 0;
+            let totalAfterTax = 0;
 
             for (const item of orderDetails) {
                 const itemPrice = item.before_tax;
                 const itemName = item.ItemName;
                 const quantity = item.quantity;
-                totalBeforeTax += itemPrice;
+                totalBeforeTax += item.before_tax;
                 totalAfterTax += item.SplitAmount;
 
                 itemsArray.push({ itemName, quantity, waiterName, tableName, restaurantName, itemPrice });
-
             }
 
             let messageMap = itemsArray.map(async (item) => {
