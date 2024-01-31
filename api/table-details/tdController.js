@@ -272,7 +272,7 @@ const mrkPaid = async (req, res) => {
             const afterTax = orderDetails.after_tax;
             const paidVia = orderDetails.paid_via;
             const tid = orderDetails.tid;
-            const orderId = orderDetails.OrderID;
+            // const orderId = orderDetails.OrderID;
 
             const waiter_id = orderDetails.waiter_id;
 
