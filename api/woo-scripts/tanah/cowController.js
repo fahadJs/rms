@@ -153,6 +153,9 @@ const getAllOrders = async (req, res) => {
             if (order.coupon_lines.length > 0) {
                 const coupon = order.coupon_lines[0];
                 tableId = coupon.code;
+            } else {
+                console.log('No Coupon! So No Table!...');
+                throw new Error('No Table...!');
             }
 
             // console.log(tableId);
@@ -232,7 +235,7 @@ const getAllOrders = async (req, res) => {
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.error('Error fetching data:', error.message);
-        res.status(500).json({ status: 500, message: 'Internal Server Error!' });
+        res.status(500).json({ status: 500, message: error });
     }
 }
 
