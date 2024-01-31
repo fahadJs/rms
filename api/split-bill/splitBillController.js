@@ -315,7 +315,7 @@ const createItSplit = async (req, res) => {
             const getTheOrder = `SELECT * FROM bill_split_item WHERE OrderID = ? AND receipt = 'false'`;
             const getTheOrderRes = await poolConnection.query(getTheOrder, [orderId]);
 
-            const orderDetails = getTheOrderRes[0];
+            const orderDetails = getTheOrderRes;
 
             const getTheMainOrder = `SELECT * FROM orders WHERE OrderID = ?`;
             const getTheMainOrderRes = await poolConnection.query(getTheMainOrder, [orderId]);
