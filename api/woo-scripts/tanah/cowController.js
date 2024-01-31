@@ -152,14 +152,14 @@ const getAllOrders = async (req, res) => {
             let tableId = 1;
             if (order.coupon_lines.length > 0) {
                 const coupon = order.coupon_lines[0];
-                tableId = coupon.code;
-            } else {
-                console.log('No Coupon! So No Table!...');
-                throw new Error('No Table...!');
-            }
+                tableId = coupon.code;}
+            // } else {
+            //     console.log('No Coupon! So No Table!...');
+            //     throw new Error('No Table...!');
+            // }
 
-            // console.log(tableId);
-            // console.log(order.coupon_lines);
+            console.log(`Table: ${tableId}`);
+            console.log(`Coupon Array! ${JSON.stringify(order.coupon_lines)}`);
 
             const totalAmount = order.total;
             const restaurantId = 3;
@@ -230,12 +230,13 @@ const getAllOrders = async (req, res) => {
 
         await poolConnection.query('COMMIT');
         console.log('Data Inserted Woo! redirecting...');
-        res.redirect('https://anunziointernational.com/tanah/home/');
-        // res.redirect('https://www.google.com');
+        // res.redirect('https://anunziointernational.com/tanah/home/');
+        // res.json(orders);
+        res.redirect('https://www.google.com');
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        console.error('Error fetching data:', error.message);
-        res.status(500).json({ status: 500, message: error });
+        console.log('Error fetching data:', error.message);
+        res.status(500).json(error);
     }
 }
 
