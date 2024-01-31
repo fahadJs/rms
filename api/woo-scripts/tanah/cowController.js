@@ -149,17 +149,102 @@ const getAllOrders = async (req, res) => {
                 continue;
             }
 
-            let tableId = 1;
+            // Dummy Coupon Example.
+            // {
+            //     "customer_id": 1,
+            //     "billing": {
+            //       "first_name": "John",
+            //       "last_name": "Doe",
+            //       "address_1": "123 Main St",
+            //       "city": "Cityville",
+            //       "postcode": "12345",
+            //       "country": "US",
+            //       "email": "john.doe@example.com",
+            //       "phone": "555-555-5555"
+            //     },
+            //     "shipping": {
+            //       "first_name": "John",
+            //       "last_name": "Doe",
+            //       "address_1": "123 Shipping St",
+            //       "city": "Shipping City",
+            //       "postcode": "54321",
+            //       "country": "US"
+            //     },
+            //     "line_items": [
+            //       {
+            //         "product_id": 1,
+            //         "quantity": 2
+            //       },
+            //       {
+            //         "product_id": 2,
+            //         "variation_id": 3,
+            //         "quantity": 1
+            //       }
+            //     ],
+            //     "coupon_lines": [
+            //       {
+            //         "code": "SUMMER2024",
+            //         "discount": "10.00",
+            //         "discount_tax": "1.80",
+            //         "meta_data": [
+            //           {
+            //             "key": "coupon_data",
+            //             "value": {
+            //               "coupon_type": "percentage",
+            //               "description": "Summer Discount"
+            //             }
+            //           }
+            //         ]
+            //       }
+            //     ],
+            //     "shipping_lines": [
+            //       {
+            //         "method_id": "flat_rate",
+            //         "method_title": "Flat Rate",
+            //         "total": "5.00"
+            //       }
+            //     ],
+            //     "fee_lines": [
+            //       {
+            //         "name": "Handling Fee",
+            //         "tax_class": "",
+            //         "tax_status": "none",
+            //         "total": "5.00"
+            //       }
+            //     ],
+            //     "shipping_tax_total": "2.50",
+            //     "tax_lines": [
+            //       {
+            //         "name": "Sales Tax",
+            //         "rate_code": "US_CA_SALES_TAX",
+            //         "rate_id": "tax_1",
+            //         "compound": false,
+            //         "tax_total": "3.60",
+            //         "shipping_tax_total": "0.90",
+            //         "meta_data": [
+            //           {
+            //             "key": "tax_rate_name",
+            //             "value": "CA Sales Tax"
+            //           }
+            //         ]
+            //       }
+            //     ],
+            //     "total": "71.90",
+            //     "subtotal": "60.00",
+            //     "total_tax": "7.50"
+            //   }
+
+            let tableId;
             if (order.coupon_lines.length > 0) {
                 const coupon = order.coupon_lines[0];
-                tableId = coupon.code;}
-            // } else {
-            //     console.log('No Coupon! So No Table!...');
-            //     throw new Error('No Table...!');
-            // }
+                tableId = coupon.code;
+            } else {
+                console.log('No Coupon! So No Table!...');
+                throw new Error('No Table...!');
+            }
 
             console.log(`Table: ${tableId}`);
-            console.log(`Coupon Array! ${JSON.stringify(order.coupon_lines)}`);
+            // console.log(`Coupon Array! ${JSON.stringify(order.coupon_lines)}`);
 
             const totalAmount = order.total;
             const restaurantId = 3;
@@ -182,21 +267,35 @@ const getAllOrders = async (req, res) => {
             for (const item of order.line_items) {
                 const getMenuItem = `SELECT * FROM menuitems WHERE Name = ? AND restaurant_id = ?`;
                 const getMenuItemRes = await poolConnection.query(getMenuItem, [item.name, restaurantId]);
-                const MenuItemID = getMenuItemRes[0].MenuItemID;
+
+                let MenuItemID;
+                if (getMenuItemRes.length > 0) {
+                    const menuItem = getMenuItemRes[0];
+                    if (menuItem.MenuItemID) {
+                        MenuItemID = menuItem.MenuItemID;
+                    } else {
+                        throw new Error('Invalid menu item data: Item ID not found!');
+                    }
+                } else {
+                    throw new Error('Menu item not found!');
+                }
                 const itemName = item.name;
                 const price = item.subtotal;
                 const quantity = item.quantity;
-                let kitchenId = 1;
 
+                let kitchenId;
                 const sku = item.sku;
                 const trimmedSku = sku.substring(sku.indexOf('k') + 1);
 
                 if (trimmedSku === '1') {
                     kitchenId = 10;
-                }
-                if (trimmedSku === '2') {
+                } else if (trimmedSku === '2') {
                     kitchenId = 9;
+                } else {
+                    console.log('No Kitchen Fetched...! No SKU DATA FOUND!');
+                    throw new Error('No Kitchen Fetched...!');
                 }
+
                 const categoryId = 1;
 
                 const orderItemsValues = [orderInsertID, MenuItemID, itemName, price, quantity, kitchenId, categoryId, quantity];
@@ -230,13 +329,13 @@ const getAllOrders = async (req, res) => {
 
         await poolConnection.query('COMMIT');
         console.log('Data Inserted Woo! redirecting...');
-        // res.redirect('https://anunziointernational.com/tanah/home/');
+        res.redirect('https://anunziointernational.com/tanah/home/');
         // res.json(orders);
-        res.redirect('https://www.google.com');
+        // res.redirect('https://www.google.com');
     } catch (error) {
         await poolConnection.query('ROLLBACK');
         console.log('Error fetching data:', error.message);
-        res.status(500).json(error);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
