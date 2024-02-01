@@ -6,7 +6,7 @@ const getAll = async (req, res) => {
         const { restaurant_id } = req.params;
 
         const getTimeZoneQuery = `
-            SELECT time_zone
+            SELECT time_zone, open_time
             FROM restaurants
             WHERE restaurant_id = ?;
         `;
@@ -18,9 +18,10 @@ const getAll = async (req, res) => {
             return;
         }
 
-        const restaurantTimeZone = timeZoneResult[0].time_zone;
+        const { time_zone, open_time } = timeZoneResult[0];
+        const timeZone = time_zone;
 
-        const twentyFourHoursAgo = moment.tz(moment(), restaurantTimeZone).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
+        const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
 
         const getCashSalesQuery = `
                 SELECT
@@ -41,7 +42,7 @@ const getAll = async (req, res) => {
                 o.time >= ?;
         `;
 
-        const getCashSalesResult = await poolConnection.query(getCashSalesQuery, [restaurant_id, twentyFourHoursAgo]);
+        const getCashSalesResult = await poolConnection.query(getCashSalesQuery, [restaurant_id, openingTime]);
 
         const totalCashSales = {};
         getCashSalesResult.forEach(result => {
@@ -80,6 +81,7 @@ const getAll = async (req, res) => {
 
 const closing = async (req, res) => {
     try {
+        await poolConnection.query('START TRANSACTION');
         const { restaurant_id, waiter_id, amount } = req.params;
 
         const getWaiterInfoQuery = `SELECT * FROM waiters WHERE restaurant_id = ? AND waiter_id = ?`;
@@ -107,9 +109,11 @@ const closing = async (req, res) => {
 
         await poolConnection.query(setClosedQuery, [orderStatus, waiter_id, restaurant_id]);
 
+        await poolConnection.query('COMMIT');
         res.status(200).json({ status: 200, message: 'Closed Updated!' });
     } catch (error) {
         console.error(`Error Closing Sales! Error: ${error}`);
+        await poolConnection.query('ROLLBACK');
         res.status(500).json({ status: 500, message: 'Error Closing Sales!' });
     }
 }

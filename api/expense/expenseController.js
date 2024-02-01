@@ -178,17 +178,23 @@ const getPosWeeklyExpense = async (req, res) => {
 const getPosDailyExpense = async (req, res) => {
     const { restaurantId } = req.params;
     try {
-        const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateQuery = `SELECT time_zone, open_time FROM restaurants WHERE restaurant_id = ?`;
         const currentDateResult = await poolConnection.query(currentDateQuery, [restaurantId]);
 
         if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
             throw new Error("Time zone not available for the restaurant");
         }
 
-        const timeZone = currentDateResult[0].time_zone;
-        const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+        // const timeZone = currentDateResult[0].time_zone;
+        // const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
-        const twentyFourHoursAgo = moment(currentDate).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
+        // const twentyFourHoursAgo = moment(currentDate).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
+
+        const { time_zone, open_time } = currentDateResult[0];
+        const timeZone = time_zone;
+
+        // Combine the current date with the opening time
+        const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
 
         const ordersQuery = `
             SELECT 
@@ -200,11 +206,11 @@ const getPosDailyExpense = async (req, res) => {
                 po.restaurant_id = ?
                 AND po.time >= ?
         `;
-        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, twentyFourHoursAgo]);
+        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, openingTime]);
 
         if (ordersData.length === 0) {
             const formattedData = {
-                name: moment(currentDate).format('D'),
+                name: moment(openingTime).format('D'),
                 Expense: 0,
                 Income: 0
             };
@@ -218,7 +224,7 @@ const getPosDailyExpense = async (req, res) => {
         });
 
         const formattedData = {
-            name: moment(currentDate).format('D'),
+            name: moment(openingTime).format('D'),
             Expense: 0,
             Income: parseFloat(totalIncome.toFixed(2))
         };
@@ -430,17 +436,24 @@ const getWaiterMonthlyExpenseAdmin = async (req, res) => {
 const getWaiterDailyExpenseAdmin = async (req, res) => {
     const { restaurantId } = req.params;
     try {
-        const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateQuery = `SELECT time_zone, open_time FROM restaurants WHERE restaurant_id = ?`;
         const currentDateResult = await poolConnection.query(currentDateQuery, [restaurantId]);
 
         if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
             throw new Error("Time zone not available for the restaurant");
         }
 
-        const timeZone = currentDateResult[0].time_zone;
-        const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+        const { time_zone, open_time } = currentDateResult[0];
+        const timeZone = time_zone;
 
-        const startOf24HoursAgo = moment(currentDate).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
+        // Combine the current date with the opening time
+        const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
+
+
+        // const timeZone = currentDateResult[0].time_zone;
+        // const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+        // const startOf24HoursAgo = moment(currentDate).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
 
         const ordersQuery = `
             SELECT 
@@ -455,11 +468,11 @@ const getWaiterDailyExpenseAdmin = async (req, res) => {
             ORDER BY 
                 o.time;
         `;
-        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, startOf24HoursAgo]);
+        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, openingTime]);
 
         if (ordersData.length === 0) {
             const formattedData = {
-                name: moment(startOf24HoursAgo).format('D'),
+                name: moment(openingTime).format('D'),
                 Expense: 0,
                 Income: 0
             };
@@ -492,7 +505,7 @@ const getWaiterDailyExpenseAdmin = async (req, res) => {
         });
 
         const formattedData = {
-            name: moment(startOf24HoursAgo).format('D'),
+            name: moment(openingTime).format('D'),
             Expense: parseFloat(totalItemExpense.toFixed(2)),
             Income: parseFloat(totalOrderIncome.toFixed(2)),
         };
@@ -620,7 +633,7 @@ const getPosMonthlyExpenseData = async (restaurantId) => {
                 Expense: 0,
                 Income: 0
             };
-            return res.json(formattedData);
+            return formattedData;
         }
 
         let totalOrderIncome = 0;
@@ -696,7 +709,7 @@ const getWaiterMonthlyExpenseAdminData = async (restaurantId) => {
                 Expense: 0,
                 Income: 0
             };
-            return res.json(formattedData);
+            return formattedData;
         }
 
         let totalOrderIncome = 0;
@@ -770,17 +783,23 @@ const getCombinedMonthlyExpense = async (req, res) => {
 const getPosDailyExpenseData = async (restaurantId) => {
     // const { restaurantId } = req.params;
     try {
-        const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateQuery = `SELECT time_zone, open_time FROM restaurants WHERE restaurant_id = ?`;
         const currentDateResult = await poolConnection.query(currentDateQuery, [restaurantId]);
 
         if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
             throw new Error("Time zone not available for the restaurant");
         }
 
-        const timeZone = currentDateResult[0].time_zone;
-        const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+        // const timeZone = currentDateResult[0].time_zone;
+        // const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
-        const twentyFourHoursAgo = moment(currentDate).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
+        // const twentyFourHoursAgo = moment(currentDate).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
+
+        const { time_zone, open_time } = currentDateResult[0];
+        const timeZone = time_zone;
+
+        // Combine the current date with the opening time
+        const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
 
         const ordersQuery = `
                 SELECT 
@@ -792,15 +811,15 @@ const getPosDailyExpenseData = async (restaurantId) => {
                     po.restaurant_id = ?
                     AND po.time >= ?
             `;
-        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, twentyFourHoursAgo]);
+        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, openingTime]);
 
         if (ordersData.length === 0) {
             const formattedData = {
-                name: moment(currentDate).format('D'),
+                name: moment(openingTime).format('D'),
                 Expense: 0,
                 Income: 0
             };
-            return res.json(formattedData);
+            return formattedData;
         }
 
         let totalIncome = 0;
@@ -810,7 +829,7 @@ const getPosDailyExpenseData = async (restaurantId) => {
         });
 
         const formattedData = {
-            name: moment(currentDate).format('D'),
+            name: moment(openingTime).format('D'),
             Expense: 0,
             Income: parseFloat(totalIncome.toFixed(2))
         };
@@ -843,17 +862,23 @@ const getPosDailyExpenseData = async (restaurantId) => {
 
 const getWaiterDailyExpenseAdminData = async (restaurantId) => {
     try {
-        const currentDateQuery = `SELECT time_zone FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateQuery = `SELECT time_zone, open_time FROM restaurants WHERE restaurant_id = ?`;
         const currentDateResult = await poolConnection.query(currentDateQuery, [restaurantId]);
 
         if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
             throw new Error("Time zone not available for the restaurant");
         }
 
-        const timeZone = currentDateResult[0].time_zone;
-        const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+        // const timeZone = currentDateResult[0].time_zone;
+        // const currentDate = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
-        const startOf24HoursAgo = moment(currentDate).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
+        // const startOf24HoursAgo = moment(currentDate).subtract(24, 'hours').format('YYYY-MM-DD HH:mm:ss');
+
+        const { time_zone, open_time } = currentDateResult[0];
+        const timeZone = time_zone;
+
+        // Combine the current date with the opening time
+        const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
 
         const ordersQuery = `
             SELECT 
@@ -868,15 +893,15 @@ const getWaiterDailyExpenseAdminData = async (restaurantId) => {
             ORDER BY 
                 o.time;
         `;
-        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, startOf24HoursAgo]);
+        const ordersData = await poolConnection.query(ordersQuery, [restaurantId, openingTime]);
 
         if (ordersData.length === 0) {
             const formattedData = {
-                name: moment(startOf24HoursAgo).format('D'),
+                name: moment(openingTime).format('D'),
                 Expense: 0,
                 Income: 0
             };
-            return (formattedData);
+            return formattedData;
         }
         let totalOrderIncome = 0;
 
@@ -905,7 +930,7 @@ const getWaiterDailyExpenseAdminData = async (restaurantId) => {
         });
 
         const formattedData = {
-            name: moment(startOf24HoursAgo).format('D'),
+            name: moment(openingTime).format('D'),
             Expense: parseFloat(totalItemExpense.toFixed(2)),
             Income: parseFloat(totalOrderIncome.toFixed(2)),
         };

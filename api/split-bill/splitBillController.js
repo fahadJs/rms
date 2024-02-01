@@ -198,7 +198,7 @@ const createItSplit = async (req, res) => {
     try {
         await poolConnection.query('START TRANSACTION');
 
-        const { orderId, tid, paidVia, items } = req.body;
+        const { orderId, tid, paidVia, cash, cash_change, items } = req.body;
         const { restaurant_id } = req.params;
 
         const getOrderQuery = 'SELECT * FROM orders WHERE OrderID = ?';
@@ -269,8 +269,8 @@ const createItSplit = async (req, res) => {
                 const tidValue = tid.toUpperCase();
                 const paidViaValue = paidVia.toUpperCase();
 
-                const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity, before_tax) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-                await poolConnection.query(insertSplitItemQuery, [orderId, menuItem.MenuItemID, menuItem.Name, afterTax, tidValue, paidViaValue, item.quantity, itemPrice]);
+                const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity, before_tax, cash, cash_change) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+                await poolConnection.query(insertSplitItemQuery, [orderId, menuItem.MenuItemID, menuItem.Name, afterTax, tidValue, paidViaValue, item.quantity, itemPrice, cash, cash_change]);
 
                 console.log('inserted into bill split.');
             }
@@ -337,6 +337,8 @@ const createItSplit = async (req, res) => {
             // const afterTax = orderDetails.splitAmount;
             const paidVia = orderDetails[0].paid_via;
             const tid = orderDetails[0].tid;
+            const cash = orderDetails[0].cash;
+            const cashChange = orderDetails[0].cash_change;
             // const orderId = mainOrderDetails.OrderID;
 
             const waiter_id = mainOrderDetails.waiter_id;
@@ -395,7 +397,11 @@ const createItSplit = async (req, res) => {
 
             const message = `${messageMap.join('\n')}`;
 
-            const messageBottom = `Order Total: ${totalBeforeTax}\nTax: ${tax}%\nAfter Tax: ${totalAfterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}`;
+            // const messageBottom = `Order Total: ${totalBeforeTax}\nTax: ${tax}%\nAfter Tax: ${totalAfterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}`;
+
+            const cashInfo = paidVia === 'CASH' ? `Cash Received: ${cash}\nChange: ${cashChange}` : '';
+
+            const messageBottom = `Order Total: ${totalBeforeTax}\nTax: ${tax}%\nAfter Tax: ${totalAfterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}` + (cashInfo ? `\n${cashInfo}` : '');
 
             const thank = `THNAK YOU`;
 

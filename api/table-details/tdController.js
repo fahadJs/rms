@@ -216,7 +216,7 @@ const updateItemQuantity = async (req, res) => {
 
 const mrkPaid = async (req, res) => {
     try {
-        const { orderId, tid, paidVia, restaurant_id } = req.params;
+        const { orderId, tid, paidVia, restaurant_id, cash, cash_change } = req.params;
 
         const startTransactionQuery = 'START TRANSACTION';
         await poolConnection.query(startTransactionQuery);
@@ -243,8 +243,8 @@ const mrkPaid = async (req, res) => {
         const timeZone = timeZoneResult[0].time_zone;
         const orderPayTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
-        const updateOrderQuery = 'UPDATE orders SET order_status = "paid", tid = ?, paid_via = ?, after_tax = ? WHERE OrderID = ?';
-        await poolConnection.query(updateOrderQuery, [tidValue, paidViaValue, afterTax, orderId]);
+        const updateOrderQuery = 'UPDATE orders SET order_status = "paid", tid = ?, paid_via = ?, after_tax = ?, cash = ?, cash_change = ? WHERE OrderID = ?';
+        await poolConnection.query(updateOrderQuery, [tidValue, paidViaValue, afterTax,cash, cash_change, orderId]);
 
         const updateTableQuery = 'UPDATE tables SET status = "available", pay_time = ? WHERE table_id = (SELECT table_id FROM orders WHERE OrderID = ?)';
         await poolConnection.query(updateTableQuery, [orderPayTime, orderId]);
@@ -272,6 +272,8 @@ const mrkPaid = async (req, res) => {
             const afterTax = orderDetails.after_tax;
             const paidVia = orderDetails.paid_via;
             const tid = orderDetails.tid;
+            const cash = orderDetails.cash;
+            const cashChange = orderDetails.cash_change;
             // const orderId = orderDetails.OrderID;
 
             const waiter_id = orderDetails.waiter_id;
@@ -305,7 +307,6 @@ const mrkPaid = async (req, res) => {
                 const quantity = item.Quantity;
 
                 itemsArray.push({ itemId, itemName, quantity, waiterName, tableName, restaurantName, itemPrice });
-
             }
 
             let messageMap = itemsArray.map(async (item) => {
@@ -313,47 +314,49 @@ const mrkPaid = async (req, res) => {
                                     JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
                                     WHERE order_extras.OrderItemID = ?`;
                 const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
-    
+
                 const extrasList = extrasResult.length > 0
-                ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
-                : '';
-    
+                    ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
+                    : '';
+
                 return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}\n${extrasList}`;
             });
-    
+
             messageMap = await Promise.all(messageMap);
-    
+
             const resName = `${restaurantName}`.toUpperCase();
             const messageTop = `OrderID: ${orderId}\n${waiterName}\n${tableName}\nDate: ${formattedDate}\nTime: ${formattedTime}\n`;
-    
+
             const message = `${messageMap.join('\n')}`;
-    
-            const messageBottom = `Order Total: ${orderTotal}\nTax: ${tax}%\nAfter Tax: ${afterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}`;
-    
+
+            const cashInfo = paidVia === 'CASH' ? `Cash Received: ${cash}\nChange: ${cashChange}` : '';
+
+            const messageBottom = `Order Total: ${orderTotal}\nTax: ${tax}%\nAfter Tax: ${afterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}` + (cashInfo ? `\n${cashInfo}` : '');
+
             const thank = `THNAK YOU`;
-    
+
             try {
                 const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
                 // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
-    
+
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
                 const paperWidth = 303;
-    
+
                 const pdf = new PDFDocument({
                     size: [paperWidth, 600],
                     margin: 12,
                 });
-    
+
                 function drawDottedLine(yPosition, length) {
                     const startX = pdf.x;
                     const endX = pdf.x + length;
                     const y = yPosition;
-    
+
                     for (let i = startX; i <= endX; i += 5) {
                         pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
                     }
                 }
-    
+
                 function centerText(text, fontSize) {
                     const textWidth = pdf.widthOfString(text, { fontSize });
                     const xPosition = (paperWidth - textWidth) / 2;
@@ -361,39 +364,39 @@ const mrkPaid = async (req, res) => {
                     pdf.text(text, xPosition, pdf.y);
                     pdf.x = currentX;
                 }
-    
+
                 pdf.pipe(fs.createWriteStream(pdfPath));
                 pdf.fontSize(12);
-    
+
                 // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
                 pdf.moveDown();
                 centerText(resName, 16);
                 // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
-    
+
                 pdf.moveDown();
                 pdf.text(messageTop);
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
-    
+
                 pdf.moveDown();
                 pdf.text(message);
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
-    
+
                 pdf.moveDown();
                 pdf.text(messageBottom);
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
-    
+
                 pdf.moveDown();
                 centerText(thank, 16);
                 // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
-    
+
                 pdf.end();
-    
+
                 const transporter = nodemailer.createTransport({
                     service: 'gmail',
                     auth: {
@@ -401,7 +404,7 @@ const mrkPaid = async (req, res) => {
                         pass: 'gkop jksn urdi dgvv'
                     }
                 });
-    
+
                 const mailOptions = {
                     from: 'siddiquiboy360@gmail.com',
                     to,
@@ -413,11 +416,11 @@ const mrkPaid = async (req, res) => {
                         }
                     ]
                 };
-    
+
                 const info = await transporter.sendMail(mailOptions);
-    
+
                 console.log('Email Sent! and Status updated!: ', info);
-    
+
                 fs.unlinkSync(pdfPath);
             } catch (error) {
                 console.log(error);
