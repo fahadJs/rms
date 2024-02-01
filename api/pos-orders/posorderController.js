@@ -55,7 +55,10 @@ const create = async (req, res) => {
 
 const mrkPaid = async (req, res) => {
     try {
-        const { orderId, tid, paidVia } = req.params;
+        const { orderId, tid, paidVia, restaurant_id } = req.params;
+
+        const startTransactionQuery = 'START TRANSACTION';
+        await poolConnection.query(startTransactionQuery);
 
         const tidValue = tid.toUpperCase();
         const paidViaValue = paidVia.toUpperCase();
@@ -63,10 +66,196 @@ const mrkPaid = async (req, res) => {
         const updateOrderQuery = 'UPDATE pos_orders SET order_status = "paid", tid = ?, paid_via = ? WHERE PosOrderID = ?';
         await poolConnection.query(updateOrderQuery, [tidValue, paidViaValue, orderId]);
 
+        try {
+            const getTheOrder = `SELECT * FROM pos_orders WHERE PosOrderID = ?`;
+            const getTheOrderRes = await poolConnection.query(getTheOrder, [orderId]);
+
+            const orderDetails = getTheOrderRes[0];
+
+            const getTheOrderItems = `SELECT * FROM pos_order_items WHERE PosOrderID = ?`;
+            const getTheOrderItemsRes = await poolConnection.query(getTheOrderItems, [orderId]);
+
+            const orderItems = getTheOrderItemsRes;
+
+            const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+            const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+
+            const timeZone = timeZoneResult[0].time_zone;
+
+            const formattedDate = moment.tz(timeZone).format('YYYY-MM-DD');
+            const formattedTime = moment.tz(timeZone).format('HH:mm:ss');
+
+            let orderTotal = 0;
+            const afterTax = orderDetails.total_amount;
+            const paidVia = orderDetails.paid_via;
+            const tid = orderDetails.tid;
+            // const orderId = orderDetails.OrderID;
+
+            // const waiter_id = orderDetails.waiter_id;
+
+            // const table_id = orderDetails.table_id;
+
+            // const waiterQuery = `SELECT * FROM waiters WHERE waiter_id = ?`;
+            // const waiterRes = await poolConnection.query(waiterQuery, [waiter_id]);
+
+            // const waiterName = waiterRes[0].waiter_name;
+
+            // const tableQuery = `SELECT table_name FROM tables WHERE table_id = ?`;
+            // const tableRes = await poolConnection.query(tableQuery, [table_id]);
+
+            // const tableName = `Table: ${tableRes[0].table_name}`
+
+            const restaurantQuery = `SELECT * FROM restaurants WHERE restaurant_id = ?`;
+            const restaurantResult = await poolConnection.query(restaurantQuery, [restaurant_id]);
+
+            const restaurantName = restaurantResult[0].name;
+            const tax = restaurantResult[0].tax;
+            const currency = restaurantResult[0].default_currency;
+
+            const itemsArray = [];
+
+            for (const item of orderItems) {
+                const itemId = item.PosOrderItemID;
+                const itemName = item.ItemName;
+                const quantity = item.Quantity;
+                const itemPrice = item.Price * quantity;
+                orderTotal += itemPrice;
+
+                itemsArray.push({ itemId, itemName, quantity, restaurantName, itemPrice });
+
+            }
+
+            let messageMap = itemsArray.map(async (item) => {
+                const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
+                                    JOIN pos_order_extras ON menu_extras.extras_id = pos_order_extras.extras_id
+                                    WHERE order_extras.PosOrderItemID = ?`;
+                const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
+
+                const extrasList = extrasResult.length > 0
+                    ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
+                    : '';
+
+                return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}\n${extrasList}`;
+            });
+
+            messageMap = await Promise.all(messageMap);
+
+            const resName = `${restaurantName}`.toUpperCase();
+            const messageTop = `OrderID: ${orderId}\nPOS Order\nDate: ${formattedDate}\nTime: ${formattedTime}\n`;
+
+            const message = `${messageMap.join('\n')}`;
+
+            const messageBottom = `Order Total: ${orderTotal}\nTax: ${tax}%\nAfter Tax: ${afterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}`;
+
+            const thank = `THNAK YOU`;
+
+            try {
+                const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+                // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
+
+                const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
+                const paperWidth = 303;
+
+                const pdf = new PDFDocument({
+                    size: [paperWidth, 600],
+                    margin: 12,
+                });
+
+                function drawDottedLine(yPosition, length) {
+                    const startX = pdf.x;
+                    const endX = pdf.x + length;
+                    const y = yPosition;
+
+                    for (let i = startX; i <= endX; i += 5) {
+                        pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
+                    }
+                }
+
+                function centerText(text, fontSize) {
+                    const textWidth = pdf.widthOfString(text, { fontSize });
+                    const xPosition = (paperWidth - textWidth) / 2;
+                    const currentX = pdf.x;
+                    pdf.text(text, xPosition, pdf.y);
+                    pdf.x = currentX;
+                }
+
+                pdf.pipe(fs.createWriteStream(pdfPath));
+                pdf.fontSize(12);
+
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+                pdf.moveDown();
+                centerText(resName, 16);
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+
+                pdf.moveDown();
+                pdf.text(messageTop);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+
+                pdf.moveDown();
+                pdf.text(message);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+
+                pdf.moveDown();
+                pdf.text(messageBottom);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+
+                pdf.moveDown();
+                centerText(thank, 16);
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+
+                pdf.end();
+
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        user: 'siddiquiboy360@gmail.com',
+                        pass: 'gkop jksn urdi dgvv'
+                    }
+                });
+
+                const mailOptions = {
+                    from: 'siddiquiboy360@gmail.com',
+                    to,
+                    attachments: [
+                        {
+                            filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+                            path: pdfPath,
+                            encoding: 'base64'
+                        }
+                    ]
+                };
+
+                const info = await transporter.sendMail(mailOptions);
+
+                console.log('Email Sent! and Status updated!: ', info);
+
+                fs.unlinkSync(pdfPath);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
+        } catch (error) {
+            console.log(error);
+            return;
+        }
+
+        const commitTransactionQuery = 'COMMIT';
+        await poolConnection.query(commitTransactionQuery);
+
         res.status(200).json({ status: 200, message: 'POS Order status updated to "paid" successfully!' });
     } catch (error) {
         console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error updating order status and table status!' });
+
+        const rollbackTransactionQuery = 'ROLLBACK';
+        await poolConnection.query(rollbackTransactionQuery);
+
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 

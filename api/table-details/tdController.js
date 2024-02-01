@@ -260,10 +260,10 @@ const mrkPaid = async (req, res) => {
 
             const orderItems = getTheOrderItemsRes;
 
-            const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
-            const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+            // const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+            // const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
 
-            const timeZone = timeZoneResult[0].time_zone;
+            // const timeZone = timeZoneResult[0].time_zone;
 
             const formattedDate = moment.tz(timeZone).format('YYYY-MM-DD');
             const formattedTime = moment.tz(timeZone).format('HH:mm:ss');
@@ -333,8 +333,8 @@ const mrkPaid = async (req, res) => {
             const thank = `THNAK YOU`;
     
             try {
-                // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
-                const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
+                const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+                // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
     
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
                 const paperWidth = 303;

@@ -400,15 +400,15 @@ const createItSplit = async (req, res) => {
             const thank = `THNAK YOU`;
 
             try {
-                // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
-                const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
+                const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+                // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
                 const paperWidth = 303;
 
                 const pdf = new PDFDocument({
-                    size: [paperWidth, 792],
-                    margin: 15,
+                    size: [paperWidth, 600],
+                    margin: 12,
                 });
 
                 function drawDottedLine(yPosition, length) {
@@ -430,7 +430,7 @@ const createItSplit = async (req, res) => {
                 }
 
                 pdf.pipe(fs.createWriteStream(pdfPath));
-                pdf.fontSize(16);
+                pdf.fontSize(12);
 
                 // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
@@ -482,6 +482,11 @@ const createItSplit = async (req, res) => {
                 };
 
                 const info = await transporter.sendMail(mailOptions);
+
+                for (const split of orderDetails) {
+                    const updateReciptStatus = `UPDATE bill_split_item SET receipt = 'true' WHERE SplitItemID = ?`;
+                    await poolConnection.query(updateReciptStatus, [split.SplitItemID]);
+                }
 
                 console.log('Email Sent! and Status updated!: ', info);
 
