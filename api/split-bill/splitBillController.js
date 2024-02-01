@@ -269,7 +269,7 @@ const createItSplit = async (req, res) => {
                 const tidValue = tid.toUpperCase();
                 const paidViaValue = paidVia.toUpperCase();
 
-                const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity, before_tax, cash, cash_change) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
+                const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity, before_tax, cash, cash_change) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
                 await poolConnection.query(insertSplitItemQuery, [orderId, menuItem.MenuItemID, menuItem.Name, afterTax, tidValue, paidViaValue, item.quantity, itemPrice, cash, cash_change]);
 
                 console.log('inserted into bill split.');
