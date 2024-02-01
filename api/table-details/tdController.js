@@ -340,8 +340,8 @@ const mrkPaid = async (req, res) => {
                 const paperWidth = 303;
     
                 const pdf = new PDFDocument({
-                    size: [paperWidth, 500],
-                    margin: 15,
+                    size: [paperWidth, 600],
+                    margin: 12,
                 });
     
                 function drawDottedLine(yPosition, length) {
@@ -363,7 +363,7 @@ const mrkPaid = async (req, res) => {
                 }
     
                 pdf.pipe(fs.createWriteStream(pdfPath));
-                pdf.fontSize(14);
+                pdf.fontSize(12);
     
                 // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
