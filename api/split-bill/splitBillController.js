@@ -277,13 +277,17 @@ const createItSplit = async (req, res) => {
                 console.log('inserted into bill split.');
             }
 
+
             const checkSpecificSplitQuantityQuery = 'SELECT * FROM order_items WHERE OrderID = ? AND OrderItemID = ?';
             const checkSpecificSplitQuantity = await poolConnection.query(checkSpecificSplitQuantityQuery, [orderId, item.OrderItemID]);
 
-            const checkQuantity = checkSpecificSplitQuantity[0].split_quantity;
-            console.log(`CheckQunatity: ${checkQuantity}`);
+            const checkQuantity = checkSpecificSplitQuantity[0].Quantity;
+            const checkSplitQuantity = checkSpecificSplitQuantity[0].split_quantity;
 
-            if (checkQuantity == 0) {
+            const checkSplitAgain = checkQuantity - checkSplitQuantity;
+            console.log(`CheckQunatity: ${checkSplitAgain}`);
+
+            if (checkSplitAgain == 0) {
                 const markOrderItemSplittedQuery = 'UPDATE order_items SET split_status = "splitted" WHERE OrderID = ? AND OrderItemID = ?';
                 await poolConnection.query(markOrderItemSplittedQuery, [orderId, item.OrderItemID]);
                 console.log(`CheckQunatity: ${checkQuantity}! Order updated to splitted!`);
