@@ -237,7 +237,10 @@ const mrkPaid = async (req, res) => {
         const afterTax = orderTotal + taxAmount;
 
         const tidValue = tid.toUpperCase();
-        const paidViaValue = paidVia.toUpperCase();
+        let paidViaValue = paidVia.toUpperCase();
+        if (tidValue === 'CASH') {
+            paidViaValue = 'CASH';
+        }
 
         const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
         const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
@@ -246,7 +249,7 @@ const mrkPaid = async (req, res) => {
         const orderPayTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
         const updateOrderQuery = 'UPDATE orders SET order_status = "paid", tid = ?, paid_via = ?, after_tax = ?, cash = ?, cash_change = ? WHERE OrderID = ?';
-        await poolConnection.query(updateOrderQuery, [tidValue, paidViaValue, afterTax,cash, cash_change, orderId]);
+        await poolConnection.query(updateOrderQuery, [tidValue, paidViaValue, afterTax, cash, cash_change, orderId]);
 
         const updateTableQuery = 'UPDATE tables SET status = "available", pay_time = ? WHERE table_id = (SELECT table_id FROM orders WHERE OrderID = ?)';
         await poolConnection.query(updateTableQuery, [orderPayTime, orderId]);

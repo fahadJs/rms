@@ -269,7 +269,10 @@ const createItSplit = async (req, res) => {
                 console.log('order split quantity updated!');
 
                 const tidValue = tid.toUpperCase();
-                const paidViaValue = paidVia.toUpperCase();
+                let paidViaValue = paidVia.toUpperCase();
+                if (tidValue === 'CASH'){
+                    paidViaValue = 'CASH';
+                }
 
                 const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity, before_tax, cash, cash_change) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
                 await poolConnection.query(insertSplitItemQuery, [orderId, menuItem.MenuItemID, menuItem.Name, afterTax, tidValue, paidViaValue, item.quantity, itemPrice, cash, cash_change]);
