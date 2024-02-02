@@ -258,9 +258,11 @@ const createItSplit = async (req, res) => {
             const updateOrderAfterTaxAndRemaining = `UPDATE orders SET remaining = ?, after_tax = after_tax + ? WHERE OrderID = ?`;
             await poolConnection.query(updateOrderAfterTaxAndRemaining, [remainingAmount, afterTax, orderId]);
 
-            const splitQuantity = orderItem.split_quantity - item.quantity;
+            const splitQuantity = orderItem.split_quantity + item.quantity;
 
-            if (splitQuantity >= 0) {
+            const checkSplit = orderItem.Quantity - splitQuantity;
+
+            if (checkSplit != 0) {
                 const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ? WHERE OrderID = ? AND OrderItemID = ?';
                 await poolConnection.query(updateOrderItemQuantityQuery, [splitQuantity, orderId, item.OrderItemID]);
 

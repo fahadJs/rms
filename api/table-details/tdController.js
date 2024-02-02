@@ -69,13 +69,15 @@ const getAll = async (req, res) => {
 
             const itemWithExtras = orderItemsMap.get(orderID).find(item => item.OrderItemID === orderItemID);
 
+            let quantity = orderItem.Quantity - orderItem.split_quantity;
+
             if (!itemWithExtras) {
                 orderItemsMap.get(orderID).push({
                     OrderItemID: orderItemID,
                     MenuItemID: orderItem.MenuItemID,
                     ItemName: orderItem.ItemName,
                     Price: orderItem.Price,
-                    Quantity: orderItem.split_quantity,
+                    Quantity: quantity,
                     KitchenID: orderItem.KitchenID,
                     CategoryID: orderItem.CategoryID,
                     Note: orderItem.Note,

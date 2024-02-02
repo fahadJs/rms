@@ -26,7 +26,7 @@ const create = async (req, res) => {
 
         for (const item of items) {
             const { menuitemID, name, price, quantity, kitchenID, categoryID, note, extras } = item;
-            const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note, quantity];
+            const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note, 0];
             const orderItemsResult = await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
 
             const orderItemID = orderItemsResult.insertId;
