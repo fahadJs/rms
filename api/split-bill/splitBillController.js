@@ -361,6 +361,8 @@ const createItSplit = async (req, res) => {
             const restaurantName = restaurantResult[0].name;
             const tax = restaurantResult[0].tax;
             const currency = restaurantResult[0].default_currency;
+            const contact = restaurantResult[0].contact;
+            const site = restaurantResult[0].site;
 
             const itemsArray = [];
 
@@ -392,7 +394,7 @@ const createItSplit = async (req, res) => {
 
             messageMap = await Promise.all(messageMap);
 
-            const resName = `${restaurantName}`.toUpperCase();
+            const resName = `${restaurantName}\n${contact}\n${site}`.toUpperCase();
             const messageTop = `OrderID: ${orderId}\n${waiterName}\n${tableName}\nDate: ${formattedDate}\nTime: ${formattedTime}\n`;
 
             const message = `${messageMap.join('\n')}`;
@@ -403,7 +405,7 @@ const createItSplit = async (req, res) => {
 
             const messageBottom = `Order Total: ${totalBeforeTax}\nTax: ${tax}%\nAfter Tax: ${totalAfterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}` + (cashInfo ? `\n${cashInfo}` : '');
 
-            const thank = `THNAK YOU`;
+            const thank = `THNAK YOU\nsoftware by\nAnunzio International FZC\nwww.anunziointernational.com\n+971-58-551-5742\ninfo@anunziointernational.com`;
 
             try {
                 const to = `habit.beauty.where.unique.protect@addtodropbox.com`;

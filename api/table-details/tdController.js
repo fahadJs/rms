@@ -296,6 +296,8 @@ const mrkPaid = async (req, res) => {
             const restaurantName = restaurantResult[0].name;
             const tax = restaurantResult[0].tax;
             const currency = restaurantResult[0].default_currency;
+            const contact = restaurantResult[0].contact;
+            const site = restaurantResult[0].site;
 
             const itemsArray = [];
 
@@ -324,7 +326,7 @@ const mrkPaid = async (req, res) => {
 
             messageMap = await Promise.all(messageMap);
 
-            const resName = `${restaurantName}`.toUpperCase();
+            const resName = `${restaurantName}\n${contact}\n${site}`.toUpperCase();
             const messageTop = `OrderID: ${orderId}\n${waiterName}\n${tableName}\nDate: ${formattedDate}\nTime: ${formattedTime}\n`;
 
             const message = `${messageMap.join('\n')}`;
@@ -333,18 +335,18 @@ const mrkPaid = async (req, res) => {
 
             const messageBottom = `Order Total: ${orderTotal}\nTax: ${tax}%\nAfter Tax: ${afterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}` + (cashInfo ? `\n${cashInfo}` : '');
 
-            const thank = `THNAK YOU`;
+            const thank = `THNAK YOU\nsoftware by\nAnunzio International FZC\nwww.anunziointernational.com\n+971-58-551-5742\ninfo@anunziointernational.com`;
 
             try {
                 const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
                 // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
-                const paperWidth = 303;
+                const paperWidth = 288;
 
                 const pdf = new PDFDocument({
                     size: [paperWidth, 600],
-                    margin: 12,
+                    margin: 10,
                 });
 
                 function drawDottedLine(yPosition, length) {
@@ -366,7 +368,7 @@ const mrkPaid = async (req, res) => {
                 }
 
                 pdf.pipe(fs.createWriteStream(pdfPath));
-                pdf.fontSize(12);
+                pdf.fontSize(9);
 
                 // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
