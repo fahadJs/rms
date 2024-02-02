@@ -237,10 +237,7 @@ const mrkPaid = async (req, res) => {
         const afterTax = orderTotal + taxAmount;
 
         const tidValue = tid.toUpperCase();
-        let paidViaValue = paidVia.toUpperCase();
-        if (tidValue === 'CASH') {
-            paidViaValue = 'CASH';
-        }
+        const paidViaValue = paidVia.toUpperCase();
 
         const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
         const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
