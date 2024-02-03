@@ -13,6 +13,7 @@ const getAll = async (req, res) => {
                 OrderID,
                 waiter_id,
                 table_id,
+                table_name,
                 time,
                 order_status,
                 bill_status,
@@ -99,7 +100,7 @@ const getAll = async (req, res) => {
         const formattedResult = ordersResult.map(order => ({
             OrderID: order.OrderID,
             waiter_id: order.waiter_id,
-            table_id: order.table_id,
+            table_id: order.table_name,
             time: order.time,
             order_status: order.order_status,
             bill_status: order.bill_status,
