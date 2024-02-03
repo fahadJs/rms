@@ -10,16 +10,18 @@ const getAll = async (req, res) => {
 
         const ordersQuery = `
             SELECT
-                OrderID,
-                waiter_id,
-                table_id,
-                table_name,
-                time,
-                order_status,
-                bill_status,
-                total_amount
+                o.OrderID,
+                o.waiter_id,
+                o.table_id,
+                t.table_name,
+                o.time,
+                o.order_status,
+                o.bill_status,
+                o.total_amount
             FROM
                 orders
+            JOIN
+                tables t ON o.table_id = t.table_id
             WHERE
                 table_id = ? AND order_status != 'paid' AND restaurant_id = ?;`;
 
