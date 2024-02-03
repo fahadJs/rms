@@ -10,7 +10,7 @@ const getAll = async (req, res) => {
                 menuitems.Name,
                 menuitems.Description,
                 menuitems.Price,
-                subcategories.SubcategoryName,
+                subcategories.SubCategoryName,
                 subcategories.SubCategoryID,
                 inventory.on_hand,
                 kitchens.Name AS kitchenName,
