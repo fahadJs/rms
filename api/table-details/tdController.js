@@ -19,7 +19,7 @@ const getAll = async (req, res) => {
                 o.bill_status,
                 o.total_amount
             FROM
-                orders
+                orders o
             JOIN
                 tables t ON o.table_id = t.table_id
             WHERE
