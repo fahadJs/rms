@@ -385,25 +385,25 @@ const createItSplit = async (req, res) => {
                 itemsArray.push({ itemName, quantity, waiterName, tableName, restaurantName, itemPrice });
             }
 
-            let messageMap = itemsArray.map(async (item) => {
-                // const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
-                //                     JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
-                //                     WHERE order_extras.OrderItemID = ?`;
-                // const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
+            // let messageMap = itemsArray.map(async (item) => {
+            //     // const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
+            //     //                     JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
+            //     //                     WHERE order_extras.OrderItemID = ?`;
+            //     // const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
 
-                // const extrasList = extrasResult.length > 0
-                //     ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
-                //     : '';
+            //     // const extrasList = extrasResult.length > 0
+            //     //     ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
+            //     //     : '';
 
-                return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}`;
-            });
+            //     return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}`;
+            // });
 
-            messageMap = await Promise.all(messageMap);
+            // messageMap = await Promise.all(messageMap);
 
-            const resName = `${restaurantName}\n${contact}\n${site}`.toUpperCase();
+            const resName = `${restaurantName}`.toUpperCase();
             const messageTop = `OrderID: ${orderId}\n${waiterName}\n${tableName}\nDate: ${formattedDate}\nTime: ${formattedTime}\n`;
 
-            const message = `${messageMap.join('\n')}`;
+            // const message = `${messageMap.join('\n')}`;
 
             // const messageBottom = `Order Total: ${totalBeforeTax}\nTax: ${tax}%\nAfter Tax: ${totalAfterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}`;
 
@@ -411,7 +411,12 @@ const createItSplit = async (req, res) => {
 
             const messageBottom = `Order Total: ${totalBeforeTax}\nTax: ${tax}%\nAfter Tax: ${totalAfterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}` + (cashInfo ? `\n${cashInfo}` : '');
 
-            const thank = `THNAK YOU\nsoftware by\nAnunzio International FZC\nwww.anunziointernational.com\n+971-58-551-5742\ninfo@anunziointernational.com`;
+            const thank = `THNAK YOU`;
+            const softwareBy = `software by`;
+            const anunzio = `Anunzio International FZC`;
+            const website = `www.anunziointernational.com`;
+            const number = `+971-58-551-5742`;
+            const email = `info@anunziointernational.com`;
 
             try {
                 const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
@@ -421,8 +426,8 @@ const createItSplit = async (req, res) => {
                 const paperWidth = 303;
 
                 const pdf = new PDFDocument({
-                    size: [paperWidth, 600],
-                    margin: 12,
+                    size: [paperWidth, 700],
+                    margin: 10,
                 });
 
                 function drawDottedLine(yPosition, length) {
@@ -445,34 +450,62 @@ const createItSplit = async (req, res) => {
 
                 pdf.pipe(fs.createWriteStream(pdfPath));
                 pdf.fontSize(12);
-
+    
                 // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
                 pdf.moveDown();
                 centerText(resName, 16);
                 // pdf.moveDown();
+                centerText(contact, 16);
+                // pdf.moveDown();
+                centerText(site, 16);
+                // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
-
+    
                 pdf.moveDown();
                 pdf.text(messageTop);
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
-
+    
+                // pdf.moveDown();
+                // pdf.text(message);
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+    
+                for (const item of itemsArray) {
+                    const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
+                                    JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
+                                    WHERE order_extras.OrderItemID = ?`;
+                    const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
+    
+                    const extrasList = extrasResult.length > 0
+                        ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
+                        : '';
+                    const itemName = `${item.quantity} ${item.itemName} ${extrasList}`;
+                    const price = `${currency} ${item.itemPrice.toFixed(2)}`;
+    
+                    pdf.moveDown();
+                    // Position item name on the left
+                    // Position item name and price on the left
+                    pdf.text(itemName, 10, pdf.y, { align: 'left' });
+                    pdf.text(price, 10, pdf.y, { align: 'right' });
+                    pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
+                }
                 pdf.moveDown();
-                pdf.text(message);
+                pdf.text(messageBottom, 10, pdf.y, { align: 'left' });
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
-
-                pdf.moveDown();
-                pdf.text(messageBottom);
-                pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
-
+    
                 pdf.moveDown();
                 centerText(thank, 16);
                 // pdf.moveDown();
+                centerText(softwareBy, 16);
+                centerText(anunzio, 16);
+                centerText(website, 16);
+                centerText(number, 16);
+                centerText(email, 16);
                 drawDottedLine(pdf.y, paperWidth);
-
+    
                 pdf.end();
 
                 const transporter = nodemailer.createTransport({
