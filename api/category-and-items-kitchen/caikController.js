@@ -10,8 +10,8 @@ const getAll = async (req, res) => {
                 menuitems.Name,
                 menuitems.Description,
                 menuitems.Price,
-                categories.CategoryName,
-                categories.CategoryID,
+                subcategories.SubcategoryName,
+                subcategories.SubCategoryID,
                 inventory.on_hand,
                 kitchens.Name AS kitchenName,
                 kitchens.KitchenID AS kitchenid,
@@ -22,7 +22,7 @@ const getAll = async (req, res) => {
             FROM 
                 menuitems
                 JOIN menuitem_categories ON menuitems.MenuItemID = menuitem_categories.MenuItemID
-                JOIN categories ON menuitem_categories.CategoryID = categories.CategoryID
+                JOIN subcategories ON menuitem_categories.SubCategoryID = subcategories.SubCategoryID
                 LEFT JOIN inventory ON menuitems.MenuItemID = inventory.MenuItemID
                 LEFT JOIN kitchens ON menuitem_categories.KitchenID = kitchens.KitchenID
                 LEFT JOIN menu_extras AS menuextras ON menuitems.MenuItemID = menuextras.MenuItemID
@@ -41,8 +41,8 @@ const getAll = async (req, res) => {
                     item_name: results.Name,
                     item_description: results.Description,
                     item_price: results.Price,
-                    category_id: results.CategoryID,
-                    category_name: results.CategoryName,
+                    category_id: results.SubCategoryID,
+                    category_name: results.SubCategoryName,
                     item_quantity: results.on_hand,
                     kitchen_name: results.kitchenName,
                     kitchen_id: results.kitchenid,
