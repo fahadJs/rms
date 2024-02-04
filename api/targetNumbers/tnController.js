@@ -1,4 +1,4 @@
-const poolConnection = require('../../config/db');
+const poolConnection = require('../../config/database');
 const axios = require('axios');
 
 const getAllInfo = async (req, res) => {
