@@ -411,7 +411,7 @@ const createItSplit = async (req, res) => {
 
             const messageBottom = `Order Total: ${totalBeforeTax}\nTax: ${tax}%\nAfter Tax: ${totalAfterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}` + (cashInfo ? `\n${cashInfo}` : '');
 
-            const thank = `THNAK YOU`;
+            const thank = `THANK YOU`;
             const softwareBy = `software by`;
             const anunzio = `Anunzio International FZC`;
             const website = `www.anunziointernational.com`;

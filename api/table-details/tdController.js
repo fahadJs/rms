@@ -363,7 +363,7 @@ const mrkPaid = async (req, res) => {
 
             const messageBottom = `Order Total: ${orderTotal.toFixed(2)}\nTax: ${tax}%\nAfter Tax: ${afterTax.toFixed(2)}\nPayment Mode: ${paidVia}\nT-ID: ${tid}` + (cashInfo ? `\n${cashInfo}` : '');
 
-            const thank = `THNAK YOU`;
+            const thank = `THANK YOU`;
             const softwareBy = `software by`;
             const anunzio = `Anunzio International FZC`;
             const website = `www.anunziointernational.com`;
