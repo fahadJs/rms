@@ -31,7 +31,8 @@ const getDenominations = async (req, res) => {
             formattedOutput.name = getRestaurantRes[0].name;
     
             formattedOutput.denomination_details = getRestaurantRes.map(row => ({
-                // denom_id: row.denom_details_id,
+                denom_details_id: row.denom_details_id,
+                digit_value: parseFloat(row.digit_value),
                 denom_name: row.denom_key,
             }));
         }
