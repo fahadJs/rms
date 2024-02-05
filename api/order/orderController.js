@@ -114,7 +114,8 @@ const getAllOrders = async (req, res) => {
             SELECT
                 orders.OrderID,
                 orders.waiter_id,
-                orders.table_name,
+                orders.table_id,
+                tables.table_name,
                 orders.time,
                 orders.order_status,
                 orders.bill_status,
@@ -138,6 +139,8 @@ const getAllOrders = async (req, res) => {
                 order_extras ON order_items.OrderItemID = order_extras.OrderItemID
             LEFT JOIN
                 menu_extras ON order_extras.extras_id = menu_extras.extras_id
+            JOIN
+                tables ON orders.table_id = tables.table_id;
             WHERE
                 orders.restaurant_id = ?;
         `;
