@@ -140,7 +140,7 @@ const getAllOrders = async (req, res) => {
             LEFT JOIN
                 menu_extras ON order_extras.extras_id = menu_extras.extras_id
             JOIN
-                tables ON orders.table_id = tables.table_id;
+                tables ON orders.table_id = tables.table_id
             WHERE
                 orders.restaurant_id = ?;
         `;
