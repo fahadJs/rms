@@ -114,7 +114,7 @@ const getAllOrders = async (req, res) => {
             SELECT
                 orders.OrderID,
                 orders.waiter_id,
-                orders.table_id,
+                orders.table_name,
                 orders.time,
                 orders.order_status,
                 orders.bill_status,
@@ -150,7 +150,7 @@ const getAllOrders = async (req, res) => {
             const {
                 OrderID,
                 waiter_id,
-                table_id,
+                table_name,
                 time,
                 order_status,
                 bill_status,
@@ -172,7 +172,7 @@ const getAllOrders = async (req, res) => {
                 orders[OrderID] = {
                     OrderID,
                     waiter_id,
-                    table_id,
+                    table_name,
                     time,
                     order_status,
                     bill_status,
