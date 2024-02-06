@@ -95,41 +95,89 @@ const getPosClosing = async (req, res) => {
         // Combine the current date with the opening time
         const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
 
+        // const getPosClosing = `
+        //     SELECT
+        //         *
+        //     FROM
+        //         pos_closing pc
+        //     JOIN
+        //         pos_closing_details pcd ON pc.pos_closing_id = pcd.pos_closing_id
+        //     WHERE
+        //         pc.time >= ? AND restaurant_id = ?
+        //     ORDER BY
+        //         pc.time DESC
+        //     LIMIT 1;
+        // `;
+
+        // const getPosClosingRes = await poolConnection.query(getPosClosing, [open_time, restaurant_id]);
+
+        // const formattedOutput = {
+        //     restaurant_id: null,
+        //     total: null,
+        //     time: null,
+        //     pos_closing_details: []
+        // };
+
+        // if (getPosClosingRes.length > 0) {
+        //     formattedOutput.restaurant_id = getPosClosingRes[0].restaurant_id;
+        //     formattedOutput.total = getPosClosingRes[0].total;
+        //     formattedOutput.time = getPosClosingRes[0].time;
+
+        //     formattedOutput.pos_closing_details = getPosClosingRes.map(row => ({
+        //         pos_closing_id: row.pos_closing_id,
+        //         denom_value: row.denom_value,
+        //         denom_key: row.denom_key,
+        //     }));
+        // }
+
+        // res.status(200).json(formattedOutput);
+
         const getPosClosing = `
-            SELECT
-                *
-            FROM
-                pos_closing_details pcd
-            JOIN
-                pos_closing pc ON pcd.pos_closing_id = pc.pos_closing_id
-            WHERE
-                pc.time >= ? AND restaurant_id = ?
-            ORDER BY
-                pc.time;
-        `;
+    SELECT
+        pc.restaurant_id,
+        pc.total,
+        pc.time,
+        pc.pos_closing_id
+    FROM
+        pos_closing pc
+    WHERE
+        pc.restaurant_id = ? AND
+        pc.time >= ?
+    ORDER BY
+        pc.time DESC
+    LIMIT 1;
+`;
 
-        const getPosClosingRes = await poolConnection.query(getPosClosing, [open_time, restaurant_id]);
-
-        const formattedOutput = {
-            restaurant_id: null,
-            total: null,
-            time: null,
-            pos_closing_details: []
-        };
+        const getPosClosingRes = await poolConnection.query(getPosClosing, [restaurant_id, openingTime]);
 
         if (getPosClosingRes.length > 0) {
-            formattedOutput.restaurant_id = getPosClosingRes[0].restaurant_id;
-            formattedOutput.total = getPosClosingRes[0].total;
-            formattedOutput.time = getPosClosingRes[0].time;
+            const latestClosingRecord = getPosClosingRes[0];
+            const { pos_closing_id } = latestClosingRecord;
 
-            formattedOutput.pos_closing_details = getPosClosingRes.map(row => ({
-                pos_closing_id: row.pos_closing_id,
-                denom_value: row.denom_value,
-                denom_key: row.denom_key,
+            const getClosingDetails = `
+        SELECT
+            denom_value,
+            denom_key
+        FROM
+            pos_closing_details
+        WHERE
+            pos_closing_id = ?
+    `;
+
+            const closingDetailsRes = await poolConnection.query(getClosingDetails, [pos_closing_id]);
+
+            const formattedDetails = closingDetailsRes.map(detail => ({
+                pos_closing_id: pos_closing_id,
+                denom_value: detail.denom_value,
+                denom_key: detail.denom_key
             }));
-        }
+            
+            latestClosingRecord.pos_closing_details = formattedDetails;
 
-        res.status(200).json(formattedOutput);
+            res.status(200).json(latestClosingRecord);
+        } else {
+            res.status(404).json({ status: 404, message: "No closing record found after the opening time." });
+        }
     } catch (error) {
         console.log(`Error! ${error.message}`);
         res.status(500).json({ status: 500, message: error.message });
