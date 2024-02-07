@@ -39,6 +39,9 @@ const wcsRouter = require('./api/waiter-cash-sales/wcsRouter');
 const tnRouter = require('./api/targetNumbers/tnRouter');
 const cocRouter = require('./api/cashier-opening-closing/cocRouter');
 
+// TEST RMS CPANEL
+const testRmsRouter = require('./api/test-rms/testRmsRouter');
+
 // Woo Scripts
 const tanahCowRouter = require('./api/woo-scripts/tanah/cowRouter');
 
@@ -85,6 +88,9 @@ app.use('/api/payment', paymentRouter);
 app.use('/api/wcs', wcsRouter);
 app.use('/api/tasksoftware/numbers', tnRouter);
 app.use('/api/coc', cocRouter);
+
+// TEST RMS CPANEL
+app.use('/api/testrms', testRmsRouter);
 
 // WOO Scripts
 app.use('/api/woo/tanah', tanahCowRouter);
