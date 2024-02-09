@@ -1,5 +1,8 @@
 const poolConnection = require('../../config/database');
 const moment = require('moment-timezone');
+const nodemailer = require('nodemailer');
+const fs = require('fs');
+const PDFDocument = require('pdfkit');
 
 const getDenominations = async (req, res) => {
     try {
@@ -264,6 +267,76 @@ const getCashOut = async (req, res) => {
     }
 }
 
+const openCashDrawer = async (req, res) => {
+    try {
+        const { restaurant_id } = req.params;
+
+        try {
+            // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+            // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
+
+            const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
+            const paperWidth = 288;
+
+            const pdf = new PDFDocument({
+                size: [paperWidth, 700],
+                margin: 10,
+            });
+
+            function drawDottedLine(yPosition, length) {
+                const startX = pdf.x;
+                const endX = pdf.x + length;
+                const y = yPosition;
+
+                for (let i = startX; i <= endX; i += 5) {
+                    pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
+                }
+            }
+
+            pdf.pipe(fs.createWriteStream(pdfPath));
+            pdf.fontSize(12);
+
+            // pdf.moveDown();
+            drawDottedLine(pdf.y, paperWidth);
+            pdf.moveDown();
+
+            pdf.end();
+
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: 'siddiquiboy360@gmail.com',
+                    pass: 'gkop jksn urdi dgvv'
+                }
+            });
+
+            // const mailOptions = {
+            //     from: 'siddiquiboy360@gmail.com',
+            //     to,
+            //     attachments: [
+            //         {
+            //             filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+            //             path: pdfPath,
+            //             encoding: 'base64'
+            //         }
+            //     ]
+            // };
+
+            // const info = await transporter.sendMail(mailOptions);
+
+            // console.log('Cash Drawer Opened!', info);
+
+            // fs.unlinkSync(pdfPath);
+        } catch (error) {
+            console.log(error);
+            return;
+        }
+    } catch (error) {
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
+    }
+}
+
 module.exports = {
     getDenominations,
     posClosing,
@@ -271,5 +344,6 @@ module.exports = {
     cashIn,
     cashOut,
     getCashIn,
-    getCashOut
+    getCashOut,
+    openCashDrawer
 }
