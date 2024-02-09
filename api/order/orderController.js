@@ -130,7 +130,8 @@ const getAllOrders = async (req, res) => {
                 order_items.Note,
                 menu_extras.extras_id,
                 menu_extras.extras_name,
-                menu_extras.extras_price
+                menu_extras.extras_price,
+                ROW_NUMBER() OVER () AS series
             FROM
                 orders
             JOIN
@@ -152,6 +153,7 @@ const getAllOrders = async (req, res) => {
         result.forEach(row => {
             const {
                 OrderID,
+                series,
                 waiter_id,
                 table_id,
                 table_name,
@@ -175,6 +177,7 @@ const getAllOrders = async (req, res) => {
             if (!orders[OrderID]) {
                 orders[OrderID] = {
                     OrderID,
+                    series,
                     waiter_id,
                     table_id,
                     table_name,
