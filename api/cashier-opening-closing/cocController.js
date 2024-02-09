@@ -149,7 +149,7 @@ const getPosClosing = async (req, res) => {
 const cashIn = async (req, res) => {
     try {
         const { restaurant_id } = req.params;
-        const { narration, amount } = req.body;
+        const { narration, amount, type } = req.body;
 
         const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
         const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
@@ -157,8 +157,10 @@ const cashIn = async (req, res) => {
         const timeZone = timeZoneResult[0].time_zone;
         const time = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
-        const cashIn = `INSERT INTO cash_in (time, narration, amount, restaurant_id) VALUES (?, ?, ?, ?);`;
-        await poolConnection.query(cashIn, [time, narration, amount, restaurant_id]);
+        const typeCap = type.toUpperCase();
+
+        const cashIn = `INSERT INTO cash_in (time, narration, amount, restaurant_id, type) VALUES (?, ?, ?, ?, ?);`;
+        await poolConnection.query(cashIn, [time, narration, amount, restaurant_id, typeCap]);
 
         res.status(201).json({ status: 201, message: 'Data Inserted successfully!' });
     } catch (error) {
@@ -170,7 +172,7 @@ const cashIn = async (req, res) => {
 const cashOut = async (req, res) => {
     try {
         const { restaurant_id } = req.params;
-        const { narration, amount } = req.body;
+        const { narration, amount, type } = req.body;
 
         const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
         const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
@@ -178,8 +180,10 @@ const cashOut = async (req, res) => {
         const timeZone = timeZoneResult[0].time_zone;
         const time = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
-        const cashOut = `INSERT INTO cash_out (time, narration, amount, restaurant_id) VALUES (?, ?, ?, ?);`;
-        await poolConnection.query(cashOut, [time, narration, amount, restaurant_id]);
+        const typeCap = type.toUpperCase();
+
+        const cashOut = `INSERT INTO cash_out (time, narration, amount, restaurant_id, type) VALUES (?, ?, ?, ?, ?);`;
+        await poolConnection.query(cashOut, [time, narration, amount, restaurant_id, typeCap]);
 
         res.status(201).json({ status: 201, message: 'Data Inserted successfully!' });
     } catch (error) {
