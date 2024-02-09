@@ -340,7 +340,8 @@ const getAllOrders = async (req, res) => {
                 pos_order_extras.PosOrderExtrasID,
                 menu_extras.extras_id,
                 menu_extras.extras_name,
-                menu_extras.extras_price
+                menu_extras.extras_price,
+                ROW_NUMBER() OVER () AS series
             FROM pos_orders
             LEFT JOIN pos_order_items ON pos_orders.PosOrderID = pos_order_items.PosOrderID
             LEFT JOIN pos_order_extras ON pos_order_items.PosOrderItemID = pos_order_extras.PosOrderItemID
@@ -356,6 +357,7 @@ const getAllOrders = async (req, res) => {
         posResult.forEach(row => {
             const {
                 PosOrderID,
+                series,
                 time,
                 order_status,
                 total_amount,
@@ -379,6 +381,7 @@ const getAllOrders = async (req, res) => {
             if (!posOrders[PosOrderID]) {
                 posOrders[PosOrderID] = {
                     PosOrderID,
+                    series,
                     time,
                     order_status,
                     total_amount,
