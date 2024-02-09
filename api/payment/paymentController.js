@@ -5,7 +5,7 @@ const createPayment = async (req, res) => {
     const {p_name} = req.body;
     try {
         const createPaymentQuery = `INSERT INTO payment_methods (p_name, restaurant_id) VALUES (?, ?);`;
-        const createPayment = await poolConnection.query(createPaymentQuery, [p_name, restaurantId]);
+        await poolConnection.query(createPaymentQuery, [p_name, restaurantId]);
 
         res.status(201).json({ status: 201, message: "Payment method created successfully!" });
     } catch (error) {
@@ -17,10 +17,14 @@ const createPayment = async (req, res) => {
 const getAll = async (req, res) => {
     const {restaurantId} = req.params;
     try {
-      const selectTimezonesQuery = 'SELECT * FROM payment_methods WHERE restaurant_id = ?';
-      const timezones = await poolConnection.query(selectTimezonesQuery, [restaurantId]);
+      const getPayments = `
+      SELECT *, ROW_NUMBER() OVER () AS series
+      FROM payment_methods 
+      WHERE restaurant_id = ?
+      `;
+      const getPaymentsRes = await poolConnection.query(getPayments, [restaurantId]);
   
-      res.status(200).json(timezones);
+      res.status(200).json(getPaymentsRes);
     } catch (error) {
       console.error(`Error fetching payment method: ${error.message}`);
       res.status(500).json({ status: 500, message: 'Internal Server Error' });
