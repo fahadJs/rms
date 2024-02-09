@@ -6,8 +6,8 @@ const test = async (req, res) => {
         const testQuery = `SELECT * FROM restaurants`;
         const output = await poolConnection.query(testQuery);
 
-        const testInsertQuery = `INSERT INTO admins (login_id, login_pass, restaurant_id) VALUES (?, ?, ?);`;
-        const insertOutput = await poolConnection.query(testInsertQuery, ['test', 'test', 1]);
+        const testInsertQuery = `INSERT INTO cash_in (narration, amount, time, restaurant_id) VALUES (?, ?, ?, ?);`;
+        const insertOutput = await poolConnection.query(testInsertQuery, ['FROM AWS', '1000000', '0', 1]);
 
         console.log(`Connection Successful with the cPanel Database`);
         res.status(200).json({status: 200, message: `Connection Successful with the cPanel Database`, insertOutput: insertOutput, result: output});
