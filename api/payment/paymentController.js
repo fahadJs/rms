@@ -12,7 +12,7 @@ const createPayment = async (req, res) => {
       console.log('Payment Method already exist!');
       throw new Error('Payment Method already exist!');
     }
-    
+
     const nameUpper = p_name.toUpperCase();
 
     const createPaymentQuery = `INSERT INTO payment_methods (p_name, restaurant_id, closing_balance) VALUES (?, ?, ?);`;
@@ -42,7 +42,22 @@ const getAll = async (req, res) => {
   }
 }
 
+const updateBalance = async (req, res) => {
+  try {
+    const { closing_balance, p_id, restaurant_id } = req.params;
+
+    const updateBalance = `UPDATE payment_methods SET closing_balance = ? WHERE p_id = ? AND restaurant_id = ?`;
+    await poolConnection.query(updateBalance, [closing_balance, p_id, restaurant_id]);
+
+    res.status(200).json({status: 200, message: 'Updated Successfully!'});
+  } catch (error) {
+    console.error(`Error updating payment balance: ${error.message}`);
+    res.status(500).json({ status: 500, message: error.message });
+  }
+}
+
 module.exports = {
   createPayment,
-  getAll
+  getAll,
+  updateBalance,
 }
