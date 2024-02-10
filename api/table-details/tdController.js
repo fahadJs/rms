@@ -249,6 +249,9 @@ const mrkPaid = async (req, res) => {
         const timeZone = timeZoneResult[0].time_zone;
         const orderPayTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
+        // const updateBalance = `UPDATE payment_methods SET closing_balance = ? WHERE p_id = ? AND restaurant_id = ?`;
+        // await poolConnection.query(updateBalance, [closing_balance, p_id, restaurant_id]);
+
         const updateOrderQuery = 'UPDATE orders SET order_status = "paid", tid = ?, paid_via = ?, after_tax = ?, cash = ?, cash_change = ? WHERE OrderID = ?';
         await poolConnection.query(updateOrderQuery, [tidValue, paidViaValue, afterTax, cash, cash_change, orderId]);
 
@@ -361,6 +364,21 @@ const mrkPaid = async (req, res) => {
 
             const cashInfo = paidVia === 'CASH' ? `Cash Received: ${cash}\nChange: ${cashChange}` : '';
 
+            const mb1 = `Order Total`;
+            const mb1Val = orderTotal.toFixed(2);
+            const mb2 = `Tax`;
+            const mb2Val = `${tax}%`
+            const mb3 = `After Tax`;
+            const mb3Val = afterTax.toFixed(2);
+            const mb4 = `Payment Mode`;
+            const mb4Val = paidVia;
+            const mb5 = `T-ID`;
+            const mb5Val = tid;
+            const mb6 = `Cash Received`;
+            const mb6Val = cash;
+            const mb7 = `Change`;
+            const mb7Val = cashChange;
+
             const messageBottom = `Order Total: ${orderTotal.toFixed(2)}\nTax: ${tax}%\nAfter Tax: ${afterTax.toFixed(2)}\nPayment Mode: ${paidVia}\nT-ID: ${tid}` + (cashInfo ? `\n${cashInfo}` : '');
 
             const thank = `THANK YOU`;
@@ -375,10 +393,10 @@ const mrkPaid = async (req, res) => {
                 // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
-                const paperWidth = 288;
+                const paperWidth = 302;
 
                 const pdf = new PDFDocument({
-                    size: [paperWidth, 700],
+                    size: [paperWidth, 1200],
                     margin: 10,
                 });
 
@@ -401,7 +419,7 @@ const mrkPaid = async (req, res) => {
                 }
 
                 pdf.pipe(fs.createWriteStream(pdfPath));
-                pdf.fontSize(12);
+                pdf.fontSize(14);
 
                 // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
@@ -422,7 +440,7 @@ const mrkPaid = async (req, res) => {
                 // pdf.moveDown();
                 // pdf.text(message);
                 // pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
+                // drawDottedLine(pdf.y, paperWidth);
 
                 for (const item of itemsArray) {
                     const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
@@ -434,17 +452,33 @@ const mrkPaid = async (req, res) => {
                         ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
                         : '';
                     const itemName = `${item.quantity} ${item.itemName} ${extrasList}`;
-                    const price = `${currency} ${item.itemPrice.toFixed(2)}`;
+                    const price = `${item.itemPrice.toFixed(2)} ${currency}`;
 
-                    pdf.moveDown();
+                    // pdf.moveDown();
                     // Position item name on the left
                     // Position item name and price on the left
+                    const priceY = pdf.y - 1;
                     pdf.text(itemName, 10, pdf.y, { align: 'left' });
-                    pdf.text(price, 10, pdf.y, { align: 'right' });
-                    pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
+                    pdf.text(price, 10, priceY, { align: 'right' });
+                    // pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
                 }
+
                 pdf.moveDown();
-                pdf.text(messageBottom, 10, pdf.y, { align: 'left' });
+                drawDottedLine(pdf.y, paperWidth);
+                pdf.text(mb1, 10, pdf.y, { align: 'left' });
+                pdf.text(mb1Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb2, 10, pdf.y, { align: 'left' });
+                pdf.text(mb2Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb3, 10, pdf.y, { align: 'left' });
+                pdf.text(mb3Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb4, 10, pdf.y, { align: 'left' });
+                pdf.text(mb4Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb5, 10, pdf.y, { align: 'left' });
+                pdf.text(mb5Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb6, 10, pdf.y, { align: 'left' });
+                pdf.text(mb6Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb7, 10, pdf.y, { align: 'left' });
+                pdf.text(mb7Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
 

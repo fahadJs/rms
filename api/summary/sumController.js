@@ -38,8 +38,8 @@ const printDaily = async (req, res) => {
         const restaurantName = restaurantResult[0].name;
         const tax = restaurantResult[0].tax;
         const currency = restaurantResult[0].default_currency;
-        // const contact = restaurantResult[0].contact;
-        // const site = restaurantResult[0].site;
+        const contact = restaurantResult[0].contact;
+        const site = restaurantResult[0].site;
 
         const itemsArray = [];
         let orderTotal = 0;
@@ -110,7 +110,13 @@ const printDaily = async (req, res) => {
         const finalOrder = orderTotal + posOrderTotal;
         const orderAmountTax = finalOrder * (tax / 100);
         const orderTotalExcl = finalOrder - orderAmountTax;
-        const messageBottom = `Order Total(excl. tax): ${orderTotalExcl.toFixed(2)}\nTax: ${orderAmountTax.toFixed(2)}\nAfter Tax: ${finalOrder.toFixed(2)}`;
+        const mb1 = `Order Total(excl. tax)`;
+        const mb1Val = orderTotalExcl.toFixed(2);
+        const mb2 = `Tax(${tax}%)`;
+        const mb2Val = orderAmountTax.toFixed(2);
+        const mb3 = `After Tax`;
+        const mb3Val = finalOrder.toFixed(2);
+        // const messageBottom = `Order Total(excl. tax): ${orderTotalExcl.toFixed(2)}\nTax: ${orderAmountTax.toFixed(2)}\nAfter Tax: ${finalOrder.toFixed(2)}`;
 
         const thank = `THANK YOU`;
         const softwareBy = `software by`;
@@ -124,10 +130,10 @@ const printDaily = async (req, res) => {
             // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
             const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
-            const paperWidth = 288;
+            const paperWidth = 302;
 
             const pdf = new PDFDocument({
-                size: [paperWidth, 1500],
+                size: [paperWidth, 1200],
                 margin: 10,
             });
 
@@ -150,12 +156,16 @@ const printDaily = async (req, res) => {
             }
 
             pdf.pipe(fs.createWriteStream(pdfPath));
-            pdf.fontSize(12);
+            pdf.fontSize(14);
 
             // pdf.moveDown();
             drawDottedLine(pdf.y, paperWidth);
             pdf.moveDown();
             centerText(resName, 16);
+            centerText(contact, 16);
+            // pdf.moveDown();
+            centerText(site, 16);
+            // pdf.moveDown();
             drawDottedLine(pdf.y, paperWidth);
 
             pdf.moveDown();
@@ -169,49 +179,43 @@ const printDaily = async (req, res) => {
             // drawDottedLine(pdf.y, paperWidth);
 
             for (const item of itemsArray) {
-                // const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
-                //                     JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
-                //                     WHERE order_extras.OrderItemID = ?`;
-                // const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
-
-                // const extrasList = extrasResult.length > 0
-                //     ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
-                //     : '';
                 const itemName = `Order: #${item.itemId}`;
-                const price = `${currency} ${item.itemPrice.toFixed(2)}`;
+                const price = `${item.itemPrice.toFixed(2)} ${currency}`;
+
+                const priceY = pdf.y - 1;
 
                 // pdf.moveDown();
                 pdf.text(itemName, 10, pdf.y, { align: 'left' });
-                pdf.text(price, 10, pdf.y, { align: 'right' });
+                pdf.text(price, 10, priceY, { align: 'right' });
                 // pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
             }
 
             pdf.moveDown();
             pdf.text('POS Orders!');
             pdf.moveDown();
-            drawDottedLine(pdf.y, paperWidth);
+            // drawDottedLine(pdf.y, paperWidth);
 
             for (const item of posItemsArray) {
-                // const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
-                //                     JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
-                //                     WHERE order_extras.OrderItemID = ?`;
-                // const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
-
-                // const extrasList = extrasResult.length > 0
-                //     ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
-                //     : '';
                 const itemName = `Order: #${item.itemId}`;
-                const price = `${currency} ${item.itemPrice.toFixed(2)}`;
+                const price = `${item.itemPrice.toFixed(2)} ${currency}`;
+
+                const priceY = pdf.y - 1;
 
                 // pdf.moveDown();
                 pdf.text(itemName, 10, pdf.y, { align: 'left' });
-                pdf.text(price, 10, pdf.y, { align: 'right' });
+                pdf.text(price, 10, priceY, { align: 'right' });
                 // pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
             }
 
+            pdf.moveDown();
             drawDottedLine(pdf.y, paperWidth);
             pdf.moveDown();
-            pdf.text(messageBottom, 10, pdf.y, { align: 'left' });
+            pdf.text(mb1, 10, pdf.y, { align: 'left' });
+            pdf.text(mb1Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+            pdf.text(mb2, 10, pdf.y, { align: 'left' });
+            pdf.text(mb2Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+            pdf.text(mb3, 10, pdf.y, { align: 'left' });
+            pdf.text(mb3Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
             pdf.moveDown();
             drawDottedLine(pdf.y, paperWidth);
 
