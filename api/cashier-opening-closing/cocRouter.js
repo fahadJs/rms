@@ -9,6 +9,6 @@ router.get('/res/:restaurant_id/cashin/get',token.verifyToken, cocController.get
 router.get('/res/:restaurant_id/cashout/get',token.verifyToken, cocController.getCashOut);
 router.post('/res/:restaurant_id/cashin/create',token.verifyToken, cocController.cashIn);
 router.post('/res/:restaurant_id/cashout/create',token.verifyToken, cocController.cashOut);
-router.get('/res/:restaurant_id/cashdrawer', cocController.openCashDrawer);
+router.get('/res/:restaurant_id/cashdrawer',token.verifyToken, cocController.openCashDrawer);
 
 module.exports = router;

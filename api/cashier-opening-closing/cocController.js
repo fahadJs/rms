@@ -272,7 +272,7 @@ const openCashDrawer = async (req, res) => {
         const { restaurant_id } = req.params;
 
         try {
-            // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+            const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
             // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
             const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
@@ -310,23 +310,25 @@ const openCashDrawer = async (req, res) => {
                 }
             });
 
-            // const mailOptions = {
-            //     from: 'siddiquiboy360@gmail.com',
-            //     to,
-            //     attachments: [
-            //         {
-            //             filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
-            //             path: pdfPath,
-            //             encoding: 'base64'
-            //         }
-            //     ]
-            // };
+            const mailOptions = {
+                from: 'siddiquiboy360@gmail.com',
+                to,
+                attachments: [
+                    {
+                        filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+                        path: pdfPath,
+                        encoding: 'base64'
+                    }
+                ]
+            };
 
-            // const info = await transporter.sendMail(mailOptions);
+            const info = await transporter.sendMail(mailOptions);
 
-            // console.log('Cash Drawer Opened!', info);
+            console.log('Cash Drawer Opened!', info);
 
-            // fs.unlinkSync(pdfPath);
+            fs.unlinkSync(pdfPath);
+
+            res.status(200).json({status: 200, message: 'Cash Drawer Opened!'});
         } catch (error) {
             console.log(error);
             return;
