@@ -230,12 +230,12 @@ const getCashIn = async (req, res) => {
                 cash_in
             WHERE
                 restaurant_id = ? AND
-                type = ? AND
+                type = 'CASH' AND
                 time >= ?
             ORDER BY
                 time DESC;
         `;
-        const getCashInRes = await poolConnection.query(getCashIn, [restaurant_id, 'CASH', openingTime]);
+        const getCashInRes = await poolConnection.query(getCashIn, [restaurant_id, openingTime]);
 
         res.status(200).json(getCashInRes);
     } catch (error) {
