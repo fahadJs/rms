@@ -249,8 +249,11 @@ const mrkPaid = async (req, res) => {
         const timeZone = timeZoneResult[0].time_zone;
         const orderPayTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
-        // const updateBalance = `UPDATE payment_methods SET closing_balance = ? WHERE p_id = ? AND restaurant_id = ?`;
-        // await poolConnection.query(updateBalance, [closing_balance, p_id, restaurant_id]);
+        if (paidViaValue == 'CASH') {
+            const updateBalance = `UPDATE payment_methods SET closing_balance = closing_balance + ? WHERE p_name = ? AND restaurant_id = ?`;
+            await poolConnection.query(updateBalance, [afterTax, paidViaValue, restaurant_id]);
+            console.log(`Cash added! ${afterTax}`);
+        }
 
         const updateOrderQuery = 'UPDATE orders SET order_status = "paid", tid = ?, paid_via = ?, after_tax = ?, cash = ?, cash_change = ? WHERE OrderID = ?';
         await poolConnection.query(updateOrderQuery, [tidValue, paidViaValue, afterTax, cash, cash_change, orderId]);
