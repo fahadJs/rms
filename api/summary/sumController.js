@@ -231,31 +231,31 @@ const printDaily = async (req, res) => {
 
             pdf.end();
 
-            // const transporter = nodemailer.createTransport({
-            //     service: 'gmail',
-            //     auth: {
-            //         user: 'siddiquiboy360@gmail.com',
-            //         pass: 'gkop jksn urdi dgvv'
-            //     }
-            // });
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: 'siddiquiboy360@gmail.com',
+                    pass: 'gkop jksn urdi dgvv'
+                }
+            });
 
-            // const mailOptions = {
-            //     from: 'siddiquiboy360@gmail.com',
-            //     to,
-            //     attachments: [
-            //         {
-            //             filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
-            //             path: pdfPath,
-            //             encoding: 'base64'
-            //         }
-            //     ]
-            // };
+            const mailOptions = {
+                from: 'siddiquiboy360@gmail.com',
+                to,
+                attachments: [
+                    {
+                        filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+                        path: pdfPath,
+                        encoding: 'base64'
+                    }
+                ]
+            };
 
-            // const info = await transporter.sendMail(mailOptions);
+            const info = await transporter.sendMail(mailOptions);
 
-            // console.log('Email Sent! and Status updated!: ', info);
+            console.log('Email Sent! and Status updated!: ', info);
 
-            // fs.unlinkSync(pdfPath);
+            fs.unlinkSync(pdfPath);
         } catch (error) {
             console.log(error);
             return;

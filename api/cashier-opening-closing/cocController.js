@@ -235,7 +235,7 @@ const getCashIn = async (req, res) => {
             ORDER BY
                 time DESC;
         `;
-        const getCashInRes = await poolConnection.query(getCashIn, [restaurant_id, openingTime]);
+        const getCashInRes = await poolConnection.query(getCashIn, [restaurant_id, 'CASH', openingTime]);
 
         res.status(200).json(getCashInRes);
     } catch (error) {
