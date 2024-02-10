@@ -344,6 +344,7 @@ const getCashInOfPaymentMethod = async (req, res) => {
         const { restaurant_id, p_name } = req.params;
 
         const nameUpper = p_name.toUpperCase();
+        console.log(nameUpper);
 
         const getCashInOfPaymentMethod = `SELECT * FROM cash_in WHERE type = ? AND restaurant_id = ?`;
         const getCashInOfPaymentMethodRes = await poolConnection.query(getCashInOfPaymentMethod, [nameUpper, restaurant_id]);
@@ -353,7 +354,7 @@ const getCashInOfPaymentMethod = async (req, res) => {
             res.status(404).json({status: 404, message: `No record found for ${nameUpper}!`});
             return;
         }
-        res.status().json(getCashInOfPaymentMethodRes);
+        res.status(200).json(getCashInOfPaymentMethodRes);
     } catch (error) {
         console.log(`Error! ${error.message}`);
         res.status(500).json({ status: 500, message: error.message });
@@ -374,7 +375,7 @@ const getCashOutOfPaymentMethod = async (req, res) => {
             res.status(404).json({status: 404, message: `No record found for ${nameUpper}!`});
             return;
         }
-        res.status().json(getCashOutOfPaymentMethodRes);
+        res.status(200).json(getCashOutOfPaymentMethodRes);
     } catch (error) {
         console.log(`Error! ${error.message}`);
         res.status(500).json({ status: 500, message: error.message });
