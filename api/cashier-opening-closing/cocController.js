@@ -339,6 +339,48 @@ const openCashDrawer = async (req, res) => {
     }
 }
 
+const getCashInOfPaymentMethod = async (req, res) => {
+    try {
+        const { restaurant_id, p_name } = req.params;
+
+        const nameUpper = p_name.toUpperCase();
+
+        const getCashInOfPaymentMethod = `SELECT * FROM cash_in WHERE type = ? AND restaurant_id = ?`;
+        const getCashInOfPaymentMethodRes = await poolConnection.query(getCashInOfPaymentMethod, [nameUpper, restaurant_id]);
+
+        if (getCashInOfPaymentMethodRes.length === 0) {
+            console.log(`No record found for ${nameUpper}!`);
+            res.status(404).json({status: 404, message: `No record found for ${nameUpper}!`});
+            return;
+        }
+        res.status().json(getCashInOfPaymentMethodRes);
+    } catch (error) {
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
+    }
+}
+
+const getCashOutOfPaymentMethod = async (req, res) => {
+    try {
+        const { restaurant_id, p_name } = req.params;
+
+        const nameUpper = p_name.toUpperCase();
+
+        const getCashOutOfPaymentMethod = `SELECT * FROM cash_out WHERE type = ? AND restaurant_id = ?`;
+        const getCashOutOfPaymentMethodRes = await poolConnection.query(getCashOutOfPaymentMethod, [nameUpper, restaurant_id]);
+
+        if (getCashOutOfPaymentMethodRes.length === 0) {
+            console.log(`No record found for ${nameUpper}!`);
+            res.status(404).json({status: 404, message: `No record found for ${nameUpper}!`});
+            return;
+        }
+        res.status().json(getCashOutOfPaymentMethodRes);
+    } catch (error) {
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
+    }
+}
+
 module.exports = {
     getDenominations,
     posClosing,
@@ -347,5 +389,7 @@ module.exports = {
     cashOut,
     getCashIn,
     getCashOut,
-    openCashDrawer
+    openCashDrawer,
+    getCashInOfPaymentMethod,
+    getCashOutOfPaymentMethod
 }

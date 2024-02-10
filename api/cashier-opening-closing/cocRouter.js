@@ -10,5 +10,7 @@ router.get('/res/:restaurant_id/cashout/get',token.verifyToken, cocController.ge
 router.post('/res/:restaurant_id/cashin/create',token.verifyToken, cocController.cashIn);
 router.post('/res/:restaurant_id/cashout/create',token.verifyToken, cocController.cashOut);
 router.get('/res/:restaurant_id/cashdrawer',token.verifyToken, cocController.openCashDrawer);
+router.get('/res/:restaurant_id/methodwise/cashin/get/:p_name', token.verifyToken, cocController.getCashInOfPaymentMethod);
+router.get('/res/:restaurant_id/methodwise/cashout/get/:p_name', token.verifyToken, cocController.getCashOutOfPaymentMethod);
 
 module.exports = router;
