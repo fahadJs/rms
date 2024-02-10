@@ -6,8 +6,8 @@ const getAll = async (req, res) => {
         const rows = await poolConnection.query('SELECT * FROM recipe_items WHERE restaurant_id = ?',[restaurant_id]);
         res.status(200).json(rows);
     } catch (error) {
-        console.error(`Error fetching recipe items! ${error.message}`);
-        res.status(500).json({status: 500, message: `Error fetching recipe items! ${error.message}` });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -44,8 +44,8 @@ const getAllWithIngredients = async (req, res) => {
     
         res.status(200).json(result);
     } catch (error) {
-        console.error(`Error fetching menu items with ingredients! ${error.message}`);
-        res.status(500).json({status: 500, message: `Error fetching menu items with ingredients! ${error.message}` });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -91,8 +91,8 @@ const create = async (req, res) => {
             throw error;
         }
     } catch (error) {
-        console.error(`Error creating recipe items! ${error.message}`);
-        res.status(500).json({status: 500, message: `Error creating recipe items! ${error.message}` });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -129,8 +129,8 @@ const update = async (req, res) => {
             throw error;
         }
     } catch (error) {
-        console.error(`Error updating recipe item! ${error.message}`);
-        res.status(500).json({status: 500, message: `Error updating recipe item! ${error.message}` });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -145,8 +145,8 @@ const getById = async (req, res) => {
 
         res.status(200).json(rows[0]);
     } catch (error) {
-        console.error(`Error fetching recipe item by ID! ${error.message}`);
-        res.status(500).json({status: 500, message: `Error fetching recipe item by ID! ${error.message}` });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -176,8 +176,8 @@ const deleteItem = async (req, res) => {
             throw error;
         }
     } catch (error) {
-        console.error(`Error deleting recipe item! ${error.message}`);
-        res.status(500).json({status: 500, message: `Error deleting recipe item! ${error.message}` });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 

@@ -74,8 +74,8 @@ const getAll = async (req, res) => {
     
         res.status(200).json(menuData);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while fetching items!'});
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
     
 }

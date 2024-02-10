@@ -48,8 +48,8 @@ const create = async (req, res) => {
         res.status(201).json({ status: 201, message: 'POS order placed successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        console.error(`Error placing POS order! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error placing POS order!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -250,11 +250,11 @@ const mrkPaid = async (req, res) => {
 
         res.status(200).json({ status: 200, message: 'POS Order status updated to "paid" successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
 
         const rollbackTransactionQuery = 'ROLLBACK';
         await poolConnection.query(rollbackTransactionQuery);
 
+        console.log(`Error! ${error.message}`);
         res.status(500).json({ status: 500, message: error.message });
     }
 }
@@ -310,8 +310,8 @@ const getOrderById = async (req, res) => {
 
         res.status(200).json(posOrderWithItemsAndExtras);
     } catch (error) {
-        console.error(`Error executing POS order query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error fetching POS order!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 
 };
@@ -424,8 +424,8 @@ const getAllOrders = async (req, res) => {
 
         res.status(200).json(formattedPosResult);
     } catch (error) {
-        console.error(`Error executing POS query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error fetching POS orders!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 
 };

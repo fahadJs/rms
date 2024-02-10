@@ -22,8 +22,8 @@ const create = async (req, res) => {
             res.status(201).json({ status: 201, message: 'Waiter created successfully!' });
         }
     } catch (error) {
-        console.error(`Error creating waiter! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error creating waiter!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -143,8 +143,8 @@ const wLogin = async (req, res) => {
             res.status(401).json({ status: 401, message: 'Incorrect password!' });
         }
     } catch (error) {
-        console.error(`Error logging in! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error logging in!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -156,8 +156,8 @@ const getAll = async (req, res) => {
 
         res.status(200).json(waiters);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error fetching waiters!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -174,8 +174,8 @@ const getById = async (req, res) => {
 
         res.status(200).json(result[0]);
     } catch (error) {
-        console.error(`Error fetching waiter! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error fetching waiter!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -192,8 +192,8 @@ const update = async (req, res) => {
 
         res.status(200).json({ status: 200, message: 'Waiter updated successfully!' });
     } catch (error) {
-        console.error(`Error updating waiter! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error updating waiter!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -209,8 +209,8 @@ const passwordReset = async (req, res) => {
 
         res.status(200).json({ status: 200, message: 'Password updated successfully!' });
     } catch (error) {
-        console.error(`Error updating Password! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error updating Password!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -222,8 +222,8 @@ const wdelete = async (req, res) => {
 
         res.status(200).json({ status: 200, message: 'Waiter deleted successfully!' });
     } catch (error) {
-        console.error(`Error deleting waiter! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error deleting waiter!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 

@@ -38,8 +38,8 @@ const getAll = async (req, res) => {
 
         res.status(200).json(inventoryData);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while fetching inventory!'});
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -62,8 +62,8 @@ const update = async (req, res) => {
         res.status(200).json({status: 200, message: 'Inventory updated successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        console.error(`Error updating inventory! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error updating inventory!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -94,8 +94,8 @@ const create = async (req, res) => {
         res.status(201).json({status: 201, message: 'Inventory created successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        console.error(`Error creating inventory! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error creating inventory!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -119,8 +119,8 @@ const updateOnHand = async (req, res) => {
         res.status(200).json({status: 200, message: 'Inventory updated successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        console.error(`Error updating inventory! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error updating inventory!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 

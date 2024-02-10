@@ -334,7 +334,7 @@ const getAllOrders = async (req, res) => {
         // res.redirect('https://www.google.com');
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        console.log('Error fetching data:', error.message);
+        console.log(`Error! ${error.message}`);
         res.status(500).json({ status: 500, message: error.message });
     }
 }

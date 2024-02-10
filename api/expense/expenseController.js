@@ -94,8 +94,8 @@ const getPosMonthlyExpense = async (req, res) => {
 
         res.json(monthlyData);
     } catch (error) {
-        console.error(`Error fetching monthly report: ${error.message}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -170,8 +170,8 @@ const getPosWeeklyExpense = async (req, res) => {
 
         res.json(formattedData);
     } catch (error) {
-        console.error(`Error fetching weekly report: ${error.message}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -250,8 +250,8 @@ const getPosDailyExpense = async (req, res) => {
 
         res.json(formattedData);
     } catch (error) {
-        console.error(`Error fetching current daily data: ${error.message}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -347,8 +347,8 @@ const getWaiterMonthlyExpenseAdminAllMonths = async (req, res) => {
 
         res.json(monthlyData);
     } catch (error) {
-        console.error(`Error fetching monthly report: ${error.message}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -428,8 +428,8 @@ const getWaiterMonthlyExpenseAdmin = async (req, res) => {
 
         res.json(formattedData);
     } catch (error) {
-        console.error(`Error fetching monthly report: ${error.message}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -512,8 +512,8 @@ const getWaiterDailyExpenseAdmin = async (req, res) => {
 
         res.json(formattedData);
     } catch (error) {
-        console.error(`Error fetching daily report for admin: ${error.message}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -589,8 +589,8 @@ const getWaiterWeeklyExpenseAdmin = async (req, res) => {
 
         res.json(formattedData);
     } catch (error) {
-        console.error(`Error fetching weekly report for admin: ${error.message}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -770,8 +770,8 @@ const getCombinedMonthlyExpense = async (req, res) => {
 
         res.json(combinedData);
     } catch (error) {
-        console.error(`Error fetching combined monthly data: ${error.message}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -962,8 +962,8 @@ const getCombinedDailyExpense = async (req, res) => {
 
         res.json(combinedData);
     } catch (error) {
-        console.error(`Error fetching combined daily data: ${error.message}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 

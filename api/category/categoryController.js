@@ -10,8 +10,8 @@ const create = async (req, res) => {
 
         res.status(201).json({status: 201, message: 'Category added successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error adding category!'});
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -22,8 +22,8 @@ const getAll = async (req, res) => {
         const result = await poolConnection.query(query, restaurant_id);
         res.status(200).json(result);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error fetching categories!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -39,8 +39,8 @@ const getById = async (req, res) => {
             res.status(200).json(result[0]);
         }
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error fetching category!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -52,8 +52,8 @@ const update = async (req, res) => {
         await poolConnection.query(query, [categoryName, categoryId]);
         res.status(200).json({status: 200, message: 'Category updated successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error updating category!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -73,8 +73,8 @@ const del = async (req, res) => {
 
         res.status(200).json({status: 200, message: 'Category deleted successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error deleting category!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 

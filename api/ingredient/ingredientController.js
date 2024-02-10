@@ -8,8 +8,8 @@ const getAll = async (req, res) => {
 
         res.status(200).json(results);
     } catch (error) {
-        console.error(`Error fetching ingredients! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error fetching ingredients!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -34,8 +34,8 @@ const create = async (req, res) => {
 
         res.status(201).json({status: 201, message: 'Ingredient created successfully!' });
     } catch (error) {
-        console.error(`Error creating ingredient! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error creating ingredient!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -49,8 +49,8 @@ const update = async (req, res) => {
 
         res.status(200).json({status: 200, message: 'Ingredient updated successfully!' });
     } catch (error) {
-        console.error(`Error updating ingredient! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error updating ingredient!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -63,8 +63,8 @@ const remove = async (req, res) => {
 
         res.status(200).json({status: 200, message: 'Ingredient deleted successfully!' });
     } catch (error) {
-        console.error(`Error deleting ingredient! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error deleting ingredient!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -81,8 +81,8 @@ const getById = async (req, res) => {
             res.status(200).json(result[0]);
         }
     } catch (error) {
-        console.error(`Error fetching ingredient by ID! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error fetching ingredient by ID!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 

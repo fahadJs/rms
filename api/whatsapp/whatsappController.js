@@ -31,8 +31,8 @@ const getAllInstances = async (req, res) => {
     
         res.status(200).json(groupedInstancesArray);
     } catch (error) {
-        console.error(`Error fetching WhatsAppInstances: ${error}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
     
 }
@@ -43,8 +43,8 @@ const getAllGroups = async (req, res) => {
         const rows = await poolConnection.query(`SELECT * FROM WGroupIds WHERE restaurant_id = ?`,[restaurant_id]);
         res.status(200).json(rows);
     } catch (error) {
-        console.error(`Error fetching WhatsApp Groups: ${error}`);
-        res.status(500).json({status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -69,8 +69,8 @@ const createGroupIds = async (req, res) => {
         res.status(200).json({status: 200, message: 'Data inserted successfully!' });
     } catch (error) {
 
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error inserting data', error: error.message });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -85,8 +85,8 @@ const updateGroups = async (req, res) => {
         res.status(200).json({status: 200, message: 'Data updated successfully!' });
     } catch (error) {
 
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error updating data', error: error.message });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 

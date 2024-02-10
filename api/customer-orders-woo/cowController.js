@@ -225,8 +225,8 @@ const getAllOrders = async (req, res) => {
         res.redirect('https://anunziointernational.com/tanah/');
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        console.error('Error fetching data:', error.message);
-        res.status(500).json({ status: 500, message: 'Internal Server Error!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 

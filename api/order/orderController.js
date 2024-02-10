@@ -44,23 +44,21 @@ const create = async (req, res) => {
         }
 
         const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_status = ? WHERE table_id = ?';
-        const updateTableStatusValues = ['reserved', 'not-vacant',table_id];
+        const updateTableStatusValues = ['reserved', 'not-vacant', table_id];
         await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
 
         await poolConnection.query('COMMIT');
 
         res.status(201).json({ status: 201, message: 'Order created successfully!' });
     } catch (error) {
-        if (poolConnection) {
-            await poolConnection.query('ROLLBACK');
-        }
-        console.error(`Error creating order! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error creating order!' });
+        await poolConnection.query('ROLLBACK');
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
 const getAllOrders = async (req, res) => {
-    
+
     // try {
     //     const {restaurant_id} = req.params;
     //     const sql = `
@@ -145,11 +143,11 @@ const getAllOrders = async (req, res) => {
             WHERE
                 orders.restaurant_id = ?;
         `;
-    
+
         const result = await poolConnection.query(sql, [restaurant_id]);
-    
+
         const orders = {};
-    
+
         result.forEach(row => {
             const {
                 OrderID,
@@ -173,7 +171,7 @@ const getAllOrders = async (req, res) => {
                 extras_name,
                 extras_price
             } = row;
-    
+
             if (!orders[OrderID]) {
                 orders[OrderID] = {
                     OrderID,
@@ -190,9 +188,9 @@ const getAllOrders = async (req, res) => {
                     items: []
                 };
             }
-    
+
             const existingItem = orders[OrderID].items.find(item => item.OrderItemID === OrderItemID);
-    
+
             if (!existingItem) {
                 const newItem = {
                     OrderItemID,
@@ -203,11 +201,11 @@ const getAllOrders = async (req, res) => {
                     Note,
                     Extras: []
                 };
-    
+
                 if (extras_id && extras_name && extras_price) {
                     newItem.Extras.push({ extras_id, extras_name, extras_price });
                 }
-    
+
                 orders[OrderID].items.push(newItem);
             } else {
                 if (extras_id && extras_name && extras_price) {
@@ -215,30 +213,30 @@ const getAllOrders = async (req, res) => {
                 }
             }
         });
-    
+
         const formattedResult = Object.values(orders);
-    
+
         res.status(200).json(formattedResult);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error fetching orders!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
-    
-    
+
+
 };
 
 const getOrderById = async (req, res) => {
     try {
         const orderId = req.params.id;
-    
+
         // Query to fetch order details
         const orderSql = 'SELECT * FROM orders WHERE OrderID = ?';
         const order = await poolConnection.query(orderSql, [orderId]);
-    
+
         if (!order.length) {
             return res.status(404).json({ status: 404, message: 'Order not found' });
         }
-    
+
         // Query to fetch order items and their associated extras
         const orderItemSql = `
             SELECT
@@ -255,13 +253,13 @@ const getOrderById = async (req, res) => {
             WHERE
                 order_items.OrderID = ?;
         `;
-    
+
         const orderItems = await poolConnection.query(orderItemSql, [orderId]);
-    
+
         // Group order items and their extras
         const groupedItems = orderItems.reduce((acc, item) => {
             const foundItem = acc.find((groupedItem) => groupedItem.OrderItemID === item.OrderItemID);
-    
+
             if (!foundItem) {
                 acc.push({
                     ...item,
@@ -272,17 +270,17 @@ const getOrderById = async (req, res) => {
                     foundItem.Extras.push({ extras_id: item.extras_id, extras_name: item.extras_name, extras_price: item.extras_price });
                 }
             }
-    
+
             return acc;
         }, []);
-    
+
         const orderWithItemsAndExtras = { ...order[0], items: groupedItems };
-    
+
         res.status(200).json(orderWithItemsAndExtras);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error fetching order!' });
-    }    
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
+    }
 };
 
 

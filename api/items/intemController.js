@@ -8,8 +8,8 @@ const getAll = async (req, res) => {
 
         res.status(200).json(result);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while Fetching items!'});
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -29,8 +29,8 @@ const getForRecipeItems = async (req, res) => {
     
         res.status(200).json(result);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while Fetching items!'});
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -57,8 +57,8 @@ const create = async (req, res) => {
     } catch (error) {
         await poolConnection.query('ROLLBACK');
 
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error adding menu item!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -84,8 +84,8 @@ const update = async (req, res) => {
 
         await poolConnection.query('ROLLBACK');
 
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error updating menu item!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -108,8 +108,8 @@ const getById = async (req, res) => {
             res.status(404).json({status: 404, message: 'Item not found.'});
         }
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while fetching item!'});
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -125,8 +125,8 @@ const deleteItem = async (req, res) => {
             res.status(404).json({status: 404, message: 'Item not found or already deleted.'});
         }
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error while deleting item!'});
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 

@@ -93,7 +93,7 @@ const getAll = async (req, res) => {
         const timeZoneResult = await poolConnection.query(getTimeZoneQuery, [restaurant_id]);
 
         if (!timeZoneResult.length) {
-            res.status(400).json({ status: 400, message: 'Restaurant not found' });
+            res.status(404).json({ status: 404, message: 'Restaurant not found' });
             return;
         }
 
@@ -119,8 +119,8 @@ const getAll = async (req, res) => {
             `;
         }
     } catch (error) {
-        console.error(`Error Getting Sales! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error Getting Sales!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -157,9 +157,9 @@ const closing = async (req, res) => {
         await poolConnection.query('COMMIT');
         res.status(200).json({ status: 200, message: 'Closed Updated!' });
     } catch (error) {
-        console.error(`Error Closing Sales! Error: ${error}`);
         await poolConnection.query('ROLLBACK');
-        res.status(500).json({ status: 500, message: 'Error Closing Sales!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 

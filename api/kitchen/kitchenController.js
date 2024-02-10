@@ -13,8 +13,8 @@ const getAll = async (req, res) => {
 
         res.status(200).json(kitchens);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error fetching kitchens!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -30,8 +30,8 @@ const create = async (req, res) => {
 
         res.status(201).json({status: 201, message: 'Kitchen added successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error adding kitchen!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -47,8 +47,8 @@ const update = async (req, res) => {
 
         res.status(200).json({status: 200, message: 'Kitchen updated successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error updating kitchen!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -63,8 +63,8 @@ const remove = async (req, res) => {
 
         res.status(200).json({status: 200, message: 'Kitchen deleted successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error deleting kitchen!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -82,8 +82,8 @@ const getById = async (req, res) => {
         const kitchenDetails = kitchenResult[0];
         res.status(200).json(kitchenDetails);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({status: 500, message: 'Error fetching kitchen details!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 

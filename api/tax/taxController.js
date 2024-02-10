@@ -9,8 +9,8 @@ const updateTax = async (req, res) => {
 
         res.status(201).json({ status: 201, message: 'Tax Updated successfully!' });
     } catch (error) {
-        console.error(`Error updating tax: ${error.message}`);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 

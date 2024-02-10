@@ -45,8 +45,8 @@ const createEqSplit = async (req, res) => {
         res.status(201).json({ status: 201, message: 'Bill split successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        console.error(`Error splitting bill! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error splitting bill!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -549,8 +549,8 @@ const createItSplit = async (req, res) => {
         res.status(201).json({ status: 201, message: 'Bill split successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        console.error(`Error splitting bill! Error: ${error.message}`);
-        res.status(500).json({ status: 500, message: `Error splitting bill! ${error.message}` });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 

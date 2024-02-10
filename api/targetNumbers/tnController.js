@@ -24,7 +24,8 @@ const getAllInfo = async (req, res) => {
         });
 
     } catch (error) {
-        res.status(404).json({ status: 404, message: `Error fetching info!` });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -108,7 +109,8 @@ const getAllCust = async (req, res) => {
         res.status(200).json(allCustomers);
 
     } catch (error) {
-        res.status(404).json({ status: 404, message: `Error fetching Customers!` });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -120,7 +122,8 @@ const getAllTargetNumbers = async (req, res) => {
         res.status(200).json(getAllNumbersResult);
 
     } catch (error) {
-        res.status(404).json({ status: 404, message: `Error fetching Customers!` });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -154,9 +157,8 @@ const assignCustomerTask = async (req, res) => {
             await poolConnection.query(updateAssigned, ['assigned', custId]);
 
         } catch (error) {
-            await poolConnection.query('ROLLBACK');
             console.log(error);
-            res.status(500).json({ status: 500, message: 'Internal Server Error' });
+           return;
         }
 
         await poolConnection.query('COMMIT');
@@ -164,8 +166,8 @@ const assignCustomerTask = async (req, res) => {
 
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
-        console.log(error);
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 
 }
@@ -191,8 +193,8 @@ const reAssignCustomerTask = async (req, res) => {
         await poolConnection.query('COMMIT');
     } catch (error) {
         await poolConnection.query('ROLLBACK');
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
-        console.log(error);
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 
 }
@@ -210,8 +212,8 @@ const resolveTask = async (req, res) => {
         res.status(200).json({ status: 200, message: 'Numbers resolved successfully' });
 
     } catch (error) {
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
-        console.log(error);
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -237,8 +239,8 @@ const getAllByCust = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -292,15 +294,14 @@ numbers: %0a%0a${numbersList}`;
             }
         } catch (error) {
             console.log(`${error}! Error Making Api Call!`);
-            res.status(500).json({ status: 500, message: `Error Making Api Call!` });
             return;
         }
 
         res.status(200).json({ status: 200, message: `Message succesfully sent!` });
 
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -326,14 +327,13 @@ const updateTargetNumbersStatus = async (req, res) => {
             }
         } else {
             console.error('Error:', error);
-            res.status(404).json({ status: 404, message: 'No Target number found!' });
             return;
         }
 
         res.status(200).json({ status: 200, message: `Status Succesfully Marked not-assigned to all!` });
     } catch (error) {
-        console.error('Error:', error);
-        res.status(500).json({ status: 500, message: 'Internal Server Error' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 

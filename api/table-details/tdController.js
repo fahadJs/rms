@@ -113,8 +113,8 @@ const getAll = async (req, res) => {
 
         res.status(200).json(formattedResult);
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error while fetching order details!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -166,8 +166,8 @@ const removeItem = async (req, res) => {
     } catch (error) {
         await poolConnection.query('ROLLBACK');
 
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error removing item from the order!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -215,8 +215,8 @@ const updateItemQuantity = async (req, res) => {
     } catch (error) {
         await poolConnection.query('ROLLBACK');
 
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error updating item quantity in the order!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 };
 
@@ -499,11 +499,11 @@ const mrkPaid = async (req, res) => {
 
         res.status(200).json({ status: 200, message: 'Order status updated to "paid" and table status set to "available" successfully!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
 
         const rollbackTransactionQuery = 'ROLLBACK';
         await poolConnection.query(rollbackTransactionQuery);
 
+        console.log(`Error! ${error.message}`);
         res.status(500).json({ status: 500, message: error.message });
     }
 }
@@ -551,8 +551,8 @@ const cancel = async (req, res) => {
     } catch (error) {
         await poolConnection.query('ROLLBACK');
 
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error deleting order and updating table status!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
@@ -565,8 +565,8 @@ const markAvailable = async (req, res) => {
 
         res.status(200).json({ status: 200, message: 'Table status set to "available"!' });
     } catch (error) {
-        console.error(`Error executing query! Error: ${error}`);
-        res.status(500).json({ status: 500, message: 'Error updating table status!' });
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
     }
 }
 
