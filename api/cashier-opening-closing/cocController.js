@@ -165,6 +165,12 @@ const cashIn = async (req, res) => {
         const cashIn = `INSERT INTO cash_in (time, narration, amount, restaurant_id, type) VALUES (?, ?, ?, ?, ?);`;
         await poolConnection.query(cashIn, [time, narration, amount, restaurant_id, typeCap]);
 
+        if (typeCap == 'CASH') {
+            const updateBalance = `UPDATE payment_methods SET closing_balance = closing_balance + ? WHERE p_name = ? AND restaurant_id = ?`;
+            await poolConnection.query(updateBalance, [amount, typeCap, restaurant_id]);
+            console.log(`Cash added! ${amount}`);
+        }
+
         res.status(201).json({ status: 201, message: 'Data Inserted successfully!' });
     } catch (error) {
         console.log(`Error! ${error.message}`);
@@ -187,6 +193,12 @@ const cashOut = async (req, res) => {
 
         const cashOut = `INSERT INTO cash_out (time, narration, amount, restaurant_id, type) VALUES (?, ?, ?, ?, ?);`;
         await poolConnection.query(cashOut, [time, narration, amount, restaurant_id, typeCap]);
+
+        if (typeCap == 'CASH') {
+            const updateBalance = `UPDATE payment_methods SET closing_balance = closing_balance - ? WHERE p_name = ? AND restaurant_id = ?`;
+            await poolConnection.query(updateBalance, [amount, typeCap, restaurant_id]);
+            console.log(`Cash added! ${amount}`);
+        }
 
         res.status(201).json({ status: 201, message: 'Data Inserted successfully!' });
     } catch (error) {
@@ -218,6 +230,7 @@ const getCashIn = async (req, res) => {
                 cash_in
             WHERE
                 restaurant_id = ? AND
+                type = ? AND
                 time >= ?
             ORDER BY
                 time DESC;

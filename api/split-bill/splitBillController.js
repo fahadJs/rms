@@ -274,6 +274,12 @@ const createItSplit = async (req, res) => {
                 const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity, before_tax, cash, cash_change) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
                 await poolConnection.query(insertSplitItemQuery, [orderId, menuItem.MenuItemID, menuItem.Name, afterTax, tidValue, paidViaValue, item.quantity, itemPrice, cash, cash_change]);
 
+                if (paidViaValue == 'CASH') {
+                    const updateBalance = `UPDATE payment_methods SET closing_balance = closing_balance + ? WHERE p_name = ? AND restaurant_id = ?`;
+                    await poolConnection.query(updateBalance, [afterTax, paidViaValue, restaurant_id]);
+                    console.log(`Cash added! ${afterTax}`);
+                }
+
                 console.log('inserted into bill split.');
             }
 
@@ -484,7 +490,7 @@ const createItSplit = async (req, res) => {
     
                 // pdf.moveDown();
                 // pdf.text(message);
-                // pdf.moveDown();
+                pdf.moveDown();
                 // drawDottedLine(pdf.y, paperWidth);
     
                 for (const item of itemsArray) {
@@ -516,13 +522,13 @@ const createItSplit = async (req, res) => {
                 pdf.text(mb3, 10, pdf.y, { align: 'left' });
                 pdf.text(mb3Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
                 pdf.text(mb4, 10, pdf.y, { align: 'left' });
-                pdf.text(mb4Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb4Va, 10, pdf.y - 15, { align: 'right' });
                 pdf.text(mb5, 10, pdf.y, { align: 'left' });
-                pdf.text(mb5Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb5Val, 10, pdf.y - 15, { align: 'right' });
                 pdf.text(mb6, 10, pdf.y, { align: 'left' });
-                pdf.text(mb6Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb6Val, 10, pdf.y - 15, { align: 'right' });
                 pdf.text(mb7, 10, pdf.y, { align: 'left' });
-                pdf.text(mb7Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb7Val, 10, pdf.y - 15, { align: 'right' });
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
     
