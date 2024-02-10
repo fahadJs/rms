@@ -267,6 +267,7 @@ const getCashOut = async (req, res) => {
                 cash_out
             WHERE
                 restaurant_id = ? AND
+                type = 'CASH' AND
                 time >= ?
             ORDER BY
                 time DESC;
