@@ -3,6 +3,7 @@ const moment = require('moment-timezone');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
+const axios = require('axios');
 
 const getDenominations = async (req, res) => {
     try {
@@ -82,11 +83,11 @@ const getDenominations = async (req, res) => {
             formattedOutput.name = getRestaurantRes[0].name;
             formattedOutput.expected_daily_cash_sale = totalCash;
 
-                formattedOutput.denomination_details = getRestaurantRes.map(row => ({
-                    denom_details_id: row.denom_details_id,
-                    digit_value: parseFloat(row.digit_value),
-                    denom_name: row.denom_key,
-                }));
+            formattedOutput.denomination_details = getRestaurantRes.map(row => ({
+                denom_details_id: row.denom_details_id,
+                digit_value: parseFloat(row.digit_value),
+                denom_name: row.denom_key,
+            }));
         }
 
         await poolConnection.query('COMMIT');
@@ -481,6 +482,45 @@ const getCashOutOfPaymentMethod = async (req, res) => {
     }
 }
 
+const differenceAlert = async (req, res) => {
+    try {
+        await poolConnection.query('START TRANSACTION');
+        const whatsappIntance = `SELECT * FROM WhatsAppInstances;`
+        const whatsappIntanceRes = await poolConnection.query(whatsappIntance);
+        const instance = whatsappIntanceRes[0];
+
+        const instanceNumber = instance.instance_number;
+        const accessToken = instance.access_token;
+        const groupNumber = `120363199942100759@g.us`;
+        const number = `923331233774`
+
+        const message = `⚠ *ALERT!*\n\nDifference in sales found.\nPlease check balance.`;
+
+        const url = `https://dash3.wabot.my/api/send.php?number=${number}&type=text&message=${encodeURIComponent(message)}&instance_id=${instanceNumber}&access_token=${accessToken}`;
+
+        // try {
+
+        // } catch (error) {
+        //     console.log(error);
+        // }
+
+        const ApiCall = await axios.get(url);
+        await poolConnection.query('COMMIT');
+        console.log(ApiCall.data.status);
+        if (ApiCall.data.status == 'success') {
+            res.status(200).json({ status: 200, message: ApiCall.data.message });
+            // console.log(`Items marked as sent!`);
+            console.log(ApiCall.data);
+        } else {
+            throw new Error(ApiCall.data.message);
+        }
+    } catch (error) {
+        await poolConnection.query('ROLLBACK');
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
+    }
+}
+
 module.exports = {
     getDenominations,
     posClosing,
@@ -491,5 +531,6 @@ module.exports = {
     getCashOut,
     openCashDrawer,
     getCashInOfPaymentMethod,
-    getCashOutOfPaymentMethod
+    getCashOutOfPaymentMethod,
+    differenceAlert
 }
