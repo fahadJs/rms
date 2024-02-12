@@ -6,8 +6,55 @@ const PDFDocument = require('pdfkit');
 
 const getDenominations = async (req, res) => {
     try {
-        // await poolConnection.query('START TRANSACTION');
+        await poolConnection.query('START TRANSACTION');
         const { restaurant_id } = req.params;
+
+        const currentDateQuery = `SELECT time_zone, open_time FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateResult = await poolConnection.query(currentDateQuery, [restaurant_id]);
+
+        if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
+            throw new Error("Time zone not available for the restaurant");
+        }
+
+        const { time_zone, open_time } = currentDateResult[0];
+        const timeZone = time_zone;
+
+        // Combine the current date with the opening time
+        const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
+
+        const getTheOrder = `SELECT * FROM orders WHERE time >= ? AND restaurant_id = ?`;
+        // const getTheOrder = `SELECT * FROM orders`;
+        const getTheOrderRes = await poolConnection.query(getTheOrder, [openingTime, restaurant_id]);
+        // const getTheOrderRes = await poolConnection.query(getTheOrder);
+
+        const orderDetails = getTheOrderRes;
+
+        const getThePosOrder = `SELECT * FROM pos_orders WHERE time >= ? AND restaurant_id = ?`;
+        // const getThePosOrder = `SELECT * FROM pos_orders`;
+        const getThePosOrderRes = await poolConnection.query(getThePosOrder, [openingTime, restaurant_id]);
+        // const getThePosOrderRes = await poolConnection.query(getThePosOrder);
+
+        const posOrderDetails = getThePosOrderRes;
+
+        let totalOrderCash = 0
+
+        for (const item of orderDetails) {
+            const itemPrice = item.after_tax;
+            if (item.paid_via == 'CASH') {
+                totalOrderCash += itemPrice;
+            }
+        }
+
+        let totalPosOrderCash = 0;
+
+        for (const item of posOrderDetails) {
+            const itemPrice = item.total_amount;
+            if (item.paid_via == 'CASH') {
+                totalPosOrderCash += itemPrice;
+            }
+        }
+
+        const totalCash = totalOrderCash + totalPosOrderCash;
 
         const getRestaurant = `
             SELECT
@@ -26,22 +73,26 @@ const getDenominations = async (req, res) => {
         const formattedOutput = {
             restaurant_id: null,
             name: null,
+            expected_daily_cash_sale: null,
             denomination_details: []
         };
 
         if (getRestaurantRes.length > 0) {
             formattedOutput.restaurant_id = getRestaurantRes[0].restaurant_id;
             formattedOutput.name = getRestaurantRes[0].name;
+            formattedOutput.expected_daily_cash_sale = totalCash;
 
-            formattedOutput.denomination_details = getRestaurantRes.map(row => ({
-                denom_details_id: row.denom_details_id,
-                digit_value: parseFloat(row.digit_value),
-                denom_name: row.denom_key,
-            }));
+                formattedOutput.denomination_details = getRestaurantRes.map(row => ({
+                    denom_details_id: row.denom_details_id,
+                    digit_value: parseFloat(row.digit_value),
+                    denom_name: row.denom_key,
+                }));
         }
 
+        await poolConnection.query('COMMIT');
         res.status(200).json(formattedOutput);
     } catch (error) {
+        await poolConnection.query('ROLLBACK');
         console.log(`Error! ${error.message}`);
         res.status(500).json({ status: 500, message: error.message });
     }
@@ -97,6 +148,40 @@ const getPosClosing = async (req, res) => {
 
         // // Combine the current date with the opening time
         // const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
+
+        // const getTheOrder = `SELECT * FROM orders WHERE time >= ? AND restaurant_id = ?`;
+        // // const getTheOrder = `SELECT * FROM orders`;
+        // const getTheOrderRes = await poolConnection.query(getTheOrder, [openingTime, restaurant_id]);
+        // // const getTheOrderRes = await poolConnection.query(getTheOrder);
+
+        // const orderDetails = getTheOrderRes;
+
+        // const getThePosOrder = `SELECT * FROM pos_orders WHERE time >= ? AND restaurant_id = ?`;
+        // // const getThePosOrder = `SELECT * FROM pos_orders`;
+        // const getThePosOrderRes = await poolConnection.query(getThePosOrder, [openingTime, restaurant_id]);
+        // // const getThePosOrderRes = await poolConnection.query(getThePosOrder);
+
+        // const posOrderDetails = getThePosOrderRes;
+
+        // let totalOrderCash = 0
+
+        // for (const item of orderDetails) {
+        //     const itemPrice = item.after_tax;
+        //     if (item.paid_via == 'CASH') {
+        //         totalOrderCash += itemPrice;
+        //     }
+        // }
+
+        // let totalPosOrderCash = 0;
+
+        // for (const item of posOrderDetails) {
+        //     const itemPrice = item.total_amount;
+        //     if (item.paid_via == 'CASH') {
+        //         totalPosOrderCash += itemPrice;
+        //     }
+        // }
+
+        // const totalCash = totalOrderCash + totalPosOrderCash;
 
         const getPosClosing = `
             SELECT
@@ -342,7 +427,7 @@ const openCashDrawer = async (req, res) => {
 
             fs.unlinkSync(pdfPath);
 
-            res.status(200).json({status: 200, message: 'Cash Drawer Opened!'});
+            res.status(200).json({ status: 200, message: 'Cash Drawer Opened!' });
         } catch (error) {
             console.log(error);
             return;
@@ -365,7 +450,7 @@ const getCashInOfPaymentMethod = async (req, res) => {
 
         if (getCashInOfPaymentMethodRes.length === 0) {
             console.log(`No record found for ${nameUpper}!`);
-            res.status(404).json({status: 404, message: `No record found for ${nameUpper}!`});
+            res.status(404).json({ status: 404, message: `No record found for ${nameUpper}!` });
             return;
         }
         res.status(200).json(getCashInOfPaymentMethodRes);
@@ -386,7 +471,7 @@ const getCashOutOfPaymentMethod = async (req, res) => {
 
         if (getCashOutOfPaymentMethodRes.length === 0) {
             console.log(`No record found for ${nameUpper}!`);
-            res.status(404).json({status: 404, message: `No record found for ${nameUpper}!`});
+            res.status(404).json({ status: 404, message: `No record found for ${nameUpper}!` });
             return;
         }
         res.status(200).json(getCashOutOfPaymentMethodRes);

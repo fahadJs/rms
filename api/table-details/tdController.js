@@ -479,9 +479,9 @@ const mrkPaid = async (req, res) => {
                 pdf.text(mb5, 10, pdf.y, { align: 'left' });
                 pdf.text(mb5Val, 10, pdf.y - 15, { align: 'right' });
                 pdf.text(mb6, 10, pdf.y, { align: 'left' });
-                pdf.text(mb6Val, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb6Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
                 pdf.text(mb7, 10, pdf.y, { align: 'left' });
-                pdf.text(mb7Val, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb7Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
 

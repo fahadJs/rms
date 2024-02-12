@@ -49,7 +49,7 @@ const updateBalance = async (req, res) => {
     const updateBalance = `UPDATE payment_methods SET closing_balance = ? WHERE p_id = ? AND restaurant_id = ?`;
     await poolConnection.query(updateBalance, [closing_balance, p_id, restaurant_id]);
 
-    res.status(200).json({status: 200, message: 'Updated Successfully!'});
+    res.status(200).json({ status: 200, message: 'Updated Successfully!' });
   } catch (error) {
     console.error(`Error updating payment balance: ${error.message}`);
     res.status(500).json({ status: 500, message: error.message });

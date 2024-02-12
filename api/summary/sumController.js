@@ -18,17 +18,17 @@ const printDaily = async (req, res) => {
         const formattedTime = moment.tz(timeZone).format('HH:mm:ss');
         const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
 
-        // const getTheOrder = `SELECT * FROM orders WHERE time >= ?`;
-        const getTheOrder = `SELECT * FROM orders`;
-        // const getTheOrderRes = await poolConnection.query(getTheOrder, [openingTime]);
-        const getTheOrderRes = await poolConnection.query(getTheOrder);
+        const getTheOrder = `SELECT * FROM orders WHERE time >= ? AND restaurant_id = ?`;
+        // const getTheOrder = `SELECT * FROM orders`;
+        const getTheOrderRes = await poolConnection.query(getTheOrder, [openingTime, restaurant_id]);
+        // const getTheOrderRes = await poolConnection.query(getTheOrder);
 
         const orderDetails = getTheOrderRes;
 
-        // const getThePosOrder = `SELECT * FROM pos_orders WHERE time >= ?`;
-        const getThePosOrder = `SELECT * FROM pos_orders`;
-        // const getThePosOrderRes = await poolConnection.query(getThePosOrder, [openingTime]);
-        const getThePosOrderRes = await poolConnection.query(getThePosOrder);
+        const getThePosOrder = `SELECT * FROM pos_orders WHERE time >= ? AND restaurant_id = ?`;
+        // const getThePosOrder = `SELECT * FROM pos_orders`;
+        const getThePosOrderRes = await poolConnection.query(getThePosOrder, [openingTime, restaurant_id]);
+        // const getThePosOrderRes = await poolConnection.query(getThePosOrder);
 
         const posOrderDetails = getThePosOrderRes;
 
@@ -43,22 +43,30 @@ const printDaily = async (req, res) => {
 
         const itemsArray = [];
         let orderTotal = 0;
+        let totalOrderCash = 0
 
         for (const item of orderDetails) {
-            const itemPrice = item.total_amount;
+            const itemPrice = item.after_tax;
             const itemId = item.OrderID;
             orderTotal += itemPrice;
+            if (item.paid_via == 'CASH') {
+                totalOrderCash += itemPrice;
+            }
 
             itemsArray.push({ itemId, itemPrice });
         }
 
         const posItemsArray = [];
         let posOrderTotal = 0;
+        let totalPosOrderCash = 0;
 
         for (const item of posOrderDetails) {
             const itemPrice = item.total_amount;
             const itemId = item.PosOrderID;
             posOrderTotal += itemPrice;
+            if (item.paid_via == 'CASH') {
+                totalPosOrderCash += itemPrice;
+            }
 
             posItemsArray.push({ itemId, itemPrice });
         }
@@ -101,12 +109,13 @@ const printDaily = async (req, res) => {
         // messageMap = await Promise.all(messageMap);
 
         const resName = `${restaurantName}`.toUpperCase();
-        const messageTop = `Date: ${formattedDate}\nTime: ${formattedTime}\nThis summary of orders are after the opening time of the restaurant!\nOpening time: ${open_time}\n`;
+        const messageTop = `Date: ${formattedDate}\nTime: ${formattedTime}\n\nThis summary of orders are after the opening time of the restaurant!\n\nOpening time: ${open_time}\n`;
 
         // const message = `${messageMap.join('\n')}`;
 
         // const cashInfo = paidVia === 'CASH' ? `Cash Received: ${cash}\nChange: ${cashChange}` : '';
 
+        const totalCash = totalOrderCash + totalPosOrderCash;
         const finalOrder = orderTotal + posOrderTotal;
         const orderAmountTax = finalOrder * (tax / 100);
         const orderTotalExcl = finalOrder - orderAmountTax;
@@ -116,6 +125,8 @@ const printDaily = async (req, res) => {
         const mb2Val = orderAmountTax.toFixed(2);
         const mb3 = `After Tax`;
         const mb3Val = finalOrder.toFixed(2);
+        const mb4 = `Total Cash Sales only`;
+        const mb4Val = totalCash.toFixed(2);
         // const messageBottom = `Order Total(excl. tax): ${orderTotalExcl.toFixed(2)}\nTax: ${orderAmountTax.toFixed(2)}\nAfter Tax: ${finalOrder.toFixed(2)}`;
 
         const thank = `THANK YOU`;
@@ -216,6 +227,8 @@ const printDaily = async (req, res) => {
             pdf.text(mb2Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
             pdf.text(mb3, 10, pdf.y, { align: 'left' });
             pdf.text(mb3Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+            pdf.text(mb4, 10, pdf.y, { align: 'left' });
+            pdf.text(mb4Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
             pdf.moveDown();
             drawDottedLine(pdf.y, paperWidth);
 
