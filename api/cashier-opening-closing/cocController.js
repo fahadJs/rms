@@ -81,7 +81,7 @@ const getDenominations = async (req, res) => {
         if (getRestaurantRes.length > 0) {
             formattedOutput.restaurant_id = getRestaurantRes[0].restaurant_id;
             formattedOutput.name = getRestaurantRes[0].name;
-            formattedOutput.expected_daily_cash_sale = totalCash;
+            formattedOutput.expected_daily_cash_sale = totalCash.toFixed(2);
 
             formattedOutput.denomination_details = getRestaurantRes.map(row => ({
                 denom_details_id: row.denom_details_id,
@@ -106,11 +106,163 @@ const posClosing = async (req, res) => {
         const { restaurant_id } = req.params;
         const { username, total, items } = req.body;
 
-        const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
-        const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+        const currentDateQuery = `SELECT time_zone, open_time FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateResult = await poolConnection.query(currentDateQuery, [restaurant_id]);
 
-        const timeZone = timeZoneResult[0].time_zone;
+        if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
+            throw new Error("Time zone not available for the restaurant");
+        }
+
+        const { time_zone, open_time } = currentDateResult[0];
+        const timeZone = time_zone;
         const time = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+        // Combine the current date with the opening time
+        const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
+
+        const getTheOrder = `SELECT * FROM orders WHERE time >= ? AND restaurant_id = ?`;
+        // const getTheOrder = `SELECT * FROM orders`;
+        const getTheOrderRes = await poolConnection.query(getTheOrder, [openingTime, restaurant_id]);
+        // const getTheOrderRes = await poolConnection.query(getTheOrder);
+
+        const orderDetails = getTheOrderRes;
+
+        const getThePosOrder = `SELECT * FROM pos_orders WHERE time >= ? AND restaurant_id = ?`;
+        // const getThePosOrder = `SELECT * FROM pos_orders`;
+        const getThePosOrderRes = await poolConnection.query(getThePosOrder, [openingTime, restaurant_id]);
+        // const getThePosOrderRes = await poolConnection.query(getThePosOrder);
+
+        const posOrderDetails = getThePosOrderRes;
+
+        let totalOrderCash = 0
+
+        for (const item of orderDetails) {
+            const itemPrice = item.after_tax;
+            if (item.paid_via == 'CASH') {
+                totalOrderCash += itemPrice;
+            }
+        }
+
+        let totalPosOrderCash = 0;
+
+        for (const item of posOrderDetails) {
+            const itemPrice = item.total_amount;
+            if (item.paid_via == 'CASH') {
+                totalPosOrderCash += itemPrice;
+            }
+        }
+
+        const totalCash = totalOrderCash + totalPosOrderCash;
+        const diff = totalCash - total;
+        console.log(diff);
+
+        if (diff > 0) {
+            await poolConnection.query('START TRANSACTION');
+
+            const whatsappIntance = `SELECT * FROM WhatsAppInstances;`
+            const whatsappIntanceRes = await poolConnection.query(whatsappIntance);
+            const instance = whatsappIntanceRes[0];
+
+            const instanceNumber = instance.instance_number;
+            const accessToken = instance.access_token;
+            const groupNumber = `120363199942100759@g.us`;
+            const number = `923331233774`
+
+            const message = `⚠ *ALERT!*\n\nDifference in Cash Closing found.\nPlease check balance.\n\nDifference: ${diff.toFixed(2)}`;
+
+            const url = `https://dash3.wabot.my/api/send.php?number=${number}&type=text&message=${encodeURIComponent(message)}&instance_id=${instanceNumber}&access_token=${accessToken}`;
+
+            const ApiCall = await axios.get(url);
+            await poolConnection.query('COMMIT');
+            console.log(ApiCall.data.status);
+            // if (ApiCall.data.status == 'success') {
+            //     // res.status(200).json({ status: 200, message: ApiCall.data.message });
+            //     // console.log(`Items marked as sent!`);
+            //     console.log(ApiCall.data);
+            // } else {
+            //     throw new Error(ApiCall.data.message);
+            // }
+            console.log(`Cash Differnece Found!`);
+            throw new Error(`Cash difference found! ${diff}`);
+        }
+
+
+        const posClosing = `INSERT INTO pos_closing (time, restaurant_id, username, total) VALUES (?, ?, ?, ?)`;
+        const posClosingRes = await poolConnection.query(posClosing, [time, restaurant_id, username, total]);
+
+        const posClosingID = posClosingRes.insertId;
+
+        const posClosingDetails = `INSERT INTO pos_closing_details (pos_closing_id, denom_key, denom_value) VALUES (?, ?, ?)`;
+
+        for (const item of items) {
+            const { denomKey, denomValue } = item;
+            await poolConnection.query(posClosingDetails, [posClosingID, denomKey, denomValue]);
+        }
+
+        res.status(201).json({ status: 201, message: `Data Inserted Successfully!` });
+        await poolConnection.query(`COMMIT`);
+    } catch (error) {
+        await poolConnection.query(`ROLLBACK`);
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
+    }
+}
+
+const posOpening = async (req, res) => {
+    try {
+        await poolConnection.query(`START TRANSACTION`);
+
+        const { restaurant_id } = req.params;
+        const { username, total, items } = req.body;
+
+        const getPosClosing = `
+            SELECT
+                *
+            FROM
+                pos_closing pc
+            WHERE
+                pc.restaurant_id = ?
+            ORDER BY
+                pc.time DESC
+            LIMIT 1;
+        `;
+
+        const getPosClosingRes = await poolConnection.query(getPosClosing, [restaurant_id]);
+        const lastTotal = getPosClosingRes[0].total;
+
+        const diff = lastTotal - total;
+        console.log(diff);
+
+        if (diff > 0) {
+            await poolConnection.query('START TRANSACTION');
+
+            const whatsappIntance = `SELECT * FROM WhatsAppInstances;`
+            const whatsappIntanceRes = await poolConnection.query(whatsappIntance);
+            const instance = whatsappIntanceRes[0];
+
+            const instanceNumber = instance.instance_number;
+            const accessToken = instance.access_token;
+            const groupNumber = `120363199942100759@g.us`;
+            const number = `923331233774`
+
+            const message = `⚠ *ALERT!*\n\nDifference in Cash Opening found.\nPlease check balance.\n\nDifference: ${diff.toFixed(2)}`;
+
+            const url = `https://dash3.wabot.my/api/send.php?number=${number}&type=text&message=${encodeURIComponent(message)}&instance_id=${instanceNumber}&access_token=${accessToken}`;
+
+            const ApiCall = await axios.get(url);
+            await poolConnection.query('COMMIT');
+            console.log(ApiCall.data.status);
+            // if (ApiCall.data.status == 'success') {
+            //     // res.status(200).json({ status: 200, message: ApiCall.data.message });
+            //     // console.log(`Items marked as sent!`);
+            //     console.log(ApiCall.data);
+            // } else {
+            //     throw new Error(ApiCall.data.message);
+            // }
+            console.log(`Cash Differnece Found!`);
+            throw new Error(`Cash difference found! ${diff}`);
+        }
+
 
         const posClosing = `INSERT INTO pos_closing (time, restaurant_id, username, total) VALUES (?, ?, ?, ?)`;
         const posClosingRes = await poolConnection.query(posClosing, [time, restaurant_id, username, total]);
@@ -524,6 +676,7 @@ const differenceAlert = async (req, res) => {
 module.exports = {
     getDenominations,
     posClosing,
+    posOpening,
     getPosClosing,
     cashIn,
     cashOut,
