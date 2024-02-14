@@ -125,6 +125,7 @@ const emitOrder = (orderId) => {
 
 io.on('connection', (socket) => {
     console.log('A client connected');
+    console.log(socket);
     
     // Handle disconnect event if needed
     socket.on('disconnect', () => {

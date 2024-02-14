@@ -1,5 +1,7 @@
+const { emitOrder } = require('../../app');
 const poolConnection = require('../../config/database');
-const emitOrder = require('../../app');
+// const emitOrder = require('../../app');
+const io = require('socket.io-client');
 
 const testScoket = async (req, res) => {
     try {
@@ -9,7 +11,7 @@ const testScoket = async (req, res) => {
 
         // const orderDetails = getTheOrderRes[0];
 
-        emitOrder.emitOrder(orderId);
+        emitOrder(orderId);
 
         res.status(200).json({status: 200, message: `Order successfully emmitted!`});
 
