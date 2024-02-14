@@ -348,9 +348,16 @@ const mrkPaid = async (req, res) => {
 
                 // const info = await transporter.sendMail(mailOptions);
 
-                console.log('Email Sent! and Status updated!: ', info);
+                // console.log('Email Sent! and Status updated!: ', info);
 
-                fs.unlinkSync(pdfPath);
+                // fs.unlinkSync(pdfPath);
+                fs.unlink(pdfPath, (err) => {
+                    if (err) {
+                        console.error('Error deleting PDF file:', err);
+                    } else {
+                        console.log('PDF file deleted successfully');
+                    }
+                });
             } catch (error) {
                 console.log(error);
                 return;
