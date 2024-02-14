@@ -128,11 +128,10 @@ io.on('connection', (socket) => {
     // console.log(socket);
 
     socket.on('userInput', (data) => {
-        // Print the user input to the console
         console.log('User input emitted:', data);
-
-        // Broadcast the user input to all connected clients (optional)
         io.emit('userInput', data);
+
+        emitOrder(data.orderId);
     });
     // Handle disconnect event if needed
     socket.on('disconnect', () => {
