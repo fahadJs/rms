@@ -125,8 +125,15 @@ const emitOrder = (orderId) => {
 
 io.on('connection', (socket) => {
     console.log('A client connected');
-    console.log(socket);
-    
+    // console.log(socket);
+
+    socket.on('userInput', (data) => {
+        // Print the user input to the console
+        console.log('User input emitted:', data);
+
+        // Broadcast the user input to all connected clients (optional)
+        io.emit('userInput', data);
+    });
     // Handle disconnect event if needed
     socket.on('disconnect', () => {
         console.log('A client disconnected');
