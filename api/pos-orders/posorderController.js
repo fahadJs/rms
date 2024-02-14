@@ -77,10 +77,10 @@ const mrkPaid = async (req, res) => {
 
             const orderItems = getTheOrderItemsRes;
 
-            // const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
-            // const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+            const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+            const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
 
-            // const timeZone = timeZoneResult[0].time_zone;
+            const timeZone = timeZoneResult[0].time_zone;
 
             const formattedDate = moment.tz(timeZone).format('YYYY-MM-DD');
             const formattedTime = moment.tz(timeZone).format('HH:mm:ss');
@@ -118,11 +118,14 @@ const mrkPaid = async (req, res) => {
 
             const itemsArray = [];
 
-            for (const item of orderDetails) {
-                const itemPrice = item.total_amount;
-                const itemId = item.PosOrderID;
+            for (const item of orderItems) {
+                const itemPrice = item.Price;
 
-                itemsArray.push({ itemId, itemPrice });
+                const itemId = item.PosOrderItemID;
+                const itemName = item.ItemName;
+                const quantity = item.Quantity;
+
+                itemsArray.push({ itemId, itemName, quantity, restaurantName, itemPrice });
             }
             // const priceColumnWidth = 0;
             // let messageMap = itemsArray.map(async (item) => {
