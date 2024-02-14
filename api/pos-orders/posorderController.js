@@ -77,18 +77,20 @@ const mrkPaid = async (req, res) => {
 
             const orderItems = getTheOrderItemsRes;
 
-            const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
-            const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
+            // const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+            // const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
 
-            const timeZone = timeZoneResult[0].time_zone;
+            // const timeZone = timeZoneResult[0].time_zone;
 
             const formattedDate = moment.tz(timeZone).format('YYYY-MM-DD');
             const formattedTime = moment.tz(timeZone).format('HH:mm:ss');
 
-            let orderTotal = 0;
-            const afterTax = orderDetails.total_amount;
+            const orderTotal = orderDetails.total_amount;
+            // const afterTax = orderDetails.after_tax;
             const paidVia = orderDetails.paid_via;
             const tid = orderDetails.tid;
+            // const cash = orderDetails.cash;
+            // const cashChange = orderDetails.cash_change;
             // const orderId = orderDetails.OrderID;
 
             // const waiter_id = orderDetails.waiter_id;
@@ -111,54 +113,112 @@ const mrkPaid = async (req, res) => {
             const restaurantName = restaurantResult[0].name;
             const tax = restaurantResult[0].tax;
             const currency = restaurantResult[0].default_currency;
+            const contact = restaurantResult[0].contact;
+            const site = restaurantResult[0].site;
 
             const itemsArray = [];
 
-            for (const item of orderItems) {
-                const itemId = item.PosOrderItemID;
-                const itemName = item.ItemName;
-                const quantity = item.Quantity;
-                const itemPrice = item.Price * quantity;
-                orderTotal += itemPrice;
+            for (const item of orderDetails) {
+                const itemPrice = item.total_amount;
+                const itemId = item.PosOrderID;
 
-                itemsArray.push({ itemId, itemName, quantity, restaurantName, itemPrice });
-
+                itemsArray.push({ itemId, itemPrice });
             }
+            // const priceColumnWidth = 0;
+            // let messageMap = itemsArray.map(async (item) => {
+            //     const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
+            //                         JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
+            //                         WHERE order_extras.OrderItemID = ?`;
+            //     const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
 
-            let messageMap = itemsArray.map(async (item) => {
-                const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
-                                    JOIN pos_order_extras ON menu_extras.extras_id = pos_order_extras.extras_id
-                                    WHERE order_extras.PosOrderItemID = ?`;
-                const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
+            //     const extrasList = extrasResult.length > 0
+            //         ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
+            //         : '';
 
-                const extrasList = extrasResult.length > 0
-                    ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
-                    : '';
+            //     // return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}\n${extrasList}`;
 
-                return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}\n${extrasList}`;
-            });
+            //     // const formattedItem = `${item.quantity} ${item.itemName} ${extrasList}`;
+            //     // const priceAlignment = ' '.repeat(50 - formattedItem.length - item.itemPrice.toString().length);
+            //     // const formattedPrice = `${priceAlignment} ${currency} ${item.itemPrice.toFixed(2)}`;
 
-            messageMap = await Promise.all(messageMap);
+            //     // return `${formattedItem}${formattedPrice}`;
+
+            //     // Format the item details with fixed-width columns for item name and price
+            //     // const formattedItem = `${item.quantity} ${item.itemName} ${extrasList}`;
+            //     // const formattedPrice = `${currency} ${item.itemPrice.toFixed(2)}`;
+
+            //     // // Ensure the item name column has a fixed width
+            //     // const truncatedItem = formattedItem.slice(0, itemNameColumnWidth);
+            //     // const itemAlignment = ' '.repeat(itemNameColumnWidth - truncatedItem.length);
+
+            //     // return `${truncatedItem}${itemAlignment}${formattedPrice}`;
+
+            //     // Format the item details with fixed-width columns for item name and price
+            //     // const formattedItem = `${item.quantity} ${item.itemName} ${extrasList}`;
+            //     // const formattedPrice = `${currency} ${item.itemPrice.toFixed(2)}`;
+
+            //     // return `${formattedItem}${repeat(100 - formattedItem.length - formattedPrice.length)}${formattedPrice}`;
+            // });
+
+            // messageMap = await Promise.all(messageMap);
 
             const resName = `${restaurantName}`.toUpperCase();
-            const messageTop = `OrderID: ${orderId}\nPOS Order\nDate: ${formattedDate}\nTime: ${formattedTime}\n`;
+            // const messageTop = `OrderID: ${orderId}\n${waiterName}\n${tableName}\nDate: ${formattedDate}\nTime: ${formattedTime}\n`;
 
-            const message = `${messageMap.join('\n')}`;
+            const messageTop = `OrderID: ${orderId}\nDate: ${formattedDate}\nTime: ${formattedTime}\n`;
 
-            const messageBottom = `Order Total: ${orderTotal}\nTax: ${tax}%\nAfter Tax: ${afterTax}\nPayment Mode: ${paidVia}\nT-ID: ${tid}`;
+            // const message = `${messageMap.join('\n')}`;
 
-            const thank = `THNAK YOU`;
+            // const cashInfo = paidVia === 'CASH' ? `Cash Received: ${cash}\nChange: ${cashChange}` : '';
+
+            // const totalCash = totalOrderCash + totalPosOrderCash;
+            // const finalOrder = orderTotal + posOrderTotal;
+            const orderAmountTax = orderTotal * (tax / 100);
+            const orderTotalExcl = orderTotal - orderAmountTax;
+            const mb1 = `Order Total(excl. tax)`;
+            const mb1Val = orderTotalExcl.toFixed(2);
+            const mb2 = `Tax(${tax}%)`;
+            const mb2Val = orderAmountTax.toFixed(2);
+            const mb3 = `After Tax`;
+            const mb3Val = orderTotal.toFixed(2);
+            const mb4 = `Payment Mode`;
+            const mb4Val = paidVia;
+            const mb5 = `T-ID`;
+            const mb5Val = tid;
+            // const mb1 = `Order Total`;
+            // const mb1Val = orderTotal.toFixed(2);
+            // const mb2 = `Tax`;
+            // const mb2Val = `${tax}%`
+            // const mb3 = `After Tax`;
+            // const mb3Val = afterTax.toFixed(2);
+            // const mb4 = `Payment Mode`;
+            // const mb4Val = paidVia;
+            // const mb5 = `T-ID`;
+            // const mb5Val = tid;
+            // const mb6 = `Cash Received`;
+            // const mb6Val = cash;
+            // const mb7 = `Change`;
+            // const mb7Val = cashChange;
+
+            // const messageBottom = `Order Total: ${orderTotal.toFixed(2)}\nTax: ${tax}%\nAfter Tax: ${afterTax.toFixed(2)}\nPayment Mode: ${paidVia}\nT-ID: ${tid}` + (cashInfo ? `\n${cashInfo}` : '');
+
+            const thank = `THANK YOU`;
+            const softwareBy = `software by`;
+            const anunzio = `Anunzio International FZC`;
+            const website = `www.anunziointernational.com`;
+            const number = `+971-58-551-5742`;
+            const email = `info@anunziointernational.com`;
 
             try {
                 const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
                 // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
-                const paperWidth = 303;
+                const paperWidth = 302;
 
                 const pdf = new PDFDocument({
-                    size: [paperWidth, 600],
-                    margin: 12,
+                    size: [paperWidth, 1200],
+                    margin: 10,
                 });
 
                 function drawDottedLine(yPosition, length) {
@@ -180,12 +240,16 @@ const mrkPaid = async (req, res) => {
                 }
 
                 pdf.pipe(fs.createWriteStream(pdfPath));
-                pdf.fontSize(12);
+                pdf.fontSize(14);
 
                 // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
                 pdf.moveDown();
                 centerText(resName, 16);
+                // pdf.moveDown();
+                centerText(contact, 16);
+                // pdf.moveDown();
+                centerText(site, 16);
                 // pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
 
@@ -194,19 +258,59 @@ const mrkPaid = async (req, res) => {
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
 
+                // pdf.moveDown();
+                // pdf.text(message);
                 pdf.moveDown();
-                pdf.text(message);
-                pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
+                // drawDottedLine(pdf.y, paperWidth);
+
+                for (const item of itemsArray) {
+                    const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
+                                    JOIN pos_order_extras ON menu_extras.extras_id = pos_order_extras.extras_id
+                                    WHERE pos_order_extras.PosOrderItemID = ?`;
+                    const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
+
+                    const extrasList = extrasResult.length > 0
+                        ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
+                        : '';
+                    const itemName = `${item.quantity} ${item.itemName} ${extrasList}`;
+                    const price = `${item.itemPrice.toFixed(2)} ${currency}`;
+
+                    // pdf.moveDown();
+                    // Position item name on the left
+                    // Position item name and price on the left
+                    const priceY = pdf.y - 1;
+                    pdf.text(itemName, 10, pdf.y, { align: 'left' });
+                    pdf.text(price, 10, priceY, { align: 'right' });
+                    // pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
+                }
 
                 pdf.moveDown();
-                pdf.text(messageBottom);
+                drawDottedLine(pdf.y, paperWidth);
+                pdf.text(mb1, 10, pdf.y, { align: 'left' });
+                pdf.text(mb1Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb2, 10, pdf.y, { align: 'left' });
+                pdf.text(mb2Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb3, 10, pdf.y, { align: 'left' });
+                pdf.text(mb3Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb4, 10, pdf.y, { align: 'left' });
+                pdf.text(mb4Val, 10, pdf.y - 15, { align: 'right' });
+                pdf.text(mb5, 10, pdf.y, { align: 'left' });
+                pdf.text(mb5Val, 10, pdf.y - 15, { align: 'right' });
+                // pdf.text(mb6, 10, pdf.y, { align: 'left' });
+                // pdf.text(mb6Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+                // pdf.text(mb7, 10, pdf.y, { align: 'left' });
+                // pdf.text(mb7Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
 
                 pdf.moveDown();
                 centerText(thank, 16);
                 // pdf.moveDown();
+                centerText(softwareBy, 16);
+                centerText(anunzio, 16);
+                centerText(website, 16);
+                centerText(number, 16);
+                centerText(email, 16);
                 drawDottedLine(pdf.y, paperWidth);
 
                 pdf.end();
