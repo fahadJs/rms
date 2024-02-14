@@ -4,10 +4,10 @@ const emitOrder = require('../../app');
 const testScoket = async (req, res) => {
     try {
         const { orderId } = req.params;
-        const getTheOrder = `SELECT * FROM pos_orders WHERE PosOrderID = ?`;
-        const getTheOrderRes = await poolConnection.query(getTheOrder, [orderId]);
+        // const getTheOrder = `SELECT * FROM pos_orders WHERE PosOrderID = ?`;
+        // const getTheOrderRes = await poolConnection.query(getTheOrder, [orderId]);
 
-        const orderDetails = getTheOrderRes[0];
+        // const orderDetails = getTheOrderRes[0];
 
         emitOrder.emitOrder(orderId);
 
