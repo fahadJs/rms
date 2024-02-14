@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const https = require('https');
 const fs = require('fs');
+const socketIo = require('socket.io');
 
 const app = express();
 const port = 443;
@@ -110,7 +111,25 @@ app.use('/api/whatsapp', whatsappRouter);
 app.use('/admin', adminRouter);
 
 const server = https.createServer(options, app);
+const io = socketIo(server);
+
+const emitOrder = (orderId) => {
+    io.emit('order', { orderId });
+};
+
+io.on('connection', (socket) => {
+    console.log('A client connected');
+    
+    // Handle disconnect event if needed
+    socket.on('disconnect', () => {
+        console.log('A client disconnected');
+    });
+});
 
 server.listen(port || 3000, () => {
     console.log(`Server up and running!\nConnection will be established once any request hits!`);
 })
+
+module.exports = {
+    emitOrder,
+}

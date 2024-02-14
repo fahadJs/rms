@@ -1,5 +1,6 @@
 const poolConnection = require('../../config/database');
 const moment = require('moment-timezone');
+const orderEmit = require('../../app');
 
 const create = async (req, res) => {
     try {
@@ -149,97 +150,99 @@ const mrkPaid = async (req, res) => {
 
             const thank = `THNAK YOU`;
 
-            try {
-                const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
-                // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
+            orderEmit.emitOrder(orderId);
 
-                const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
-                const paperWidth = 303;
+            // try {
+            //     const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+            //     // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
-                const pdf = new PDFDocument({
-                    size: [paperWidth, 600],
-                    margin: 12,
-                });
+            //     const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
+            //     const paperWidth = 303;
 
-                function drawDottedLine(yPosition, length) {
-                    const startX = pdf.x;
-                    const endX = pdf.x + length;
-                    const y = yPosition;
+            //     const pdf = new PDFDocument({
+            //         size: [paperWidth, 600],
+            //         margin: 12,
+            //     });
 
-                    for (let i = startX; i <= endX; i += 5) {
-                        pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
-                    }
-                }
+            //     function drawDottedLine(yPosition, length) {
+            //         const startX = pdf.x;
+            //         const endX = pdf.x + length;
+            //         const y = yPosition;
 
-                function centerText(text, fontSize) {
-                    const textWidth = pdf.widthOfString(text, { fontSize });
-                    const xPosition = (paperWidth - textWidth) / 2;
-                    const currentX = pdf.x;
-                    pdf.text(text, xPosition, pdf.y);
-                    pdf.x = currentX;
-                }
+            //         for (let i = startX; i <= endX; i += 5) {
+            //             pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
+            //         }
+            //     }
 
-                pdf.pipe(fs.createWriteStream(pdfPath));
-                pdf.fontSize(12);
+            //     function centerText(text, fontSize) {
+            //         const textWidth = pdf.widthOfString(text, { fontSize });
+            //         const xPosition = (paperWidth - textWidth) / 2;
+            //         const currentX = pdf.x;
+            //         pdf.text(text, xPosition, pdf.y);
+            //         pdf.x = currentX;
+            //     }
 
-                // pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
-                pdf.moveDown();
-                centerText(resName, 16);
-                // pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
+            //     pdf.pipe(fs.createWriteStream(pdfPath));
+            //     pdf.fontSize(12);
 
-                pdf.moveDown();
-                pdf.text(messageTop);
-                pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
+            //     // pdf.moveDown();
+            //     drawDottedLine(pdf.y, paperWidth);
+            //     pdf.moveDown();
+            //     centerText(resName, 16);
+            //     // pdf.moveDown();
+            //     drawDottedLine(pdf.y, paperWidth);
 
-                pdf.moveDown();
-                pdf.text(message);
-                pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
+            //     pdf.moveDown();
+            //     pdf.text(messageTop);
+            //     pdf.moveDown();
+            //     drawDottedLine(pdf.y, paperWidth);
 
-                pdf.moveDown();
-                pdf.text(messageBottom);
-                pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
+            //     pdf.moveDown();
+            //     pdf.text(message);
+            //     pdf.moveDown();
+            //     drawDottedLine(pdf.y, paperWidth);
 
-                pdf.moveDown();
-                centerText(thank, 16);
-                // pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
+            //     pdf.moveDown();
+            //     pdf.text(messageBottom);
+            //     pdf.moveDown();
+            //     drawDottedLine(pdf.y, paperWidth);
 
-                pdf.end();
+            //     pdf.moveDown();
+            //     centerText(thank, 16);
+            //     // pdf.moveDown();
+            //     drawDottedLine(pdf.y, paperWidth);
 
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        user: 'siddiquiboy360@gmail.com',
-                        pass: 'gkop jksn urdi dgvv'
-                    }
-                });
+            //     pdf.end();
 
-                const mailOptions = {
-                    from: 'siddiquiboy360@gmail.com',
-                    to,
-                    attachments: [
-                        {
-                            filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
-                            path: pdfPath,
-                            encoding: 'base64'
-                        }
-                    ]
-                };
+            //     const transporter = nodemailer.createTransport({
+            //         service: 'gmail',
+            //         auth: {
+            //             user: 'siddiquiboy360@gmail.com',
+            //             pass: 'gkop jksn urdi dgvv'
+            //         }
+            //     });
 
-                const info = await transporter.sendMail(mailOptions);
+            //     const mailOptions = {
+            //         from: 'siddiquiboy360@gmail.com',
+            //         to,
+            //         attachments: [
+            //             {
+            //                 filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+            //                 path: pdfPath,
+            //                 encoding: 'base64'
+            //             }
+            //         ]
+            //     };
 
-                console.log('Email Sent! and Status updated!: ', info);
+            //     const info = await transporter.sendMail(mailOptions);
 
-                fs.unlinkSync(pdfPath);
-            } catch (error) {
-                console.log(error);
-                return;
-            }
+            //     console.log('Email Sent! and Status updated!: ', info);
+
+            //     fs.unlinkSync(pdfPath);
+            // } catch (error) {
+            //     console.log(error);
+            //     return;
+            // }
         } catch (error) {
             console.log(error);
             return;
