@@ -1,6 +1,5 @@
 const { emitOrder } = require('../../app');
 const poolConnection = require('../../config/database');
-const emitOrder = require('../../app');
 
 const testScoket = async (req, res) => {
     try {
