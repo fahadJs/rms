@@ -150,99 +150,99 @@ const mrkPaid = async (req, res) => {
 
             const thank = `THNAK YOU`;
 
-            orderEmit.emitOrder(orderId);
+            // orderEmit.emitOrder(orderId);
 
-            // try {
-            //     const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
-            //     // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
+            try {
+                const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+                // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
-            //     const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
-            //     const paperWidth = 303;
+                const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
+                const paperWidth = 303;
 
-            //     const pdf = new PDFDocument({
-            //         size: [paperWidth, 600],
-            //         margin: 12,
-            //     });
+                const pdf = new PDFDocument({
+                    size: [paperWidth, 600],
+                    margin: 12,
+                });
 
-            //     function drawDottedLine(yPosition, length) {
-            //         const startX = pdf.x;
-            //         const endX = pdf.x + length;
-            //         const y = yPosition;
+                function drawDottedLine(yPosition, length) {
+                    const startX = pdf.x;
+                    const endX = pdf.x + length;
+                    const y = yPosition;
 
-            //         for (let i = startX; i <= endX; i += 5) {
-            //             pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
-            //         }
-            //     }
+                    for (let i = startX; i <= endX; i += 5) {
+                        pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
+                    }
+                }
 
-            //     function centerText(text, fontSize) {
-            //         const textWidth = pdf.widthOfString(text, { fontSize });
-            //         const xPosition = (paperWidth - textWidth) / 2;
-            //         const currentX = pdf.x;
-            //         pdf.text(text, xPosition, pdf.y);
-            //         pdf.x = currentX;
-            //     }
+                function centerText(text, fontSize) {
+                    const textWidth = pdf.widthOfString(text, { fontSize });
+                    const xPosition = (paperWidth - textWidth) / 2;
+                    const currentX = pdf.x;
+                    pdf.text(text, xPosition, pdf.y);
+                    pdf.x = currentX;
+                }
 
-            //     pdf.pipe(fs.createWriteStream(pdfPath));
-            //     pdf.fontSize(12);
+                pdf.pipe(fs.createWriteStream(pdfPath));
+                pdf.fontSize(12);
 
-            //     // pdf.moveDown();
-            //     drawDottedLine(pdf.y, paperWidth);
-            //     pdf.moveDown();
-            //     centerText(resName, 16);
-            //     // pdf.moveDown();
-            //     drawDottedLine(pdf.y, paperWidth);
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
+                pdf.moveDown();
+                centerText(resName, 16);
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
 
-            //     pdf.moveDown();
-            //     pdf.text(messageTop);
-            //     pdf.moveDown();
-            //     drawDottedLine(pdf.y, paperWidth);
+                pdf.moveDown();
+                pdf.text(messageTop);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
 
-            //     pdf.moveDown();
-            //     pdf.text(message);
-            //     pdf.moveDown();
-            //     drawDottedLine(pdf.y, paperWidth);
+                pdf.moveDown();
+                pdf.text(message);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
 
-            //     pdf.moveDown();
-            //     pdf.text(messageBottom);
-            //     pdf.moveDown();
-            //     drawDottedLine(pdf.y, paperWidth);
+                pdf.moveDown();
+                pdf.text(messageBottom);
+                pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
 
-            //     pdf.moveDown();
-            //     centerText(thank, 16);
-            //     // pdf.moveDown();
-            //     drawDottedLine(pdf.y, paperWidth);
+                pdf.moveDown();
+                centerText(thank, 16);
+                // pdf.moveDown();
+                drawDottedLine(pdf.y, paperWidth);
 
-            //     pdf.end();
+                pdf.end();
 
-            //     const transporter = nodemailer.createTransport({
-            //         service: 'gmail',
-            //         auth: {
-            //             user: 'siddiquiboy360@gmail.com',
-            //             pass: 'gkop jksn urdi dgvv'
-            //         }
-            //     });
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: {
+                        user: 'siddiquiboy360@gmail.com',
+                        pass: 'gkop jksn urdi dgvv'
+                    }
+                });
 
-            //     const mailOptions = {
-            //         from: 'siddiquiboy360@gmail.com',
-            //         to,
-            //         attachments: [
-            //             {
-            //                 filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
-            //                 path: pdfPath,
-            //                 encoding: 'base64'
-            //             }
-            //         ]
-            //     };
+                const mailOptions = {
+                    from: 'siddiquiboy360@gmail.com',
+                    to,
+                    attachments: [
+                        {
+                            filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+                            path: pdfPath,
+                            encoding: 'base64'
+                        }
+                    ]
+                };
 
-            //     const info = await transporter.sendMail(mailOptions);
+                const info = await transporter.sendMail(mailOptions);
 
-            //     console.log('Email Sent! and Status updated!: ', info);
+                console.log('Email Sent! and Status updated!: ', info);
 
-            //     fs.unlinkSync(pdfPath);
-            // } catch (error) {
-            //     console.log(error);
-            //     return;
-            // }
+                fs.unlinkSync(pdfPath);
+            } catch (error) {
+                console.log(error);
+                return;
+            }
         } catch (error) {
             console.log(error);
             return;
