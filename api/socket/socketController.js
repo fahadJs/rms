@@ -1,7 +1,6 @@
 const { emitOrder } = require('../../app');
 const poolConnection = require('../../config/database');
-// const emitOrder = require('../../app');
-const io = require('socket.io-client');
+const emitOrder = require('../../app');
 
 const testScoket = async (req, res) => {
     try {
