@@ -3,6 +3,7 @@ const moment = require('moment-timezone');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
+const path = require('path');
 
 const create = async (req, res) => {
     try {
@@ -227,9 +228,12 @@ const mrkPaid = async (req, res) => {
                     margin: 10,
                 });
 
+                const filePath = 'C:\\Dropbox\\Email Attachments\\'; // Specify the file path
+                const fileName = path.basename(filePath);
+
                 // Pipe the PDF directly to the response object
                 res.setHeader('Content-Type', 'application/pdf');
-                res.setHeader('Content-Disposition', `attachment; filename="${restaurant_id}.pdf"`);
+                res.setHeader('Content-Disposition', `attachment; filename="${fileName}\\${restaurant_id}.pdf"`);
                 pdf.pipe(res);
 
                 function drawDottedLine(yPosition, length) {
