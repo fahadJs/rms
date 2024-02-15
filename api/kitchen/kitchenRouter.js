@@ -7,5 +7,6 @@ router.post('/res/:restaurant_id', token.verifyToken, kitchenController.create);
 router.get('/res/:restaurant_id/kit/:kitchenId', token.verifyToken, kitchenController.getById);
 router.patch('/res/:restaurant_id/kit/:kitchenId', token.verifyToken, kitchenController.update);
 router.delete('/res/:restaurant_id/kit/:kitchenId', token.verifyToken, kitchenController.remove);
+router.post('/login', kitchenController.kLogin);
 
 module.exports = router;
