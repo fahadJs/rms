@@ -14,6 +14,7 @@ const emitOrderToKitchen = async (kitchenID) => {
         const orderItemsRes = await poolConnection.query(orderItems, [KitchenID]);
 
         console.log(`order: ${JSON.stringify(orderItemsRes)}`);
+        const orders = {};
         for (const item of orderItemsRes) {
             const itemsByStatusQuery = `SELECT * FROM order_items JOIN orders ON order_items.OrderID = orders.OrderID WHERE order_items.OrderID = ?`;
             const itemsByStatus = await poolConnection.query(itemsByStatusQuery, [item.OrderID]);
