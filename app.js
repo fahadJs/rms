@@ -124,27 +124,18 @@ io.on('connection', (socket) => {
     console.log('A client connected');
     // console.log(socket);
 
-    // socket.on('userInput', (data) => {
-    //     console.log('User input emitted:', data);
-    //     io.emit('userInput', data);
+    socket.on('userInput', (data) => {
+        console.log('User input emitted:', data);
+        io.emit('userInput', data);
 
-    //     emitOrder(data.orderId);
-    // });
+        // emitOrder(data.orderId);
+    });
 
     // When a kitchen client joins a room
     socket.on('getKitchen', (kitchenID) => {
-
         let k2 = 2;
         io.emit('getKitchen', k2);
         console.log('getKitchen', k2);
-        // Join the room corresponding to the kitchen ID
-        // socket.join(`kitchen-${kitchenID}`);
-        // console.log(`Kitchen with ID ${kitchenID} joined room`);
-
-        // Call emitOrderToKitchen function when a client joins a kitchen
-        // You need to import emitOrderToKitchen function from wherever it is defined
-        // const orderDetails = {}; // Define your order details here
-        // emitOrderToKitchen(kitchenID, orderDetails);// Adjust the parameters as needed
     });
     // Handle disconnect event if needed
     socket.on('disconnect', () => {
