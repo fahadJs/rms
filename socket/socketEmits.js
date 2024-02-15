@@ -13,7 +13,7 @@ const emitOrderToKitchen = async (kitchenID) => {
         const orderItems = `SELECT * FROM order_items WHERE SStatus = 'not-sent' AND KitchenID = ?`;
         const orderItemsRes = await poolConnection.query(orderItems, [KitchenID]);
 
-        console.log(`order: ${JSON.stringify(orderItemsRes)}`);
+        // console.log(`order: ${JSON.stringify(orderItemsRes)}`);
         const orders = {};
         for (const item of orderItemsRes) {
             const itemsByStatusQuery = `SELECT * FROM order_items JOIN orders ON order_items.OrderID = orders.OrderID WHERE order_items.OrderID = ?`;
@@ -55,6 +55,7 @@ const emitOrderToKitchen = async (kitchenID) => {
         const orderList = Object.values(orders);
         // io.emit(kitchenID, orderList);
 
+        console.log(`order from socket: ${orderList}`);
         return orderList;
 
     } catch (error) {
