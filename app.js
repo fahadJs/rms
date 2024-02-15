@@ -135,7 +135,7 @@ io.on('connection', (socket) => {
     socket.on('getKitchen', (kitchenID) => {
 
         let k2 = 2
-        io.emit('getKitchen', k2, kitchenID);
+        socket.emit('getKitchen', k2, kitchenID);
         console.log('getKitchen', k2, kitchenID);
         // Join the room corresponding to the kitchen ID
         // socket.join(`kitchen-${kitchenID}`);
