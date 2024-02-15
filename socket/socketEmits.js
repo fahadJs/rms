@@ -13,7 +13,7 @@ const emitOrderToKitchen = async (kitchenID) => {
         const orderItems = `SELECT * FROM order_items WHERE SStatus = 'not-sent'`;
         const orderItemsRes = await poolConnection.query(orderItems);
 
-        console.log(`order: ${orderItemsRes}`);
+        console.log(`order: ${JSON.stringify(orderItemsRes)}`);
         for (const item of orderItemsRes) {
             const itemsByStatusQuery = `SELECT * FROM order_items JOIN orders ON order_items.OrderID = orders.OrderID WHERE order_items.OrderID = ? AND order_items.KitchenID = ? AND order_items.SStatus = 'not-sent'`;
             const itemsByStatus = await poolConnection.query(itemsByStatusQuery, [item.OrderID, KitchenID]);
