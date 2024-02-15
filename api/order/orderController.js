@@ -48,9 +48,9 @@ const create = async (req, res) => {
         const updateTableStatusValues = ['reserved', 'not-vacant', table_id];
         await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
 
-        let ki = 1;
-        let od = `details agai! :)`;
-        emitOrderToKitchen(ki, od);
+        // let ki = 1;
+        // let od = `details agai! :)`;
+        // emitOrderToKitchen(ki, od);
 
         await poolConnection.query('COMMIT');
 

@@ -123,21 +123,19 @@ const io = socketIo(server);
 io.on('connection', (socket) => {
     console.log('A client connected');
     // console.log(socket);
-    let k2 = 'test';
 
-    socket.on('getKitchenID', (data) => {
-        console.log('User input emitted:', data);
-        io.emit('getKitchenID', data);
-        io.emit(data, k2);
-
-        // emitOrder(data.orderId);
+    socket.on('getKitchenID', (kitchenID) => {
+        console.log('User input emitted:', kitchenID);
+        // io.emit('getKitchenID', kitchenID);
+        // io.emit(kitchenID, k2);
+        emitOrderToKitchen(kitchenID);
     });
 
     // // When a kitchen client joins a room
-    socket.on('getKitchen', (kitchenID) => {
-        let k2 = 2;
-        console.log('getKitchen', k2);
-    });
+    // socket.on('getKitchen', (kitchenID) => {
+    //     let k2 = 2;
+    //     console.log('getKitchen', k2);
+    // });
     // Handle disconnect event if needed
     socket.on('disconnect', () => {
         console.log('A client disconnected');
