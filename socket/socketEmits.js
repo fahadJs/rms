@@ -28,7 +28,7 @@ const emitOrderToKitchen = async (kitchenID) => {
             const tableQuery = `SELECT table_name FROM tables WHERE table_id = ?`;
             const tableRes = await poolConnection.query(tableQuery, [table_id]);
 
-            const tableName = `Table: ${tableRes[0].table_name}`;
+            const tableName = `Table: ${tableRes.table_name}`;
 
             const orderID = item.OrderID;
 
