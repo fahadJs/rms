@@ -15,12 +15,12 @@ const emitOrderToKitchen = async (kitchenID) => {
 
         console.log(`order: ${JSON.stringify(orderItemsRes)}`);
         for (const item of orderItemsRes) {
-            const itemsByStatusQuery = `SELECT * FROM order_items JOIN orders ON order_items.OrderID = orders.OrderID WHERE order_items.OrderID = ? AND order_items.KitchenID = ? AND order_items.SStatus = 'not-sent'`;
-            const itemsByStatus = await poolConnection.query(itemsByStatusQuery, [item.OrderID, KitchenID]);
+            const itemsByStatusQuery = `SELECT * FROM order_items JOIN orders ON order_items.OrderID = orders.OrderID WHERE order_items.OrderID = ?`;
+            const itemsByStatus = await poolConnection.query(itemsByStatusQuery, [item.OrderID]);
 
-            // const restaurant_id = itemsByStatus[0].restaurant_id;
-            const waiter_id = itemsByStatus[0].waiter_id;
-            const table_id = itemsByStatus[0].table_id;
+            const restaurant_id = itemsByStatus.restaurant_id;
+            const waiter_id = itemsByStatus.waiter_id;
+            const table_id = itemsByStatus.table_id;
 
             const waiterQuery = `SELECT * FROM waiters WHERE waiter_id = ?`;
             const waiterRes = await poolConnection.query(waiterQuery, [waiter_id]);
