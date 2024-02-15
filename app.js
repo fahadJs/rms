@@ -139,7 +139,8 @@ io.on('connection', (socket) => {
 
         // Call emitOrderToKitchen function when a client joins a kitchen
         // You need to import emitOrderToKitchen function from wherever it is defined
-        // emitOrderToKitchen(kitchenID); // Adjust the parameters as needed
+        const orderDetails = {}; // Define your order details here
+        emitOrderToKitchen(kitchenID, orderDetails);// Adjust the parameters as needed
     });
     // Handle disconnect event if needed
     socket.on('disconnect', () => {
