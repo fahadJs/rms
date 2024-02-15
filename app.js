@@ -124,11 +124,11 @@ io.on('connection', (socket) => {
     console.log('A client connected');
     // console.log(socket);
 
-    socket.on('getKitchenID', (kitchenID) => {
+    socket.on('getKitchenID', async (kitchenID) => {
         console.log('User input emitted:', kitchenID);
         // io.emit('getKitchenID', kitchenID);
         // io.emit(kitchenID, k2);
-        const orderList = emitOrderToKitchen(kitchenID);
+        const orderList = await emitOrderToKitchen(kitchenID);
         console.log(orderList);
         io.emit(kitchenID, orderList);
     });
