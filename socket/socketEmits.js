@@ -10,8 +10,8 @@ const emitOrderToKitchen = async (kitchenID) => {
     try {
         const KitchenID = kitchenID;
 
-        const orderItems = `SELECT * FROM order_items WHERE SStatus = 'not-sent'`;
-        const orderItemsRes = await poolConnection.query(orderItems);
+        const orderItems = `SELECT * FROM order_items WHERE SStatus = 'not-sent' AND KitchenID = ?`;
+        const orderItemsRes = await poolConnection.query(orderItems, [KitchenID]);
 
         console.log(`order: ${JSON.stringify(orderItemsRes)}`);
         for (const item of orderItemsRes) {
