@@ -120,26 +120,6 @@ app.use('/admin', adminRouter);
 
 const server = https.createServer(options, app);
 const io = socketIo(server);
-io.on('connection', (socket) => {
-    console.log('A client connected');
-    // console.log(socket);
-
-    socket.on('getKitchenID', async (kitchenID) => {
-        console.log('User input emitted:', kitchenID);
-        emitOrderToKitchen(kitchenID);
-        // const orderList = await emitOrderToKitchen(kitchenID);
-        // console.log(`orderList from app.js: ${orderList}`);
-        // io.emit(kitchenID, orderList);
-    });
-
-    socket.on('disconnect', () => {
-        console.log('A client disconnected');
-    });
-});
-
-server.listen(port || 3000, () => {
-    console.log(`Server up and running!\nConnection will be established once any request hits!`);
-})
 
 const emitOrderToKitchen = async (kitchenID) => {
     try {
@@ -200,6 +180,27 @@ const emitOrderToKitchen = async (kitchenID) => {
         // res.status(500).json({ status: 500, message: error.message });
     }
 };
+
+io.on('connection', (socket) => {
+    console.log('A client connected');
+    // console.log(socket);
+
+    socket.on('getKitchenID', async (kitchenID) => {
+        console.log('User input emitted:', kitchenID);
+        emitOrderToKitchen(kitchenID);
+        // const orderList = await emitOrderToKitchen(kitchenID);
+        // console.log(`orderList from app.js: ${orderList}`);
+        // io.emit(kitchenID, orderList);
+    });
+
+    socket.on('disconnect', () => {
+        console.log('A client disconnected');
+    });
+});
+
+server.listen(port || 3000, () => {
+    console.log(`Server up and running!\nConnection will be established once any request hits!`);
+})
 
 module.exports = {
     io,

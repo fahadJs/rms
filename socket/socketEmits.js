@@ -59,11 +59,11 @@ const emitOrderToKitchen = async (kitchenID) => {
         // return orderList;
 
     } catch (error) {
-    // await poolConnection.query('ROLLBACK');
-    console.log(`Error! ${error.message}`);
-    // return [{FAHAD:'faahd'}];
-    // res.status(500).json({ status: 500, message: error.message });
-}
+        // await poolConnection.query('ROLLBACK');
+        console.log(`Error! ${error.message}`);
+        // return [{FAHAD:'faahd'}];
+        // res.status(500).json({ status: 500, message: error.message });
+    }
 };
 
 module.exports = {

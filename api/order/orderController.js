@@ -1,7 +1,7 @@
 const poolConnection = require('../../config/database');
 const moment = require('moment-timezone');
 // const { emitOrderToKitchen } = require('../../socket/socketEmits');
-const { emitOrderToKitchen } = require('../../app');
+const app = require('../../app');
 
 const create = async (req, res) => {
     try {
@@ -52,7 +52,7 @@ const create = async (req, res) => {
             //     io.emit(kitchenID, orderList);
             // });
 
-            emitOrderToKitchen(kitchenID);
+            app.emitOrderToKitchen(kitchenID);
         }
 
         const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_status = ? WHERE table_id = ?';
