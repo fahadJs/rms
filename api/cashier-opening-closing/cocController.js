@@ -157,24 +157,24 @@ const posClosing = async (req, res) => {
         console.log(diff);
 
         if (diff > 0) {
-            await poolConnection.query('START TRANSACTION');
+            // await poolConnection.query('START TRANSACTION');
 
-            const whatsappIntance = `SELECT * FROM WhatsAppInstances;`
-            const whatsappIntanceRes = await poolConnection.query(whatsappIntance);
-            const instance = whatsappIntanceRes[0];
+            // const whatsappIntance = `SELECT * FROM WhatsAppInstances;`
+            // const whatsappIntanceRes = await poolConnection.query(whatsappIntance);
+            // const instance = whatsappIntanceRes[0];
 
-            const instanceNumber = instance.instance_number;
-            const accessToken = instance.access_token;
-            const groupNumber = `120363199942100759@g.us`;
-            const number = `923331233774`
+            // const instanceNumber = instance.instance_number;
+            // const accessToken = instance.access_token;
+            // const groupNumber = `120363199942100759@g.us`;
+            // const number = `923331233774`
 
-            const message = `⚠ *ALERT!*\n\nDifference in Cash Closing found.\nPlease check balance.\n\nDifference: ${diff.toFixed(2)}`;
+            // const message = `⚠ *ALERT!*\n\nDifference in Cash Closing found.\nPlease check balance.\n\nDifference: ${diff.toFixed(2)}`;
 
-            const url = `https://dash3.wabot.my/api/send.php?number=${number}&type=text&message=${encodeURIComponent(message)}&instance_id=${instanceNumber}&access_token=${accessToken}`;
+            // const url = `https://dash3.wabot.my/api/send.php?number=${number}&type=text&message=${encodeURIComponent(message)}&instance_id=${instanceNumber}&access_token=${accessToken}`;
 
-            const ApiCall = await axios.get(url);
-            await poolConnection.query('COMMIT');
-            console.log(ApiCall.data.status);
+            // const ApiCall = await axios.get(url);
+            // await poolConnection.query('COMMIT');
+            // console.log(ApiCall.data.status);
             // if (ApiCall.data.status == 'success') {
             //     // res.status(200).json({ status: 200, message: ApiCall.data.message });
             //     // console.log(`Items marked as sent!`);

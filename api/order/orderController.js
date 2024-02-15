@@ -1,5 +1,6 @@
 const poolConnection = require('../../config/database');
 const moment = require('moment-timezone');
+const { emitOrderToKitchen } = require('../../socket/socketEmits');
 
 const create = async (req, res) => {
     try {
@@ -46,6 +47,10 @@ const create = async (req, res) => {
         const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_status = ? WHERE table_id = ?';
         const updateTableStatusValues = ['reserved', 'not-vacant', table_id];
         await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
+
+        let ki = 1;
+        let od = `details agai! :)`;
+        emitOrderToKitchen(ki, od);
 
         await poolConnection.query('COMMIT');
 

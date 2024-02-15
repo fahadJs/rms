@@ -3,6 +3,7 @@ const express = require('express');
 const https = require('https');
 const fs = require('fs');
 const socketIo = require('socket.io');
+const { emitOrderToKitchen } = require('./socket/socketEmits');
 
 const app = express();
 const port = 443;
@@ -105,7 +106,7 @@ app.use('/api/testrms', testRmsRouter);
 app.use('/api/woo/tanah', tanahCowRouter);
 
 // For Parameter Testing
-app.use('/api/test',testRouter);
+app.use('/api/test', testRouter);
 
 // Telegram
 app.use('/api/telegram', telegramRouter);
@@ -119,19 +120,26 @@ app.use('/admin', adminRouter);
 const server = https.createServer(options, app);
 const io = socketIo(server);
 
-const emitOrder = (orderId) => {
-    io.emit('order', { orderId });
-};
-
 io.on('connection', (socket) => {
     console.log('A client connected');
     // console.log(socket);
 
-    socket.on('userInput', (data) => {
-        console.log('User input emitted:', data);
-        io.emit('userInput', data);
+    // socket.on('userInput', (data) => {
+    //     console.log('User input emitted:', data);
+    //     io.emit('userInput', data);
 
-        emitOrder(data.orderId);
+    //     emitOrder(data.orderId);
+    // });
+
+    // When a kitchen client joins a room
+    socket.on('joinKitchen', (kitchenID) => {
+        // Join the room corresponding to the kitchen ID
+        socket.join(`kitchen-${kitchenID}`);
+        console.log(`Kitchen with ID ${kitchenID} joined room`);
+
+        // Call emitOrderToKitchen function when a client joins a kitchen
+        // You need to import emitOrderToKitchen function from wherever it is defined
+        // emitOrderToKitchen(kitchenID); // Adjust the parameters as needed
     });
     // Handle disconnect event if needed
     socket.on('disconnect', () => {
@@ -144,5 +152,5 @@ server.listen(port || 3000, () => {
 })
 
 module.exports = {
-    emitOrder,
+    io
 }
