@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const https = require('https');
 const fs = require('fs');
-const socketIo = require('socket.io')(server);
+const socketIo = require('socket.io');
 const { emitOrderToKitchen } = require('./socket/socketEmits');
 
 const app = express();
@@ -139,8 +139,8 @@ io.on('connection', (socket) => {
 
         // Call emitOrderToKitchen function when a client joins a kitchen
         // You need to import emitOrderToKitchen function from wherever it is defined
-        const orderDetails = {}; // Define your order details here
-        emitOrderToKitchen(kitchenID, orderDetails);// Adjust the parameters as needed
+        // const orderDetails = {}; // Define your order details here
+        // emitOrderToKitchen(kitchenID, orderDetails);// Adjust the parameters as needed
     });
     // Handle disconnect event if needed
     socket.on('disconnect', () => {
