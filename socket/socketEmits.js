@@ -55,12 +55,13 @@ const emitOrderToKitchen = async (kitchenID) => {
         const orderList = Object.values(orders);
         // io.emit(kitchenID, orderList);
 
-        console.log(`order from socket: ${orderList}`);
+        console.log(`order from socket: ${JSON.stringify(orderList)}`);
         return orderList;
 
     } catch (error) {
     // await poolConnection.query('ROLLBACK');
     console.log(`Error! ${error.message}`);
+    return [];
     // res.status(500).json({ status: 500, message: error.message });
 }
 };
