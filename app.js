@@ -124,19 +124,19 @@ io.on('connection', (socket) => {
     console.log('A client connected');
     // console.log(socket);
 
-    socket.on('userInput', (data) => {
+    socket.on('getKitchenID', (data) => {
         console.log('User input emitted:', data);
-        io.emit('userInput', data);
+        io.emit('getKitchenID', data);
 
         // emitOrder(data.orderId);
     });
 
-    // When a kitchen client joins a room
-    socket.on('getKitchen', (kitchenID) => {
-        let k2 = 2;
-        io.emit('getKitchen', k2);
-        console.log('getKitchen', k2);
-    });
+    // // When a kitchen client joins a room
+    // socket.on('getKitchen', (kitchenID) => {
+    //     let k2 = 2;
+    //     io.emit('getKitchen', k2);
+    //     console.log('getKitchen', k2);
+    // });
     // Handle disconnect event if needed
     socket.on('disconnect', () => {
         console.log('A client disconnected');
