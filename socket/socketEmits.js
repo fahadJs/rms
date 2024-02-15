@@ -2,8 +2,8 @@ const { getAllWithIngredients } = require('../api/recipe-items/riController');
 const io = require('../app');
 const poolConnection = require('../config/database');
 
-// const orderDetails = (details) => {
-//     return details;
+// function triggerEmitOrderToKitchen() {
+//     emitOrderToKitchen();
 // }
 
 const emitOrderToKitchen = async (kitchenID) => {

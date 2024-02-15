@@ -42,6 +42,8 @@ const create = async (req, res) => {
             const updateInventoryQuery = 'UPDATE inventory SET on_hand = GREATEST(on_hand - ?, 0) WHERE MenuItemID = ?';
             const updateInventoryValues = [quantity, menuitemID];
             await poolConnection.query(updateInventoryQuery, updateInventoryValues);
+
+            emitOrderToKitchen(kitchenID);
         }
 
         const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_status = ? WHERE table_id = ?';
