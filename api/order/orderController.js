@@ -1,7 +1,7 @@
 const poolConnection = require('../../config/database');
 const moment = require('moment-timezone');
 const { emitOrderToKitchen } = require('../../socket/socketEmits');
-const { io } = require('../../app');
+const { onEmit } = require('../../app');
 
 const create = async (req, res) => {
     try {
@@ -44,13 +44,15 @@ const create = async (req, res) => {
             const updateInventoryValues = [quantity, menuitemID];
             await poolConnection.query(updateInventoryQuery, updateInventoryValues);
 
-            io.on('getKitchenID', async (kitchenID) => {
-                console.log('User input emitted:', kitchenID);
-                // Your logic here
-                const orderList = await emitOrderToKitchen(kitchenID);
-                console.log(orderList);
-                io.emit(kitchenID, orderList);
-            });
+            // io.on('getKitchenID', async (kitchenID) => {
+            //     console.log('User input emitted:', kitchenID);
+            //     // Your logic here
+            //     const orderList = await emitOrderToKitchen(kitchenID);
+            //     console.log(orderList);
+            //     io.emit(kitchenID, orderList);
+            // });
+
+            onEmit();
         }
 
         const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_status = ? WHERE table_id = ?';
