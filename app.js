@@ -119,29 +119,20 @@ app.use('/admin', adminRouter);
 
 const server = https.createServer(options, app);
 const io = socketIo(server);
-
-const onEmit = io.on('getKitchenID', async (kitchenID) => {
-    console.log('User input emitted:', kitchenID);
-    // io.emit('getKitchenID', kitchenID);
-    // io.emit(kitchenID, k2);
-    // emitOrderToKitchen(kitchenID);
-    const orderList = await emitOrderToKitchen(kitchenID);
-    console.log(orderList);
-    io.emit(kitchenID, orderList);
-});
+let onEmit;
 io.on('connection', (socket) => {
     console.log('A client connected');
     // console.log(socket);
 
-    // socket.on('getKitchenID', async (kitchenID) => {
-    //     console.log('User input emitted:', kitchenID);
-    //     // io.emit('getKitchenID', kitchenID);
-    //     // io.emit(kitchenID, k2);
-    //     // emitOrderToKitchen(kitchenID);
-    //     const orderList = await emitOrderToKitchen(kitchenID);
-    //     console.log(orderList);
-    //     io.emit(kitchenID, orderList);
-    // });
+    onEmit = socket.on('getKitchenID', async (kitchenID) => {
+        console.log('User input emitted:', kitchenID);
+        // io.emit('getKitchenID', kitchenID);
+        // io.emit(kitchenID, k2);
+        // emitOrderToKitchen(kitchenID);
+        const orderList = await emitOrderToKitchen(kitchenID);
+        console.log(orderList);
+        io.emit(kitchenID, orderList);
+    });
 
     // // When a kitchen client joins a room
     // socket.on('getKitchen', (kitchenID) => {
@@ -160,5 +151,5 @@ server.listen(port || 3000, () => {
 
 module.exports = {
     io,
-    onEmit,
+    onEmit
 }
