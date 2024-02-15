@@ -6,7 +6,7 @@ const poolConnection = require('../config/database');
 //     emitOrderToKitchen();
 // }
 
-const emitOrderToKitchen = async (kitchenID) => {
+const emitOrderToKitchen = async (io, kitchenID) => {
     try {
         const KitchenID = kitchenID;
 
@@ -53,15 +53,15 @@ const emitOrderToKitchen = async (kitchenID) => {
 
         // Convert the orders object to an array of order objects
         const orderList = Object.values(orders);
-        // io.emit(kitchenID, orderList);
+        io.emit(kitchenID, orderList);
 
         console.log(`order from socket: ${JSON.stringify(orderList)}`);
-        return orderList;
+        // return orderList;
 
     } catch (error) {
     // await poolConnection.query('ROLLBACK');
     console.log(`Error! ${error.message}`);
-    return [{FAHAD:'faahd'}];
+    // return [{FAHAD:'faahd'}];
     // res.status(500).json({ status: 500, message: error.message });
 }
 };
