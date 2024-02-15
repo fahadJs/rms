@@ -128,7 +128,9 @@ io.on('connection', (socket) => {
         console.log('User input emitted:', kitchenID);
         // io.emit('getKitchenID', kitchenID);
         // io.emit(kitchenID, k2);
-        emitOrderToKitchen(kitchenID);
+        const orderList = emitOrderToKitchen(kitchenID);
+        console.log(orderList);
+        io.emit(kitchenID, orderList);
     });
 
     // // When a kitchen client joins a room

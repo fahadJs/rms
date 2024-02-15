@@ -53,7 +53,9 @@ const emitOrderToKitchen = async (kitchenID) => {
 
         // Convert the orders object to an array of order objects
         const orderList = Object.values(orders);
-        io.emit(kitchenID, orderList);
+        // io.emit(kitchenID, orderList);
+
+        return orderList;
 
     } catch (error) {
     // await poolConnection.query('ROLLBACK');
