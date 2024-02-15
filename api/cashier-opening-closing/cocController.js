@@ -215,6 +215,17 @@ const posOpening = async (req, res) => {
         const { restaurant_id } = req.params;
         const { username, total, items } = req.body;
 
+        const currentDateQuery = `SELECT time_zone, open_time FROM restaurants WHERE restaurant_id = ?`;
+        const currentDateResult = await poolConnection.query(currentDateQuery, [restaurant_id]);
+
+        if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
+            throw new Error("Time zone not available for the restaurant");
+        }
+
+        const { time_zone, open_time } = currentDateResult[0];
+        const timeZone = time_zone;
+        const time = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
         const getPosClosing = `
             SELECT
                 *
