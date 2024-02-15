@@ -132,10 +132,14 @@ io.on('connection', (socket) => {
     // });
 
     // When a kitchen client joins a room
-    socket.on('joinKitchen', (kitchenID) => {
+    socket.on('getKitchen', (kitchenID) => {
+
+        let k2 = 2
+        io.emit('order', k2);
+        console.log('order', k2);
         // Join the room corresponding to the kitchen ID
-        socket.join(`kitchen-${kitchenID}`);
-        console.log(`Kitchen with ID ${kitchenID} joined room`);
+        // socket.join(`kitchen-${kitchenID}`);
+        // console.log(`Kitchen with ID ${kitchenID} joined room`);
 
         // Call emitOrderToKitchen function when a client joins a kitchen
         // You need to import emitOrderToKitchen function from wherever it is defined
