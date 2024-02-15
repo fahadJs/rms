@@ -126,9 +126,10 @@ io.on('connection', (socket) => {
 
     socket.on('getKitchenID', async (kitchenID) => {
         console.log('User input emitted:', kitchenID);
-        const orderList = await emitOrderToKitchen(kitchenID);
-        console.log(`orderList from app.js: ${orderList}`);
-        io.emit(kitchenID, orderList);
+        emitOrderToKitchen(kitchenID);
+        // const orderList = await emitOrderToKitchen(kitchenID);
+        // console.log(`orderList from app.js: ${orderList}`);
+        // io.emit(kitchenID, orderList);
     });
 
     socket.on('disconnect', () => {
@@ -193,11 +194,11 @@ const emitOrderToKitchen = async (kitchenID) => {
         // return orderList;
 
     } catch (error) {
-    // await poolConnection.query('ROLLBACK');
-    console.log(`Error! ${error.message}`);
-    // return [{FAHAD:'faahd'}];
-    // res.status(500).json({ status: 500, message: error.message });
-}
+        // await poolConnection.query('ROLLBACK');
+        console.log(`Error! ${error.message}`);
+        // return [{FAHAD:'faahd'}];
+        // res.status(500).json({ status: 500, message: error.message });
+    }
 };
 
 module.exports = {
