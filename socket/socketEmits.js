@@ -62,5 +62,4 @@ const emitOrderToKitchen = async (kitchenID) => {
 
 module.exports = {
     emitOrderToKitchen,
-    orderDetails
 };
