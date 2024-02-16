@@ -186,7 +186,7 @@ io.on('connection', (socket) => {
     // console.log(socket);
 
     socket.on('getKitchenID', async (kitchenID) => {
-        console.log('User input emitted:', kitchenID);
+        // console.log('User input emitted:', kitchenID);
         await emitOrderToKitchen(kitchenID);
         // const orderList = await emitOrderToKitchen(kitchenID);
         // console.log(`orderList from app.js: ${orderList}`);

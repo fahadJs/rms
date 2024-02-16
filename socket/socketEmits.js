@@ -74,7 +74,7 @@ const emitOrderToKitchen = async (kitchenID) => {
         const orderList = Object.values(orders);
         io.emit('getKitchenID', orderList);
 
-        console.log(`order from socket: ${JSON.stringify(orderList)}`);
+        // console.log(`order from socket: ${JSON.stringify(orderList)}`);
 
     } catch (error) {
         console.log(`Error! ${error.message}`);
