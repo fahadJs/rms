@@ -19,30 +19,30 @@ const emitOrderToKitchen = async (kitchenID) => {
             const itemsByStatusQuery = `SELECT * FROM order_items JOIN orders ON order_items.OrderID = orders.OrderID WHERE order_items.OrderID = ?`;
             const itemsByStatus = await poolConnection.query(itemsByStatusQuery, [item.OrderID]);
 
-            const restaurant_id = itemsByStatus.restaurant_id;
-            const waiter_id = itemsByStatus.waiter_id;
-            const table_id = itemsByStatus.table_id;
+            const restaurant_id = itemsByStatus[0].restaurant_id;
+            const waiter_id = itemsByStatus[0].waiter_id;
+            const table_id = itemsByStatus[0].table_id;
 
             const waiterQuery = `SELECT * FROM waiters WHERE waiter_id = ?`;
             const waiterRes = await poolConnection.query(waiterQuery, [waiter_id]);
 
-            const tableQuery = `SELECT table_name, table_id FROM tables WHERE table_id = ?`;
+            const tableQuery = `SELECT * FROM tables WHERE table_id = ?`;
             const tableRes = await poolConnection.query(tableQuery, [table_id]);
 
-            const tableName = `Table: ${tableRes.table_name}`;
+            const tableName = `Table: ${tableRes[0].table_name}`;
 
             const orderID = item.OrderID;
             const waiterName = waiterRes[0].waiter_name;
-            const waiterId = waiterRes[0].waiter_id;
-            const tableId = tableRes.table_id;
+            // const waiterId = waiterRes[0].waiter_id;
+            // const tableId = tableRes.table_id;
 
             if (!orders[orderID]) {
                 orders[orderID] = {
                     OrderID: orderID,
-                    tableID: tableId,
+                    tableID: table_id,
                     tableName: tableName,
                     waiterName: waiterName,
-                    waiterID: waiterId,
+                    waiterID: waiter_id,
                     items: []
                 };
             }
