@@ -4,11 +4,11 @@ const mysql = require('mysql');
 
 const pool = mysql.createPool({
     // port: process.env.DB_PORT,
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
-    connectionLimit: 10,
+    host: process.env.DB_HOST_TEST,
+    user: process.env.DB_USER_TEST,
+    password: process.env.DB_PASS_TEST,
+    database: process.env.DB_NAME_TEST,
+    connectionLimit: 1,
     // connectTimeout  : 60 * 60 * 1000,
     // acquireTimeout  : 60 * 60 * 1000,
     // timeout         : 60 * 60 * 1000,
@@ -22,16 +22,16 @@ const query = (sql, values) => {
                 reject(error);
                 return;
             } else {
-                console.info('Successful Pool Connection with MySQL server.');
+                console.log('Successful Pool Connection with MySQL server.');
                 connection.query(sql, values, (queryErr, results, fields) => {
-                    console.info(`Connection Released back to pool!`);
+                    // console.info(`Connection Released back to pool!`);
                     connection.release();
                     if (queryErr) {
-                        console.error(`Error while executing query! Error: ${queryErr}`);
-                        console.error(`Connection Rejected!`);
+                        console.log(`Error while executing query! Error: ${queryErr}`);
+                        console.log(`Connection Rejected!`);
                         reject(queryErr);
                     } else {
-                        console.info(`Connection Resolved!`);
+                        // console.info(`Connection Resolved!`);
                         resolve(results);
                     }
                 });
