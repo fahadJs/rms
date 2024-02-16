@@ -22,6 +22,8 @@ const emitOrderToKitchen = async (kitchenID) => {
             const restaurant_id = itemsByStatus[0].restaurant_id;
             const waiter_id = itemsByStatus[0].waiter_id;
             const table_id = itemsByStatus[0].table_id;
+            const status = itemsByStatus[0].KStatus;
+            const time = itemsByStatus[0].time;
 
             const waiterQuery = `SELECT * FROM waiters WHERE waiter_id = ?`;
             const waiterRes = await poolConnection.query(waiterQuery, [waiter_id]);
@@ -43,6 +45,8 @@ const emitOrderToKitchen = async (kitchenID) => {
                     tableName: tableName,
                     waiterName: waiterName,
                     waiterID: waiter_id,
+                    status: status,
+                    time: time,
                     items: []
                 };
             }
