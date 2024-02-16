@@ -52,7 +52,7 @@ const create = async (req, res) => {
             //     io.emit(kitchenID, orderList);
             // });
 
-            emitOrderToKitchen(kitchenID);
+            await emitOrderToKitchen(kitchenID);
         }
 
         const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_status = ? WHERE table_id = ?';

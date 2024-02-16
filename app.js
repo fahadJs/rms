@@ -44,7 +44,7 @@ const cocRouter = require('./api/cashier-opening-closing/cocRouter');
 const sumRouter = require('./api/summary/sumRouter');
 
 // SOCKET TEST
-const socketRouter = require('./api/socket/socketRouter');
+// const socketRouter = require('./api/socket/socketRouter');
 
 // TEST RMS CPANEL
 const testRmsRouter = require('./api/test-rms/testRmsRouter');
@@ -98,7 +98,7 @@ app.use('/api/coc', cocRouter);
 app.use('/api/summary', sumRouter);
 
 // SOCKET
-app.use('/api/socket', socketRouter);
+// app.use('/api/socket', socketRouter);
 
 // TEST RMS CPANEL
 app.use('/api/testrms', testRmsRouter);
