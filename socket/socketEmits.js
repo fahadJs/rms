@@ -1,14 +1,7 @@
-// const { getAllWithIngredients } = require('../api/recipe-items/riController');
-// const io = require('../app');
 const poolConnection = require('../config/database');
-
-// function triggerEmitOrderToKitchen() {
-//     emitOrderToKitchen();
-// }
 
 let io;
 
-// Function to initialize the io instance
 const initializeIO = (socketIO) => {
     io = socketIO;
 };
@@ -33,43 +26,54 @@ const emitOrderToKitchen = async (kitchenID) => {
             const waiterQuery = `SELECT * FROM waiters WHERE waiter_id = ?`;
             const waiterRes = await poolConnection.query(waiterQuery, [waiter_id]);
 
-            const tableQuery = `SELECT table_name FROM tables WHERE table_id = ?`;
+            const tableQuery = `SELECT table_name, table_id FROM tables WHERE table_id = ?`;
             const tableRes = await poolConnection.query(tableQuery, [table_id]);
 
             const tableName = `Table: ${tableRes.table_name}`;
 
             const orderID = item.OrderID;
+            const waiterName = waiterRes[0].waiter_name;
+            const waiterId = waiterRes[0].waiter_id;
+            const tableId = tableRes.table_id;
 
-            // If orderID doesn't exist in the orders object, create a new entry
             if (!orders[orderID]) {
                 orders[orderID] = {
                     OrderID: orderID,
+                    tableID: tableId,
+                    tableName: tableName,
+                    waiterName: waiterName,
+                    waiterID: waiterId,
                     items: []
                 };
             }
 
-            // Push item details to the items array of the respective orderID
+            const extrasQuery = `SELECT * FROM order_extras JOIN menu_extras ON order_extras.extras_id = menu_extras.extras_id WHERE OrderItemID = ?`;
+            const extrasRes = await poolConnection.query(extrasQuery, [item.OrderItemID]);
+
+            let extras = [];
+            if (extrasRes.length > 0) {
+                extras = extrasRes.map(extra => ({
+                    extrasName: extra.extras_name,
+                    // extrasPrice: extra.extras_price
+                }));
+            }
+
             orders[orderID].items.push({
-                // Add relevant item details here, for example:
+                itemId: item.OrderItemID,
                 name: item.ItemName,
-                price: item.Price,
                 quantity: item.Quantity,
-                // etc.
+                note: item.Note,
+                extras: extras,
             });
         }
 
-        // Convert the orders object to an array of order objects
         const orderList = Object.values(orders);
         io.emit(kitchenID, orderList);
 
         console.log(`order from socket: ${JSON.stringify(orderList)}`);
-        // return orderList;
 
     } catch (error) {
-        // await poolConnection.query('ROLLBACK');
         console.log(`Error! ${error.message}`);
-        // return [{FAHAD:'faahd'}];
-        // res.status(500).json({ status: 500, message: error.message });
     }
 };
 
