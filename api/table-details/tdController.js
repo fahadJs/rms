@@ -512,7 +512,7 @@ const mrkPaid = async (req, res) => {
 
                 const fileContent = fs.readFileSync(pdfPath, 'utf8');
                 console.log('File Content:', fileContent);
-                upload.uploadFile(pdfPath, fileContent);
+                await upload.uploadFile(pdfPath, fileContent);
                 
                 // const transporter = nodemailer.createTransport({
                 //     service: 'gmail',
