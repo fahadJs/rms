@@ -151,12 +151,11 @@ const getAllOrders = async (req, res) => {
 
         const orders = {};
 
-        // let series = 1; // Initialize series counter
+        let series = 1; // Initialize series counter
 
         result.forEach(row => {
             let {
                 OrderID,
-                series = 1,
                 waiter_id,
                 table_id,
                 table_name,
