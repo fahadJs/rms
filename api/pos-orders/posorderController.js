@@ -466,8 +466,7 @@ const getAllOrders = async (req, res) => {
                 pos_order_extras.PosOrderExtrasID,
                 menu_extras.extras_id,
                 menu_extras.extras_name,
-                menu_extras.extras_price,
-                ROW_NUMBER() OVER () AS series
+                menu_extras.extras_price
             FROM pos_orders
             LEFT JOIN pos_order_items ON pos_orders.PosOrderID = pos_order_items.PosOrderID
             LEFT JOIN pos_order_extras ON pos_order_items.PosOrderItemID = pos_order_extras.PosOrderItemID
@@ -479,6 +478,8 @@ const getAllOrders = async (req, res) => {
         const posResult = await poolConnection.query(getPosOrdersQuery, [restaurant_id]);
 
         const posOrders = {};
+
+        let series = 1; // Initialize series counter
 
         posResult.forEach(row => {
             const {
@@ -517,6 +518,7 @@ const getAllOrders = async (req, res) => {
                     paid_via,
                     items: []
                 };
+                series++;
             }
 
             const existingItem = posOrders[PosOrderID].items.find(item => item.PosOrderItemID === PosOrderItemID);

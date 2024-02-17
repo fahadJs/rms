@@ -29,18 +29,19 @@ const getAll = async (req, res) => {
   const { restaurantId } = req.params;
   try {
     const getPayments = `
-    SELECT *,
-       @row_number := @row_number + 1 AS series
-FROM (
-    SELECT *
-    FROM payment_methods
-    WHERE restaurant_id = ?
-) AS filtered_payment_methods
-CROSS JOIN (SELECT @row_number := 0) AS row_init;
+      SELECT *
+      FROM payment_methods 
+      WHERE restaurant_id = ?
       `;
     const getPaymentsRes = await poolConnection.query(getPayments, [restaurantId]);
 
-    res.status(200).json(getPaymentsRes);
+    let series = 1;
+    const paymentsWithSeries = getPaymentsRes.map(payment => ({
+        ...payment,
+        series: series++
+    }));
+
+    res.status(200).json(paymentsWithSeries);
   } catch (error) {
     console.error(`Error fetching payment method: ${error.message}`);
     res.status(500).json({ status: 500, message: error.message });
