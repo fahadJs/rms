@@ -18,14 +18,14 @@ const printDaily = async (req, res) => {
         const formattedTime = moment.tz(timeZone).format('HH:mm:ss');
         const openingTime = moment.tz(timeZone).startOf('day').format('YYYY-MM-DD') + ' ' + open_time;
 
-        const getTheOrder = `SELECT * FROM orders WHERE time >= ? AND restaurant_id = ?`;
+        const getTheOrder = `SELECT * FROM orders WHERE time >= ? AND restaurant_id = ? AND order_status != 'cancelled'`;
         // const getTheOrder = `SELECT * FROM orders`;
         const getTheOrderRes = await poolConnection.query(getTheOrder, [openingTime, restaurant_id]);
         // const getTheOrderRes = await poolConnection.query(getTheOrder);
 
         const orderDetails = getTheOrderRes;
 
-        const getThePosOrder = `SELECT * FROM pos_orders WHERE time >= ? AND restaurant_id = ?`;
+        const getThePosOrder = `SELECT * FROM pos_orders WHERE time >= ? AND restaurant_id = ? AND IStatus != 'cancelled'`;
         // const getThePosOrder = `SELECT * FROM pos_orders`;
         const getThePosOrderRes = await poolConnection.query(getThePosOrder, [openingTime, restaurant_id]);
         // const getThePosOrderRes = await poolConnection.query(getThePosOrder);
