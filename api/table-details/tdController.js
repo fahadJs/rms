@@ -408,7 +408,7 @@ const mrkPaid = async (req, res) => {
                 const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
                 // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
-                const pdfPath = path.join(__dirname, `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`);
+                const pdfPath = newPath.join(__dirname, `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`);
                 console.log(pdfPath);
                 const paperWidth = 302;
 
