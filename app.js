@@ -7,7 +7,7 @@ const poolConnection = require('./config/database');
 const { emitOrderToKitchen, initializeIO, orderStatusUpdate, waiterReceivingOrder } = require('./socket/socketEmits');
 
 const app = express();
-const port = 8443;
+const port = 443;
 
 const options = {
     key: fs.readFileSync('./server.key'),
@@ -139,8 +139,8 @@ io.on('connection', (socket) => {
 });
 app.set('socketio', io);
 
-app.listen(8000, () => {
-    console.log(`Server up and running 8000!\nConnection will be established once any request hits!`);
+server.listen(port || 3000, () => {
+    console.log(`Server up and running!\nConnection will be established once any request hits!`);
 })
 
 initializeIO(io);
