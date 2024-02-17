@@ -144,7 +144,8 @@ const getAllOrders = async (req, res) => {
             JOIN
                 tables ON orders.table_id = tables.table_id
             WHERE
-                orders.restaurant_id = ?;
+                orders.restaurant_id = ?
+                AND order_items.IStatus != 'cancelled'
         `;
 
         const result = await poolConnection.query(sql, [restaurant_id]);

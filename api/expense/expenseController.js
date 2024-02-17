@@ -280,6 +280,7 @@ const getWaiterMonthlyExpenseAdminAllMonths = async (req, res) => {
         WHERE 
             o.restaurant_id = ?
             AND o.time >= ?
+            AND o.order_status != 'cancelled'
     `;
         const ordersData = await poolConnection.query(ordersQuery, [restaurantId, startOfMonth]);
 
@@ -381,6 +382,7 @@ const getWaiterMonthlyExpenseAdmin = async (req, res) => {
             WHERE 
                 o.restaurant_id = ?
                 AND o.time >= ?
+                AND o.order_status != 'cancelled'
             ORDER BY 
                 o.time;
         `;
@@ -465,6 +467,7 @@ const getWaiterDailyExpenseAdmin = async (req, res) => {
             WHERE 
                 o.restaurant_id = ?
                 AND o.time >= ?
+                AND o.order_status != 'cancelled'
             ORDER BY 
                 o.time;
         `;
@@ -542,6 +545,7 @@ const getWaiterWeeklyExpenseAdmin = async (req, res) => {
             WHERE 
                 o.restaurant_id = ?
                 AND o.time >= ?
+                AND o.order_status != 'cancelled'
             ORDER BY 
                 o.time;
         `;
@@ -698,6 +702,7 @@ const getWaiterMonthlyExpenseAdminData = async (restaurantId) => {
             WHERE 
                 o.restaurant_id = ?
                 AND o.time >= ?
+                AND o.order_status != 'cancelled'
             ORDER BY 
                 o.time;
         `;
@@ -890,6 +895,7 @@ const getWaiterDailyExpenseAdminData = async (restaurantId) => {
             WHERE 
                 o.restaurant_id = ?
                 AND o.time >= ?
+                AND o.order_status != 'cancelled'
             ORDER BY 
                 o.time;
         `;

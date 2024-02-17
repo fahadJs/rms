@@ -23,7 +23,7 @@ const getAll = async (req, res) => {
         JOIN
             tables t ON o.table_id = t.table_id
         WHERE
-            o.table_id = ? AND o.order_status != 'paid' AND o.restaurant_id = ?;`;
+            o.table_id = ? AND o.order_status NOT IN ('paid', 'cancelled') AND o.restaurant_id = ?;`;
 
         const ordersResult = await poolConnection.query(ordersQuery, [table_id, restaurant_id]);
 
@@ -55,6 +55,7 @@ const getAll = async (req, res) => {
                 menu_extras me ON oe.extras_id = me.extras_id
             WHERE
                 oi.OrderID IN (?)
+                AND oi.IStatus != 'cancelled'
         `;
 
         const orderIDs = ordersResult.map(order => order.OrderID);

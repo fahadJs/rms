@@ -115,7 +115,8 @@ const getAll = async (req, res) => {
                 WHERE
                     o.restaurant_id = ? AND
                     (o.waiter_closed = 'pending' OR o.waiter_closed = 'closed-r') AND
-                    o.time >= ?;
+                    o.time >= ? AND
+                    o.order_status != 'cancelled'
             `;
         }
     } catch (error) {
