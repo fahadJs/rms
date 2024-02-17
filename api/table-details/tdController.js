@@ -151,7 +151,7 @@ const removeItem = async (req, res) => {
         const updateInventoryQuery = 'UPDATE inventory SET on_hand = on_hand + ? WHERE MenuItemID = ?';
         await poolConnection.query(updateInventoryQuery, [removedItemQuantity, menuItemId]);
 
-        const remainingItemsQuery = 'SELECT * FROM order_items WHERE OrderID = ?';
+        const remainingItemsQuery = `SELECT * FROM order_items WHERE OrderID = ? AND IStatus = 'pending'`;
         const remainingItemsResult = await poolConnection.query(remainingItemsQuery, [orderId]);
 
         if (remainingItemsResult.length === 0) {
