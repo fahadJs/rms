@@ -161,6 +161,9 @@ const removeItem = async (req, res) => {
             const deleteOrderQuery = 'UPDATE orders SET order_status = ? WHERE OrderID = ?';
             await poolConnection.query(deleteOrderQuery, ['cancelled', orderId]);
 
+            const removeALLItemQuery = 'UPDATE order_items SET KStatus = ? WHERE OrderID = ?';
+            await poolConnection.query(removeALLItemQuery, ['cancelled', orderId]);
+
             const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = ?';
             await poolConnection.query(updateTableQuery, [checkOrderResult[0].table_id]);
         }
