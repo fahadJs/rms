@@ -7,7 +7,7 @@ const poolConnection = require('./config/database');
 const { emitOrderToKitchen, initializeIO, orderStatusUpdate, waiterReceivingOrder } = require('./socket/socketEmits');
 
 const app = express();
-const port = 443;
+const port = 8443;
 
 const options = {
     key: fs.readFileSync('./server.key'),
