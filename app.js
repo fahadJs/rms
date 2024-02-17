@@ -139,8 +139,8 @@ io.on('connection', (socket) => {
 });
 app.set('socketio', io);
 
-server.listen(port || 3000, () => {
-    console.log(`Server up and running ${port}!\nConnection will be established once any request hits!`);
+app.listen(8000, () => {
+    console.log(`Server up and running 8000!\nConnection will be established once any request hits!`);
 })
 
 initializeIO(io);
