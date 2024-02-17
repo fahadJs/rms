@@ -21,11 +21,11 @@ const emitOrderToKitchen = async (kitchenID) => {
             const itemsByStatus = await poolConnection.query(itemsByStatusQuery, [item.OrderID]);
 
             // const restaurant_id = itemsByStatus[0].restaurant_id;
-            const waiter_id = itemsByStatus[0].waiter_id;
-            const table_id = itemsByStatus[0].table_id;
-            const status = itemsByStatus[0].KStatus;
-            const time = itemsByStatus[0].time;
-            const logTime = itemsByStatus[0].log_time;
+            const waiter_id = itemsByStatus.waiter_id;
+            const table_id = itemsByStatus.table_id;
+            const status = itemsByStatus.KStatus;
+            const time = itemsByStatus.time;
+            const logTime = itemsByStatus.log_time;
 
             const waiterQuery = `SELECT * FROM waiters WHERE waiter_id = ?`;
             const waiterRes = await poolConnection.query(waiterQuery, [waiter_id]);
@@ -33,10 +33,10 @@ const emitOrderToKitchen = async (kitchenID) => {
             const tableQuery = `SELECT * FROM tables WHERE table_id = ?`;
             const tableRes = await poolConnection.query(tableQuery, [table_id]);
 
-            const tableName = `Table: ${tableRes[0].table_name}`;
+            const tableName = `Table: ${tableRes.table_name}`;
 
             const orderID = item.OrderID;
-            const waiterName = waiterRes[0].waiter_name;
+            const waiterName = waiterRes.waiter_name;
             // const waiterId = waiterRes[0].waiter_id;
             // const tableId = tableRes.table_id;
 
