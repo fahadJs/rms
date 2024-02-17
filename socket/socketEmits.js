@@ -11,7 +11,7 @@ const emitOrderToKitchen = async (kitchenID) => {
     try {
         const KitchenID = kitchenID;
 
-        const orderItems = `SELECT * FROM order_items WHERE SStatus = 'not-sent' AND KitchenID = ?`;
+        const orderItems = `SELECT * FROM order_items WHERE KitchenID = ?`;
         const orderItemsRes = await poolConnection.query(orderItems, [KitchenID]);
 
         // console.log(`order: ${JSON.stringify(orderItemsRes)}`);
@@ -68,6 +68,7 @@ const emitOrderToKitchen = async (kitchenID) => {
                 name: item.ItemName,
                 quantity: item.Quantity,
                 note: item.Note,
+                status: item.IStatus,
                 extras: extras,
             });
         }

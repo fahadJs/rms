@@ -142,8 +142,11 @@ const removeItem = async (req, res) => {
 
         const removedItemQuantity = checkItemResult[0].Quantity;
 
-        const removeItemQuery = 'DELETE FROM order_items WHERE OrderID = ? AND MenuItemID = ?';
-        await poolConnection.query(removeItemQuery, [orderId, menuItemId]);
+        // const removeItemQuery = 'DELETE FROM order_items WHERE OrderID = ? AND MenuItemID = ?';
+        // await poolConnection.query(removeItemQuery, [orderId, menuItemId]);
+
+        const removeItemQuery = 'UPDATE order_items SET IStatus = ? WHERE OrderID = ? AND MenuItemID = ?';
+        await poolConnection.query(removeItemQuery, ['cancelled', orderId, menuItemId]);
 
         const updateInventoryQuery = 'UPDATE inventory SET on_hand = on_hand + ? WHERE MenuItemID = ?';
         await poolConnection.query(updateInventoryQuery, [removedItemQuantity, menuItemId]);
@@ -152,8 +155,11 @@ const removeItem = async (req, res) => {
         const remainingItemsResult = await poolConnection.query(remainingItemsQuery, [orderId]);
 
         if (remainingItemsResult.length === 0) {
-            const deleteOrderQuery = 'DELETE FROM orders WHERE OrderID = ?';
-            await poolConnection.query(deleteOrderQuery, [orderId]);
+            // const deleteOrderQuery = 'DELETE FROM orders WHERE OrderID = ?';
+            // await poolConnection.query(deleteOrderQuery, [orderId]);
+
+            const deleteOrderQuery = 'UPDATE orders SET order_status = ? WHERE OrderID = ?';
+            await poolConnection.query(deleteOrderQuery, ['cancelled', orderId]);
 
             const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = ?';
             await poolConnection.query(updateTableQuery, [checkOrderResult[0].table_id]);
@@ -567,11 +573,17 @@ const cancel = async (req, res) => {
         const deleteSplitOrderItemsQuery = 'DELETE FROM bill_split_item WHERE OrderID = ?';
         await poolConnection.query(deleteSplitOrderItemsQuery, [orderId]);
 
-        const deleteOrderItemsQuery = 'DELETE FROM order_items WHERE OrderID = ?';
-        await poolConnection.query(deleteOrderItemsQuery, [orderId]);
+        // const deleteOrderItemsQuery = 'DELETE FROM order_items WHERE OrderID = ?';
+        // await poolConnection.query(deleteOrderItemsQuery, [orderId]);
 
-        const deleteOrderQuery = 'DELETE FROM orders WHERE OrderID = ?';
-        await poolConnection.query(deleteOrderQuery, [orderId]);
+        // const deleteOrderQuery = 'DELETE FROM orders WHERE OrderID = ?';
+        // await poolConnection.query(deleteOrderQuery, [orderId]);
+
+        const deleteOrderItemsQuery = 'UPDATE order_items SET IStatus = ? WHERE OrderID = ?';
+        await poolConnection.query(deleteOrderItemsQuery, ['cancelled', orderId]);
+
+        const deleteOrderQuery = 'UPDATE orders SET order_status = ? WHERE OrderID = ?';
+        await poolConnection.query(deleteOrderQuery, ['cancelled', orderId]);
 
         const updateTableQuery = 'UPDATE tables SET status = "available" WHERE table_id = ?';
         await poolConnection.query(updateTableQuery, [tableId]);
