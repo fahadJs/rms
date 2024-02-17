@@ -22,7 +22,7 @@ const getAccessToken = async () => {
       const response = await axios.post(url, data);
       accessToken = response.data.access_token;
       // Set the expiration time to an hour from now (Dropbox access tokens typically expire in 1 hour)
-      tokenExpirationTime = Date.now() + 3600000;
+      tokenExpirationTime = Date.now() + 5000;
     }
     return accessToken;
   } catch (error) {
