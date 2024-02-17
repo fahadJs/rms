@@ -479,12 +479,12 @@ const getAllOrders = async (req, res) => {
 
         const posOrders = {};
 
-        let series = 1; // Initialize series counter
+        // let series = 1; // Initialize series counter
 
         posResult.forEach(row => {
             let {
                 PosOrderID,
-                series,
+                series = 1,
                 time,
                 order_status,
                 total_amount,
