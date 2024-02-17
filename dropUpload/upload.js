@@ -10,42 +10,46 @@ let accessToken = null;
 let tokenExpirationTime = null;
 
 const getAccessToken = async () => {
-  try {
-    if (!accessToken || Date.now() >= tokenExpirationTime) {
-      const url = 'https://api.dropbox.com/oauth2/token';
-      const data = new URLSearchParams();
-      data.append('refresh_token', REFRESH_TOKEN);
-      data.append('grant_type', 'refresh_token');
-      data.append('client_id', CLIENT_ID);
-      data.append('client_secret', CLIENT_SECRET);
+    try {
+        if (!accessToken || Date.now() >= tokenExpirationTime) {
+            const url = 'https://api.dropbox.com/oauth2/token';
+            const data = new URLSearchParams();
+            data.append('refresh_token', REFRESH_TOKEN);
+            data.append('grant_type', 'refresh_token');
+            data.append('client_id', CLIENT_ID);
+            data.append('client_secret', CLIENT_SECRET);
 
-      const response = await axios.post(url, data);
-      accessToken = response.data.access_token;
-      // Set the expiration time to an hour from now (Dropbox access tokens typically expire in 1 hour)
-      tokenExpirationTime = Date.now() + 5000;
+            const response = await axios.post(url, data);
+            accessToken = response.data.access_token;
+            // Set the expiration time to an hour from now (Dropbox access tokens typically expire in 1 hour)
+            tokenExpirationTime = Date.now() + 5000;
+        }
+        return accessToken;
+    } catch (error) {
+        console.error('Error refreshing access token:', error);
+        throw error;
     }
-    return accessToken;
-  } catch (error) {
-    console.error('Error refreshing access token:', error);
-    throw error;
-  }
 };
 
 const uploadFile = async (path, content) => {
-  try {
-    const token = await getAccessToken();
-    const dbx = new Dropbox({ accessToken: token });
+    try {
+        const token = await getAccessToken();
+        const dbx = new Dropbox({ accessToken: token });
 
-    const response = await dbx.filesUpload({
-      path: '/Test/' + path,
-      contents: content,
-      mode: 'add',
-      autorename: true,
-    });
-    console.log('File uploaded:', response);
-  } catch (error) {
-    console.error('Error uploading file:', error);
-  }
+        const response = await dbx.filesUpload({
+            path: '/Test/' + path,
+            contents: content,
+            mode: 'add',
+            autorename: true,
+
+            headers: {
+                'Content-Type': 'application/pdf'
+            }
+        });
+        console.log('File uploaded:', response);
+    } catch (error) {
+        console.error('Error uploading file:', error);
+    }
 };
 
 // Example usage
