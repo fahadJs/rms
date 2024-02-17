@@ -29,7 +29,7 @@ const getAll = async (req, res) => {
   const { restaurantId } = req.params;
   try {
     const getPayments = `
-      SELECT *, ROW_NUMBER() OVER () AS series
+      SELECT *, ROW_NUMBER() OVER() AS series
       FROM payment_methods 
       WHERE restaurant_id = ?
       `;
