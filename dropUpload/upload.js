@@ -39,7 +39,7 @@ const uploadFile = async (path, content) => {
     const response = await dbx.filesUpload({
       path: '/Test/' + path,
       contents: content,
-      mode: add,
+      mode: 'add',
       autorename: true,
     });
     console.log('File uploaded:', response);
