@@ -39,6 +39,10 @@ const emitOrderToKitchen = async (kitchenID) => {
             // const waiterId = waiterRes[0].waiter_id;
             // const tableId = tableRes.table_id;
 
+            const logTimeQuery = `SELECT log_time FROM kitchens_log WHERE OrderID = ?`;
+            const logTimeRes = await poolConnection.query(logTimeQuery, [orderID]);
+            const logTime = logTimeRes.length > 0 ? logTimeRes[0].log_time : null;
+
             if (!orders[orderID]) {
                 orders[orderID] = {
                     OrderID: orderID,
@@ -48,6 +52,7 @@ const emitOrderToKitchen = async (kitchenID) => {
                     waiterID: waiter_id,
                     status: status,
                     time: time,
+                    logTime: logTime,
                     items: []
                 };
             }
