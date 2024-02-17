@@ -408,7 +408,7 @@ const mrkPaid = async (req, res) => {
                 // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
-                console.log(pdfPath);
+                // console.log(pdfPath);
                 const paperWidth = 302;
 
                 const pdf = new PDFDocument({

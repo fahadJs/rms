@@ -35,9 +35,6 @@ const uploadFile = async (path, content) => {
     try {
         const token = await getAccessToken();
         const dbx = new Dropbox({ accessToken: token });
-
-        console.log(content);
-        console.log(path);
         const response = await dbx.filesUpload({
             path: '/Test/' + path,
             contents: content,
