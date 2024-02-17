@@ -4,7 +4,7 @@ const https = require('https');
 const fs = require('fs');
 const socketIo = require('socket.io');
 const poolConnection = require('./config/database');
-const { emitOrderToKitchen, initializeIO, orderStatusUpdate } = require('./socket/socketEmits');
+const { emitOrderToKitchen, initializeIO, orderStatusUpdate, waiterReceivingOrder } = require('./socket/socketEmits');
 
 const app = express();
 const port = 443;
@@ -124,6 +124,11 @@ io.on('connection', (socket) => {
 
     socket.on('markOrderCompleted', async (orderData) => {
         await orderStatusUpdate(orderData);
+        await emitOrderToKitchen(orderData.kitchenID);
+    });
+
+    socket.on('waiterReceivedOrder', async (orderData) => {
+        await waiterReceivingOrder(orderData);
         await emitOrderToKitchen(orderData.kitchenID);
     });
 

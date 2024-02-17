@@ -87,7 +87,7 @@ const orderStatusUpdate = async (orderData) => {
         const { orderID, kitchenID, orderCompletedTime, restaurantID } = orderData;
 
         const updateOrderItemsKitchenStatus = `UPDATE order_items SET KStatus = ? WHERE OrderID = ? AND KitchenID = ?`;
-        await poolConnection.query(updateOrderItemsKitchenStatus, ['COMPLETED', orderID, kitchenID]);
+        await poolConnection.query(updateOrderItemsKitchenStatus, ['completed', orderID, kitchenID]);
 
         const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
         const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurantID]);
@@ -102,8 +102,29 @@ const orderStatusUpdate = async (orderData) => {
     }
 }
 
+const waiterReceivingOrder = async (orderData) => {
+    try {
+        const { orderID, kitchenID, waiterReceivedTime, restaurantID, waiterID } = orderData;
+
+        // const updateOrderItemsKitchenStatus = `UPDATE order_items SET KStatus = ? WHERE OrderID = ? AND KitchenID = ?`;
+        // await poolConnection.query(updateOrderItemsKitchenStatus, ['completed', orderID, kitchenID]);
+
+        const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+        const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurantID]);
+
+        const timeZone = timeZoneResult[0].time_zone;
+        const orderTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+        const insertKitchenTimeLog = `INSERT INTO waiters_log (time_diff, log_time, OrderID, KitchenID, waiter_id) VALUES (?, ?, ?, ?, ?)`;
+        await poolConnection.query(insertKitchenTimeLog, [waiterReceivedTime, orderTime, orderID, kitchenID, waiterID]);
+    } catch (error) {
+        console.log(`Error! ${error.message}`);
+    }
+}
+
 module.exports = {
     emitOrderToKitchen,
     initializeIO,
-    orderStatusUpdate
+    orderStatusUpdate,
+    waiterReceivingOrder
 };
