@@ -3,6 +3,7 @@ const moment = require('moment-timezone');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
+const upload = require('../../dropUpload/upload');
 
 const createEqSplit = async (req, res) => {
     try {
@@ -440,7 +441,7 @@ const createItSplit = async (req, res) => {
             const email = `info@anunziointernational.com`;
 
             try {
-                const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+                // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
                 // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
@@ -515,6 +516,7 @@ const createItSplit = async (req, res) => {
                 }
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
+                pdf.moveDown();
                 pdf.text(mb1, 10, pdf.y, { align: 'left' });
                 pdf.text(mb1Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
                 pdf.text(mb2, 10, pdf.y, { align: 'left' });
@@ -544,34 +546,37 @@ const createItSplit = async (req, res) => {
     
                 pdf.end();
 
-                const transporter = nodemailer.createTransport({
-                    service: 'gmail',
-                    auth: {
-                        user: 'siddiquiboy360@gmail.com',
-                        pass: 'gkop jksn urdi dgvv'
-                    }
-                });
+                const fileContent = fs.createReadStream(pdfPath);
+                await upload.uploadFile(pdfPath, fileContent);
 
-                const mailOptions = {
-                    from: 'siddiquiboy360@gmail.com',
-                    to,
-                    attachments: [
-                        {
-                            filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
-                            path: pdfPath,
-                            encoding: 'base64'
-                        }
-                    ]
-                };
+                // const transporter = nodemailer.createTransport({
+                //     service: 'gmail',
+                //     auth: {
+                //         user: 'siddiquiboy360@gmail.com',
+                //         pass: 'gkop jksn urdi dgvv'
+                //     }
+                // });
 
-                const info = await transporter.sendMail(mailOptions);
+                // const mailOptions = {
+                //     from: 'siddiquiboy360@gmail.com',
+                //     to,
+                //     attachments: [
+                //         {
+                //             filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+                //             path: pdfPath,
+                //             encoding: 'base64'
+                //         }
+                //     ]
+                // };
 
-                for (const split of orderDetails) {
-                    const updateReciptStatus = `UPDATE bill_split_item SET receipt = 'true' WHERE SplitItemID = ?`;
-                    await poolConnection.query(updateReciptStatus, [split.SplitItemID]);
-                }
+                // const info = await transporter.sendMail(mailOptions);
 
-                console.log('Email Sent! and Status updated!: ', info);
+                // for (const split of orderDetails) {
+                //     const updateReciptStatus = `UPDATE bill_split_item SET receipt = 'true' WHERE SplitItemID = ?`;
+                //     await poolConnection.query(updateReciptStatus, [split.SplitItemID]);
+                // }
+
+                console.log('File Sent! and Status updated!');
 
                 fs.unlinkSync(pdfPath);
             } catch (error) {

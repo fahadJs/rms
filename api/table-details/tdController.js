@@ -404,7 +404,7 @@ const mrkPaid = async (req, res) => {
             const email = `info@anunziointernational.com`;
 
             try {
-                const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+                // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
                 // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
@@ -481,6 +481,7 @@ const mrkPaid = async (req, res) => {
 
                 pdf.moveDown();
                 drawDottedLine(pdf.y, paperWidth);
+                pdf.moveDown();
                 pdf.text(mb1, 10, pdf.y, { align: 'left' });
                 pdf.text(mb1Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
                 pdf.text(mb2, 10, pdf.y, { align: 'left' });
@@ -534,7 +535,7 @@ const mrkPaid = async (req, res) => {
                 // };
 
                 // const info = await transporter.sendMail(mailOptions);
-                // console.log('Email Sent! and Status updated!: ', info);
+                console.log('File Sent! and Status updated!');
                 fs.unlinkSync(pdfPath);
             } catch (error) {
                 console.log(error);

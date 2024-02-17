@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const axios = require('axios');
+const upload = require('../../dropUpload/upload');
 
 const getDenominations = async (req, res) => {
     try {
@@ -535,7 +536,7 @@ const openCashDrawer = async (req, res) => {
         const { restaurant_id } = req.params;
 
         try {
-            const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+            // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
             // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
             const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
@@ -565,29 +566,32 @@ const openCashDrawer = async (req, res) => {
 
             pdf.end();
 
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: 'siddiquiboy360@gmail.com',
-                    pass: 'gkop jksn urdi dgvv'
-                }
-            });
+            const fileContent = fs.createReadStream(pdfPath);
+            await upload.uploadFile(pdfPath, fileContent);
 
-            const mailOptions = {
-                from: 'siddiquiboy360@gmail.com',
-                to,
-                attachments: [
-                    {
-                        filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
-                        path: pdfPath,
-                        encoding: 'base64'
-                    }
-                ]
-            };
+            // const transporter = nodemailer.createTransport({
+            //     service: 'gmail',
+            //     auth: {
+            //         user: 'siddiquiboy360@gmail.com',
+            //         pass: 'gkop jksn urdi dgvv'
+            //     }
+            // });
 
-            const info = await transporter.sendMail(mailOptions);
+            // const mailOptions = {
+            //     from: 'siddiquiboy360@gmail.com',
+            //     to,
+            //     attachments: [
+            //         {
+            //             filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+            //             path: pdfPath,
+            //             encoding: 'base64'
+            //         }
+            //     ]
+            // };
 
-            console.log('Cash Drawer Opened!', info);
+            // const info = await transporter.sendMail(mailOptions);
+
+            console.log('Cash Drawer Opened!');
 
             fs.unlinkSync(pdfPath);
 
