@@ -41,7 +41,7 @@ const emitOrderToKitchen = async (kitchenID) => {
 
             const logTimeQuery = `SELECT log_time FROM kitchens_log WHERE OrderID = ?`;
             const logTimeRes = await poolConnection.query(logTimeQuery, [orderID]);
-            const logTime = logTimeRes.length > 0 ? logTimeRes[0].log_time : null;
+            const logTime = logTimeRes.length > 0 ? logTimeRes[0].log_time : 0;
 
             if (!orders[orderID]) {
                 orders[orderID] = {
