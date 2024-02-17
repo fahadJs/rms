@@ -39,7 +39,6 @@ const uploadFile = async (path, content) => {
     const response = await dbx.filesUpload({
       path: '/Test/' + path,
       contents: content,
-      mode: { '.tag': 'add' },
     });
     console.log('File uploaded:', response);
   } catch (error) {

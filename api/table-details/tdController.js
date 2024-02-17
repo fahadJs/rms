@@ -535,7 +535,7 @@ const mrkPaid = async (req, res) => {
                 // };
 
                 // const info = await transporter.sendMail(mailOptions);
-                console.log('Email Sent! and Status updated!: ', info);
+                // console.log('Email Sent! and Status updated!: ', info);
                 fs.unlinkSync(pdfPath);
             } catch (error) {
                 console.log(error);
