@@ -84,7 +84,7 @@ const emitOrderToKitchen = async (kitchenID) => {
 
 const orderStatusUpdate = async (orderData) => {
     try {
-        const { orderID, kitchenID, time, restaurantID } = orderData;
+        const { orderID, kitchenID, orderCompletedTime, restaurantID } = orderData;
 
         const updateOrderItemsKitchenStatus = `UPDATE order_items SET KStatus = ? WHERE OrderID = ? AND KitchenID = ?`;
         await poolConnection.query(updateOrderItemsKitchenStatus, ['COMPLETED', orderID, kitchenID]);
@@ -96,7 +96,7 @@ const orderStatusUpdate = async (orderData) => {
         const orderTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
 
         const insertKitchenTimeLog = `INSERT INTO kitchens_log (time_diff, log_time, OrderID, KitchenID) VALUES (?, ?, ?, ?)`;
-        await poolConnection.query(insertKitchenTimeLog, [time, orderTime, orderID, kitchenID]);
+        await poolConnection.query(insertKitchenTimeLog, [orderCompletedTime, orderTime, orderID, kitchenID]);
     } catch (error) {
         console.log(`Error! ${error.message}`);
     }
