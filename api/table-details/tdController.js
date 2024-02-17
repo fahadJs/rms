@@ -5,7 +5,6 @@ const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const { Dropbox } = require('dropbox');
 const upload = require('../../dropUpload/upload');
-const newPath = require('path');
 
 const getAll = async (req, res) => {
     try {
@@ -408,7 +407,7 @@ const mrkPaid = async (req, res) => {
                 const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
                 // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
-                const pdfPath = newPath.join(__dirname, `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`);
+                const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
                 console.log(pdfPath);
                 const paperWidth = 302;
 
@@ -511,7 +510,7 @@ const mrkPaid = async (req, res) => {
 
                 pdf.end();
 
-                const fileContent = fs.readFileSync(pdfPath);
+                const fileContent = fs.createReadStream(pdfPath);
                 await upload.uploadFile(pdfPath, fileContent);
                 
                 // const transporter = nodemailer.createTransport({
