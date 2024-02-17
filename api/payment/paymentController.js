@@ -30,10 +30,13 @@ const getAll = async (req, res) => {
   try {
     const getPayments = `
     SELECT *,
-    @row_number := @row_number + 1 AS series
-FROM payment_methods
-CROSS JOIN (SELECT @row_number := 0) AS row_init
-WHERE restaurant_id = ?
+       @row_number := @row_number + 1 AS series
+FROM (
+    SELECT *
+    FROM payment_methods
+    WHERE restaurant_id = ?
+) AS filtered_payment_methods
+CROSS JOIN (SELECT @row_number := 0) AS row_init;
       `;
     const getPaymentsRes = await poolConnection.query(getPayments, [restaurantId]);
 
