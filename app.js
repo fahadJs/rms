@@ -130,6 +130,7 @@ io.on('connection', (socket) => {
     socket.on('waiterReceivedOrder', async (orderData) => {
         await waiterReceivingOrder(orderData);
         await emitOrderToKitchen(orderData.kitchenID);
+        io.emit('waiterReceivedOrder', 'true');
     });
 
     socket.on('disconnect', () => {
