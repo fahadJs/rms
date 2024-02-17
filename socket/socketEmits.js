@@ -20,7 +20,7 @@ const emitOrderToKitchen = async (kitchenID) => {
             const itemsByStatusQuery = `SELECT * FROM order_items JOIN orders ON order_items.OrderID = orders.OrderID JOIN kitchens_log ON order_items.OrderID = kitchens_log.OrderID WHERE order_items.OrderID = ?`;
             const itemsByStatus = await poolConnection.query(itemsByStatusQuery, [item.OrderID]);
 
-            const restaurant_id = itemsByStatus[0].restaurant_id;
+            // const restaurant_id = itemsByStatus[0].restaurant_id;
             const waiter_id = itemsByStatus[0].waiter_id;
             const table_id = itemsByStatus[0].table_id;
             const status = itemsByStatus[0].KStatus;
