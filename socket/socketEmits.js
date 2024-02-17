@@ -1,4 +1,5 @@
 const poolConnection = require('../config/database');
+const moment = require('moment-timezone');
 
 let io;
 
@@ -81,7 +82,28 @@ const emitOrderToKitchen = async (kitchenID) => {
     }
 };
 
+const orderStatusUpdate = async (orderData) => {
+    try {
+        const { orderID, kitchenID, time, restaurantID } = orderData;
+
+        const updateOrderItemsKitchenStatus = `UPDATE order_items SET KStatus = ? WHERE OrderID = ? AND KitchenID = ?`;
+        await poolConnection.query(updateOrderItemsKitchenStatus, ['COMPLETED', orderID, kitchenID]);
+
+        const timeZoneQuery = 'SELECT time_zone FROM restaurants WHERE restaurant_id = ?';
+        const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurantID]);
+
+        const timeZone = timeZoneResult[0].time_zone;
+        const orderTime = moment.tz(timeZone).format('YYYY-MM-DD HH:mm:ss');
+
+        const insertKitchenTimeLog = `INSERT INTO kitchens_log (time_diff, log_time, OrderID, KitchenID) VALUES (?, ?, ?, ?)`;
+        await poolConnection.query(insertKitchenTimeLog, [time, orderTime, orderID, kitchenID]);
+    } catch (error) {
+        console.log(`Error! ${error.message}`);
+    }
+}
+
 module.exports = {
     emitOrderToKitchen,
-    initializeIO
+    initializeIO,
+    orderStatusUpdate
 };
