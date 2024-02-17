@@ -509,8 +509,8 @@ const mrkPaid = async (req, res) => {
 
                 pdf.end();
 
-                const fileContent = fs.readFileSync(pdfPath);
-                upload.uploadFile(pdfPath, fileContent);
+                // const fileContent = fs.readFileSync(pdfPath);
+                upload.uploadFile(pdfPath, pdfPath);
                 
                 // const transporter = nodemailer.createTransport({
                 //     service: 'gmail',
