@@ -3,6 +3,7 @@ const moment = require('moment-timezone');
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
+const upload = require('../../dropUpload/upload');
 
 const printDaily = async (req, res) => {
     try {
@@ -70,50 +71,9 @@ const printDaily = async (req, res) => {
 
             posItemsArray.push({ itemId, itemPrice });
         }
-        // const priceColumnWidth = 0;
-        // let messageMap = itemsArray.map(async (item) => {
-        //     const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
-        //                         JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
-        //                         WHERE order_extras.OrderItemID = ?`;
-        //     const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
-
-        //     const extrasList = extrasResult.length > 0
-        //         ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
-        //         : '';
-
-        //     // return `${item.quantity} ${item.itemName} ${currency} ${item.itemPrice}\n${extrasList}`;
-
-        //     // const formattedItem = `${item.quantity} ${item.itemName} ${extrasList}`;
-        //     // const priceAlignment = ' '.repeat(50 - formattedItem.length - item.itemPrice.toString().length);
-        //     // const formattedPrice = `${priceAlignment} ${currency} ${item.itemPrice.toFixed(2)}`;
-
-        //     // return `${formattedItem}${formattedPrice}`;
-
-        //     // Format the item details with fixed-width columns for item name and price
-        //     // const formattedItem = `${item.quantity} ${item.itemName} ${extrasList}`;
-        //     // const formattedPrice = `${currency} ${item.itemPrice.toFixed(2)}`;
-
-        //     // // Ensure the item name column has a fixed width
-        //     // const truncatedItem = formattedItem.slice(0, itemNameColumnWidth);
-        //     // const itemAlignment = ' '.repeat(itemNameColumnWidth - truncatedItem.length);
-
-        //     // return `${truncatedItem}${itemAlignment}${formattedPrice}`;
-
-        //     // Format the item details with fixed-width columns for item name and price
-        //     // const formattedItem = `${item.quantity} ${item.itemName} ${extrasList}`;
-        //     // const formattedPrice = `${currency} ${item.itemPrice.toFixed(2)}`;
-
-        //     // return `${formattedItem}${repeat(100 - formattedItem.length - formattedPrice.length)}${formattedPrice}`;
-        // });
-
-        // messageMap = await Promise.all(messageMap);
 
         const resName = `${restaurantName}`.toUpperCase();
         const messageTop = `Date: ${formattedDate}\nTime: ${formattedTime}\n\nThis summary of orders are after the opening time of the restaurant!\n\nOpening time: ${open_time}\n`;
-
-        // const message = `${messageMap.join('\n')}`;
-
-        // const cashInfo = paidVia === 'CASH' ? `Cash Received: ${cash}\nChange: ${cashChange}` : '';
 
         const totalCash = totalOrderCash + totalPosOrderCash;
         const finalOrder = orderTotal + posOrderTotal;
@@ -127,7 +87,6 @@ const printDaily = async (req, res) => {
         const mb3Val = finalOrder.toFixed(2);
         const mb4 = `Total Cash Sales only`;
         const mb4Val = totalCash.toFixed(2);
-        // const messageBottom = `Order Total(excl. tax): ${orderTotalExcl.toFixed(2)}\nTax: ${orderAmountTax.toFixed(2)}\nAfter Tax: ${finalOrder.toFixed(2)}`;
 
         const thank = `THANK YOU`;
         const softwareBy = `software by`;
@@ -136,143 +95,138 @@ const printDaily = async (req, res) => {
         const number = `+971-58-551-5742`;
         const email = `info@anunziointernational.com`;
 
-        try {
-            const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
-            // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
+        const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
+        const paperWidth = 302;
 
-            const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
-            const paperWidth = 302;
+        const pdf = new PDFDocument({
+            size: [paperWidth, 1200],
+            margin: 10,
+        });
 
-            const pdf = new PDFDocument({
-                size: [paperWidth, 1200],
-                margin: 10,
-            });
+        function drawDottedLine(yPosition, length) {
+            const startX = pdf.x;
+            const endX = pdf.x + length;
+            const y = yPosition;
 
-            function drawDottedLine(yPosition, length) {
-                const startX = pdf.x;
-                const endX = pdf.x + length;
-                const y = yPosition;
-
-                for (let i = startX; i <= endX; i += 5) {
-                    pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
-                }
+            for (let i = startX; i <= endX; i += 5) {
+                pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
             }
-
-            function centerText(text, fontSize) {
-                const textWidth = pdf.widthOfString(text, { fontSize });
-                const xPosition = (paperWidth - textWidth) / 2;
-                const currentX = pdf.x;
-                pdf.text(text, xPosition, pdf.y);
-                pdf.x = currentX;
-            }
-
-            pdf.pipe(fs.createWriteStream(pdfPath));
-            pdf.fontSize(14);
-
-            // pdf.moveDown();
-            drawDottedLine(pdf.y, paperWidth);
-            pdf.moveDown();
-            centerText(resName, 16);
-            centerText(contact, 16);
-            // pdf.moveDown();
-            centerText(site, 16);
-            // pdf.moveDown();
-            drawDottedLine(pdf.y, paperWidth);
-
-            pdf.moveDown();
-            pdf.text(messageTop);
-            pdf.moveDown();
-            drawDottedLine(pdf.y, paperWidth);
-
-            pdf.moveDown();
-            pdf.text('Waiter Orders!');
-            pdf.moveDown();
-            // drawDottedLine(pdf.y, paperWidth);
-
-            for (const item of itemsArray) {
-                const itemName = `Order: #${item.itemId}`;
-                const price = `${item.itemPrice.toFixed(2)} ${currency}`;
-
-                const priceY = pdf.y - 1;
-
-                // pdf.moveDown();
-                pdf.text(itemName, 10, pdf.y, { align: 'left' });
-                pdf.text(price, 10, priceY, { align: 'right' });
-                // pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
-            }
-
-            pdf.moveDown();
-            pdf.text('POS Orders!');
-            pdf.moveDown();
-            // drawDottedLine(pdf.y, paperWidth);
-
-            for (const item of posItemsArray) {
-                const itemName = `Order: #${item.itemId}`;
-                const price = `${item.itemPrice.toFixed(2)} ${currency}`;
-
-                const priceY = pdf.y - 1;
-
-                // pdf.moveDown();
-                pdf.text(itemName, 10, pdf.y, { align: 'left' });
-                pdf.text(price, 10, priceY, { align: 'right' });
-                // pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
-            }
-
-            pdf.moveDown();
-            drawDottedLine(pdf.y, paperWidth);
-            pdf.moveDown();
-            pdf.text(mb1, 10, pdf.y, { align: 'left' });
-            pdf.text(mb1Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
-            pdf.text(mb2, 10, pdf.y, { align: 'left' });
-            pdf.text(mb2Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
-            pdf.text(mb3, 10, pdf.y, { align: 'left' });
-            pdf.text(mb3Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
-            pdf.text(mb4, 10, pdf.y, { align: 'left' });
-            pdf.text(mb4Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
-            pdf.moveDown();
-            drawDottedLine(pdf.y, paperWidth);
-
-            pdf.moveDown();
-            centerText(thank, 16);
-            // pdf.moveDown();
-            centerText(softwareBy, 16);
-            centerText(anunzio, 16);
-            centerText(website, 16);
-            centerText(number, 16);
-            centerText(email, 16);
-            drawDottedLine(pdf.y, paperWidth);
-
-            pdf.end();
-
-            const transporter = nodemailer.createTransport({
-                service: 'gmail',
-                auth: {
-                    user: 'siddiquiboy360@gmail.com',
-                    pass: 'gkop jksn urdi dgvv'
-                }
-            });
-
-            const mailOptions = {
-                from: 'siddiquiboy360@gmail.com',
-                to,
-                attachments: [
-                    {
-                        filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
-                        path: pdfPath,
-                        encoding: 'base64'
-                    }
-                ]
-            };
-
-            const info = await transporter.sendMail(mailOptions);
-
-            console.log('Email Sent! and Status updated!: ', info);
-
-            fs.unlinkSync(pdfPath);
-        } catch (error) {
-            console.log(error);
-            return;
         }
+
+        function centerText(text, fontSize) {
+            const textWidth = pdf.widthOfString(text, { fontSize });
+            const xPosition = (paperWidth - textWidth) / 2;
+            const currentX = pdf.x;
+            pdf.text(text, xPosition, pdf.y);
+            pdf.x = currentX;
+        }
+
+        pdf.pipe(fs.createWriteStream(pdfPath));
+        pdf.fontSize(14);
+
+        // pdf.moveDown();
+        drawDottedLine(pdf.y, paperWidth);
+        pdf.moveDown();
+        centerText(resName, 16);
+        centerText(contact, 16);
+        // pdf.moveDown();
+        centerText(site, 16);
+        // pdf.moveDown();
+        drawDottedLine(pdf.y, paperWidth);
+
+        pdf.moveDown();
+        pdf.text(messageTop);
+        pdf.moveDown();
+        drawDottedLine(pdf.y, paperWidth);
+
+        pdf.moveDown();
+        pdf.text('Waiter Orders!');
+        pdf.moveDown();
+        // drawDottedLine(pdf.y, paperWidth);
+
+        for (const item of itemsArray) {
+            const itemName = `Order: #${item.itemId}`;
+            const price = `${item.itemPrice.toFixed(2)} ${currency}`;
+
+            const priceY = pdf.y - 1;
+
+            // pdf.moveDown();
+            pdf.text(itemName, 10, pdf.y, { align: 'left' });
+            pdf.text(price, 10, priceY, { align: 'right' });
+            // pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
+        }
+
+        pdf.moveDown();
+        pdf.text('POS Orders!');
+        pdf.moveDown();
+        // drawDottedLine(pdf.y, paperWidth);
+
+        for (const item of posItemsArray) {
+            const itemName = `Order: #${item.itemId}`;
+            const price = `${item.itemPrice.toFixed(2)} ${currency}`;
+
+            const priceY = pdf.y - 1;
+
+            // pdf.moveDown();
+            pdf.text(itemName, 10, pdf.y, { align: 'left' });
+            pdf.text(price, 10, priceY, { align: 'right' });
+            // pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
+        }
+
+        pdf.moveDown();
+        drawDottedLine(pdf.y, paperWidth);
+        pdf.moveDown();
+        pdf.text(mb1, 10, pdf.y, { align: 'left' });
+        pdf.text(mb1Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+        pdf.text(mb2, 10, pdf.y, { align: 'left' });
+        pdf.text(mb2Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+        pdf.text(mb3, 10, pdf.y, { align: 'left' });
+        pdf.text(mb3Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+        pdf.text(mb4, 10, pdf.y, { align: 'left' });
+        pdf.text(mb4Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+        pdf.moveDown();
+        drawDottedLine(pdf.y, paperWidth);
+
+        pdf.moveDown();
+        centerText(thank, 16);
+        // pdf.moveDown();
+        centerText(softwareBy, 16);
+        centerText(anunzio, 16);
+        centerText(website, 16);
+        centerText(number, 16);
+        centerText(email, 16);
+        drawDottedLine(pdf.y, paperWidth);
+
+        pdf.end();
+
+        const fileContent = fs.createReadStream(pdfPath);
+        await upload.uploadFile(pdfPath, fileContent);
+
+        // const transporter = nodemailer.createTransport({
+        //     service: 'gmail',
+        //     auth: {
+        //         user: 'siddiquiboy360@gmail.com',
+        //         pass: 'gkop jksn urdi dgvv'
+        //     }
+        // });
+
+        // const mailOptions = {
+        //     from: 'siddiquiboy360@gmail.com',
+        //     to,
+        //     attachments: [
+        //         {
+        //             filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+        //             path: pdfPath,
+        //             encoding: 'base64'
+        //         }
+        //     ]
+        // };
+
+        // const info = await transporter.sendMail(mailOptions);
+
+        console.log('File Sent! and Status updated!');
+
+        fs.unlinkSync(pdfPath);
     } catch (error) {
         console.log(`Error! ${error.message}`);
         res.status(500).json({ status: 500, message: error.message });

@@ -52,150 +52,6 @@ const createEqSplit = async (req, res) => {
 }
 
 const createItSplit = async (req, res) => {
-    // try {
-    //     await poolConnection.query('START TRANSACTION');
-
-    //     const { orderId, tid, paidVia, items } = req.body;
-    //     const { restaurant_id } = req.params;
-
-    //     const getOrderQuery = 'SELECT * FROM orders WHERE OrderID = ?';
-    //     const orderResult = await poolConnection.query(getOrderQuery, [orderId]);
-
-    //     if (orderResult.length === 0) {
-    //         throw new Error({ status: 404, message: 'Order not found!' });
-    //     }
-
-    //     const fetchedOrder = orderResult[0];
-
-    //     if (fetchedOrder.order_status === 'paid') {
-    //         throw new Error({ status: 401, message: 'Bill is already paid!' });
-    //     }
-
-    //     const getItemDetailsQuery = `SELECT * FROM order_items WHERE OrderID = ? AND split_status = 'unsplitted'`;
-    //     const itemDetailsResult = await poolConnection.query(getItemDetailsQuery, [orderId]);
-
-    //     const insertSplitItemQuery = 'INSERT INTO bill_split_item (OrderID, MenuItemID, ItemName, SplitAmount, tid, paid_via, SplitQuantity) VALUES (?, ?, ?, ?, ?, ?, ?)';
-
-    //     const updateOrderItemQuantityQuery = 'UPDATE order_items SET split_quantity = ? WHERE OrderID = ? AND OrderItemID = ?';
-
-    //     const getMenuItemDetailsQuery = `SELECT * FROM menuitems WHERE MenuItemID = ? AND restaurant_id = ?`;
-
-    //     const checkExtrasQuery = `SELECT * FROM order_extras WHERE OrderItemID = ? AND split_status = 'unsplitted'`;
-
-    //     const updateExtrasStatusQuery = `UPDATE order_extras SET split_status = ? WHERE OrderExtrasID = ?`;
-
-    //     const getExtrasDetailQuery = `SELECT * FROM menu_extras WHERE extras_id = ?`;
-
-    //     const updateRemainingQuery = 'UPDATE orders SET remaining = ?, after_tax = after_tax + ? WHERE OrderID = ?';
-
-    //     const checkSpecificSplitQuantityQuery = 'SELECT split_quantity FROM order_items WHERE OrderItemID = ? AND MenuItemID = ?';
-
-    //     const markOrderItemSplittedQuery = 'UPDATE order_items SET split_status = "splitted" WHERE OrderID = ? AND OrderItemID = ?';
-
-    //     const markMenuItemSplittedQuery = 'UPDATE order_items SET split_status = "splitted" WHERE OrderID = ? AND MenuItemID = ?';
-
-    //     for (const item of items) {
-    //         const itemDetails = itemDetailsResult.find(details => details.MenuItemID === item.menuitemID);
-
-    //         if (itemDetails) {
-    //             const getMenuItemDetailsResult = await poolConnection.query(getMenuItemDetailsQuery, [item.menuitemID, restaurant_id]);
-
-    //             let itemPrice = getMenuItemDetailsResult[0].Price * item.quantity;
-
-    //             console.log(`item Price: ${itemPrice}`);
-
-    //             const checkExtrasResult = await poolConnection.query(checkExtrasQuery, [itemDetails.OrderItemID]);
-
-    //             console.log(`extras: ${JSON.stringify(checkExtrasResult[0], null, 2)}`);
-
-    //             if (checkExtrasResult.length > 0) {
-    //                 for (const extra of checkExtrasResult) {
-    //                     const getExtrasDetailResult = await poolConnection.query(getExtrasDetailQuery, [extra.extras_id]);
-
-    //                     let extrasPrice = getExtrasDetailResult[0].extras_price;
-    //                     itemPrice += extrasPrice;
-    //                     console.log(`extras price: ${extrasPrice}, updated item price: ${itemPrice}`);
-    //                 }
-    //             }
-
-    //             const getTaxQuery = `SELECT tax FROM restaurants WHERE restaurant_id = ?`;
-    //             const getTaxResult = await poolConnection.query(getTaxQuery, [restaurant_id]);
-
-    //             const taxPercent = getTaxResult[0].tax;
-
-    //             const taxAmount = (taxPercent / 100) * itemPrice;
-
-    //             const afterTax = itemPrice + taxAmount;
-
-    //             const remainingAmount = fetchedOrder.remaining - itemPrice;
-
-    //             console.log(`remainingAmount: ${remainingAmount}, taxPercent: ${taxPercent}, taxAmount: ${taxAmount}, afterTax: ${afterTax}`);
-
-    //             const updatedQuantity = itemDetails.split_quantity - item.quantity;
-
-    //             if (updatedQuantity >= 0) {
-    //                 await poolConnection.query(updateOrderItemQuantityQuery, [updatedQuantity, orderId, itemDetails.OrderItemID]);
-    //                 console.log('Quantity updated!');
-
-    //                 await poolConnection.query(updateRemainingQuery, [remainingAmount, afterTax, orderId]);
-    //                 console.log('Remaining Updated!');
-
-    //                 await poolConnection.query(insertSplitItemQuery, [orderId, item.menuitemID, itemDetails.ItemName, afterTax, tid, paidVia, item.quantity]);
-    //                 console.log('Data inserted in Split Bill!');
-    //             } else {
-    //                 console.error(`Not enough quantity to split for MenuItemID ${item.menuitemID}`);
-    //             }
-
-    //             if (checkExtrasResult.length > 0) {
-    //                 // If extras are present, check split_quantity before marking the specific order item as "splitted"
-    //                 const checkSplitQuantityResult = await poolConnection.query(checkSpecificSplitQuantityQuery, [itemDetails.OrderItemID, item.menuitemID]);
-    //                 const itemsWithZeroSplit = checkSplitQuantityResult[0].split_quantity;
-
-    //                 if (itemsWithZeroSplit === 0) {
-    //                     await poolConnection.query(markOrderItemSplittedQuery, [orderId, itemDetails.OrderItemID]);
-    //                     console.log('With extras item set splitted!');
-
-    //                     for (const extrasStatus of checkExtrasResult) {
-    //                         await poolConnection.query(updateExtrasStatusQuery, ['splitted', extrasStatus.OrderExtrasID])
-    //                         console.log('Extras Status marked splitted!');
-    //                     }
-    //                 }
-    //             } else {
-    //                 // If no extras are present, check split_quantity before marking the menu item as "splitted"
-    //                 const checkSplitQuantityResult = await poolConnection.query(checkSpecificSplitQuantityQuery, [itemDetails.OrderItemID, item.menuitemID]);
-    //                 const itemsWithZeroSplit = checkSplitQuantityResult[0].split_quantity;
-
-    //                 if (itemsWithZeroSplit === 0) {
-    //                     await poolConnection.query(markMenuItemSplittedQuery, [orderId, item.menuitemID]);
-    //                     console.log('Without extras item set splitted!');
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     const remainingItemsQuery = 'SELECT COUNT(*) AS remainingItems FROM order_items WHERE OrderID = ? AND split_status != "splitted"';
-    //     const remainingItemsResult = await poolConnection.query(remainingItemsQuery, [orderId]);
-    //     const remainingItemCount = remainingItemsResult[0].remainingItems;
-
-    //     if (remainingItemCount === 0) {
-    //         const updateOrderStatusQuery = 'UPDATE orders SET order_status = "paid", tid = "itsplit", paid_via = "itsplit" WHERE OrderID = ?';
-    //         await poolConnection.query(updateOrderStatusQuery, [orderId]);
-    //         console.log('Orders Marked Paid!');
-
-    //         const updateTableStatusQuery = 'UPDATE tables SET status = ? WHERE table_id = ?';
-    //         const updateTableStatusValues = ['available', fetchedOrder.table_id];
-    //         await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
-    //         console.log('Table set available!');
-    //     }
-
-    //     await poolConnection.query('COMMIT');
-    //     res.status(201).json({ status: 201, message: 'Bill split successfully!' });
-    // } catch (error) {
-    //     await poolConnection.query('ROLLBACK');
-    //     console.error(`Error splitting bill! Error: ${error.message}`);
-    //     res.status(500).json({ status: 500, message: `Error splitting bill! ${error.message}` });
-    // }
-
     try {
         await poolConnection.query('START TRANSACTION');
 
@@ -325,8 +181,6 @@ const createItSplit = async (req, res) => {
             console.log('Table set available!');
         }
 
-        await poolConnection.query('COMMIT');
-
         try {
             const getTheOrder = `SELECT * FROM bill_split_item WHERE OrderID = ? AND receipt = 'false'`;
             const getTheOrderRes = await poolConnection.query(getTheOrder, [orderId]);
@@ -440,153 +294,149 @@ const createItSplit = async (req, res) => {
             const number = `+971-58-551-5742`;
             const email = `info@anunziointernational.com`;
 
-            try {
-                // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
-                // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
+            // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+            // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
-                const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
-                const paperWidth = 302;
+            const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
+            const paperWidth = 302;
 
-                const pdf = new PDFDocument({
-                    size: [paperWidth, 1200],
-                    margin: 10,
-                });
+            const pdf = new PDFDocument({
+                size: [paperWidth, 1200],
+                margin: 10,
+            });
 
-                function drawDottedLine(yPosition, length) {
-                    const startX = pdf.x;
-                    const endX = pdf.x + length;
-                    const y = yPosition;
+            function drawDottedLine(yPosition, length) {
+                const startX = pdf.x;
+                const endX = pdf.x + length;
+                const y = yPosition;
 
-                    for (let i = startX; i <= endX; i += 5) {
-                        pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
-                    }
+                for (let i = startX; i <= endX; i += 5) {
+                    pdf.moveTo(i, y).lineTo(i + 2, y).stroke();
                 }
+            }
 
-                function centerText(text, fontSize) {
-                    const textWidth = pdf.widthOfString(text, { fontSize });
-                    const xPosition = (paperWidth - textWidth) / 2;
-                    const currentX = pdf.x;
-                    pdf.text(text, xPosition, pdf.y);
-                    pdf.x = currentX;
-                }
+            function centerText(text, fontSize) {
+                const textWidth = pdf.widthOfString(text, { fontSize });
+                const xPosition = (paperWidth - textWidth) / 2;
+                const currentX = pdf.x;
+                pdf.text(text, xPosition, pdf.y);
+                pdf.x = currentX;
+            }
 
-                pdf.pipe(fs.createWriteStream(pdfPath));
-                pdf.fontSize(14);
-    
-                // pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
-                pdf.moveDown();
-                centerText(resName, 16);
-                // pdf.moveDown();
-                centerText(contact, 16);
-                // pdf.moveDown();
-                centerText(site, 16);
-                // pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
-    
-                pdf.moveDown();
-                pdf.text(messageTop);
-                pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
-    
-                // pdf.moveDown();
-                // pdf.text(message);
-                pdf.moveDown();
-                // drawDottedLine(pdf.y, paperWidth);
-    
-                for (const item of itemsArray) {
-                    const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
+            pdf.pipe(fs.createWriteStream(pdfPath));
+            pdf.fontSize(14);
+
+            // pdf.moveDown();
+            drawDottedLine(pdf.y, paperWidth);
+            pdf.moveDown();
+            centerText(resName, 16);
+            // pdf.moveDown();
+            centerText(contact, 16);
+            // pdf.moveDown();
+            centerText(site, 16);
+            // pdf.moveDown();
+            drawDottedLine(pdf.y, paperWidth);
+
+            pdf.moveDown();
+            pdf.text(messageTop);
+            pdf.moveDown();
+            drawDottedLine(pdf.y, paperWidth);
+
+            // pdf.moveDown();
+            // pdf.text(message);
+            pdf.moveDown();
+            // drawDottedLine(pdf.y, paperWidth);
+
+            for (const item of itemsArray) {
+                const extrasQuery = `SELECT menu_extras.extras_name FROM menu_extras
                                     JOIN order_extras ON menu_extras.extras_id = order_extras.extras_id
                                     WHERE order_extras.OrderItemID = ?`;
-                    const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
-    
-                    const extrasList = extrasResult.length > 0
-                        ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
-                        : '';
-                    const itemName = `${item.quantity} ${item.itemName} ${extrasList}`;
-                    const price = `${currency} ${item.itemPrice.toFixed(2)}`;
-    
-                    // pdf.moveDown();
-                    // Position item name on the left
-                    // Position item name and price on the left
-                    const priceY = pdf.y - 1;
-                    pdf.text(itemName, 10, pdf.y, { align: 'left' });
-                    pdf.text(price, 10, priceY, { align: 'right' });
-                    // pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
-                }
-                pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
-                pdf.moveDown();
-                pdf.text(mb1, 10, pdf.y, { align: 'left' });
-                pdf.text(mb1Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
-                pdf.text(mb2, 10, pdf.y, { align: 'left' });
-                pdf.text(mb2Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
-                pdf.text(mb3, 10, pdf.y, { align: 'left' });
-                pdf.text(mb3Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
-                pdf.text(mb4, 10, pdf.y, { align: 'left' });
-                pdf.text(mb4Va, 10, pdf.y - 15, { align: 'right' });
-                pdf.text(mb5, 10, pdf.y, { align: 'left' });
-                pdf.text(mb5Val, 10, pdf.y - 15, { align: 'right' });
-                pdf.text(mb6, 10, pdf.y, { align: 'left' });
-                pdf.text(mb6Val, 10, pdf.y - 15, { align: 'right' });
-                pdf.text(mb7, 10, pdf.y, { align: 'left' });
-                pdf.text(mb7Val, 10, pdf.y - 15, { align: 'right' });
-                pdf.moveDown();
-                drawDottedLine(pdf.y, paperWidth);
-    
-                pdf.moveDown();
-                centerText(thank, 16);
+                const extrasResult = await poolConnection.query(extrasQuery, [item.itemId]);
+
+                const extrasList = extrasResult.length > 0
+                    ? `(${extrasResult.map(extra => extra.extras_name).join(`, `)})`
+                    : '';
+                const itemName = `${item.quantity} ${item.itemName} ${extrasList}`;
+                const price = `${currency} ${item.itemPrice.toFixed(2)}`;
+
                 // pdf.moveDown();
-                centerText(softwareBy, 16);
-                centerText(anunzio, 16);
-                centerText(website, 16);
-                centerText(number, 16);
-                centerText(email, 16);
-                drawDottedLine(pdf.y, paperWidth);
-    
-                pdf.end();
-
-                const fileContent = fs.createReadStream(pdfPath);
-                await upload.uploadFile(pdfPath, fileContent);
-
-                // const transporter = nodemailer.createTransport({
-                //     service: 'gmail',
-                //     auth: {
-                //         user: 'siddiquiboy360@gmail.com',
-                //         pass: 'gkop jksn urdi dgvv'
-                //     }
-                // });
-
-                // const mailOptions = {
-                //     from: 'siddiquiboy360@gmail.com',
-                //     to,
-                //     attachments: [
-                //         {
-                //             filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
-                //             path: pdfPath,
-                //             encoding: 'base64'
-                //         }
-                //     ]
-                // };
-
-                // const info = await transporter.sendMail(mailOptions);
-
-                // for (const split of orderDetails) {
-                //     const updateReciptStatus = `UPDATE bill_split_item SET receipt = 'true' WHERE SplitItemID = ?`;
-                //     await poolConnection.query(updateReciptStatus, [split.SplitItemID]);
-                // }
-
-                console.log('File Sent! and Status updated!');
-
-                fs.unlinkSync(pdfPath);
-            } catch (error) {
-                console.log(error);
-                return;
+                // Position item name on the left
+                // Position item name and price on the left
+                const priceY = pdf.y - 1;
+                pdf.text(itemName, 10, pdf.y, { align: 'left' });
+                pdf.text(price, 10, priceY, { align: 'right' });
+                // pdf.moveTo(10, pdf.y).lineTo(paperWidth - 10, pdf.y).stroke();
             }
+            pdf.moveDown();
+            drawDottedLine(pdf.y, paperWidth);
+            pdf.moveDown();
+            pdf.text(mb1, 10, pdf.y, { align: 'left' });
+            pdf.text(mb1Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+            pdf.text(mb2, 10, pdf.y, { align: 'left' });
+            pdf.text(mb2Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+            pdf.text(mb3, 10, pdf.y, { align: 'left' });
+            pdf.text(mb3Val + ' ' + currency, 10, pdf.y - 15, { align: 'right' });
+            pdf.text(mb4, 10, pdf.y, { align: 'left' });
+            pdf.text(mb4Va, 10, pdf.y - 15, { align: 'right' });
+            pdf.text(mb5, 10, pdf.y, { align: 'left' });
+            pdf.text(mb5Val, 10, pdf.y - 15, { align: 'right' });
+            pdf.text(mb6, 10, pdf.y, { align: 'left' });
+            pdf.text(mb6Val, 10, pdf.y - 15, { align: 'right' });
+            pdf.text(mb7, 10, pdf.y, { align: 'left' });
+            pdf.text(mb7Val, 10, pdf.y - 15, { align: 'right' });
+            pdf.moveDown();
+            drawDottedLine(pdf.y, paperWidth);
+
+            pdf.moveDown();
+            centerText(thank, 16);
+            // pdf.moveDown();
+            centerText(softwareBy, 16);
+            centerText(anunzio, 16);
+            centerText(website, 16);
+            centerText(number, 16);
+            centerText(email, 16);
+            drawDottedLine(pdf.y, paperWidth);
+
+            pdf.end();
+
+            const fileContent = fs.createReadStream(pdfPath);
+            await upload.uploadFile(pdfPath, fileContent);
+
+            // const transporter = nodemailer.createTransport({
+            //     service: 'gmail',
+            //     auth: {
+            //         user: 'siddiquiboy360@gmail.com',
+            //         pass: 'gkop jksn urdi dgvv'
+            //     }
+            // });
+
+            // const mailOptions = {
+            //     from: 'siddiquiboy360@gmail.com',
+            //     to,
+            //     attachments: [
+            //         {
+            //             filename: `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`,
+            //             path: pdfPath,
+            //             encoding: 'base64'
+            //         }
+            //     ]
+            // };
+
+            // const info = await transporter.sendMail(mailOptions);
+
+            // for (const split of orderDetails) {
+            //     const updateReciptStatus = `UPDATE bill_split_item SET receipt = 'true' WHERE SplitItemID = ?`;
+            //     await poolConnection.query(updateReciptStatus, [split.SplitItemID]);
+            // }
+
+            console.log('File Sent! and Status updated!');
+
+            fs.unlinkSync(pdfPath);
         } catch (error) {
             console.log(error);
             return;
         }
+        await poolConnection.query('COMMIT');
         res.status(201).json({ status: 201, message: 'Bill split successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
