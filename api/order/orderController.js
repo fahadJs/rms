@@ -42,8 +42,6 @@ const create = async (req, res) => {
             const updateInventoryQuery = 'UPDATE inventory SET on_hand = GREATEST(on_hand - ?, 0) WHERE MenuItemID = ?';
             const updateInventoryValues = [quantity, menuitemID];
             await poolConnection.query(updateInventoryQuery, updateInventoryValues);
-
-            await emitOrderToKitchen(kitchenID);
         }
 
         const updateTableStatusQuery = 'UPDATE tables SET status = ?, pay_status = ? WHERE table_id = ?';
@@ -51,6 +49,10 @@ const create = async (req, res) => {
         await poolConnection.query(updateTableStatusQuery, updateTableStatusValues);
 
         await poolConnection.query('COMMIT');
+
+        items.forEach(async item => {
+            await emitOrderToKitchen(item.kitchenID);
+        });
 
         res.status(201).json({ status: 201, message: 'Order created successfully!' });
     } catch (error) {
