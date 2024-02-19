@@ -1,5 +1,4 @@
 const poolConnection = require('../config/database');
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const create = async (req, res) => {
