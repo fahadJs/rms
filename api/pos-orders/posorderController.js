@@ -4,7 +4,8 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const path = require('path');
-const upload = require('../../dropUpload/upload')
+const upload = require('../../dropUpload/upload');
+const { emitOrderToKitchen } = require('../../socket/socketEmits');
 
 const create = async (req, res) => {
     try {
@@ -50,6 +51,11 @@ const create = async (req, res) => {
         }
 
         await poolConnection.query('COMMIT');
+
+        items.forEach(async item => {
+            await emitOrderToKitchen(item.kitchenID);
+        });
+
         res.status(201).json({ status: 201, message: 'POS order placed successfully!' });
     } catch (error) {
         await poolConnection.query('ROLLBACK');
