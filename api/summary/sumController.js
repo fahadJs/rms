@@ -24,7 +24,9 @@ const printDaily = async (restaurant_id) => {
 
         const orderDetails = getTheOrderRes;
 
-        const getThePosOrder = `SELECT * FROM pos_orders WHERE time >= ? AND restaurant_id = ? AND IStatus != 'cancelled'`;
+        // const getThePosOrder = `SELECT * FROM pos_orders WHERE time >= ? AND restaurant_id = ? AND IStatus != 'cancelled'`;
+
+        const getThePosOrder = `SELECT * FROM pos_orders WHERE time >= ? AND restaurant_id = ?`;
         // const getThePosOrder = `SELECT * FROM pos_orders`;
         const getThePosOrderRes = await poolConnection.query(getThePosOrder, [openingTime, restaurant_id]);
         // const getThePosOrderRes = await poolConnection.query(getThePosOrder);
