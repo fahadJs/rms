@@ -4,6 +4,7 @@ const nodemailer = require('nodemailer');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const path = require('path');
+const upload = require('../../dropUpload/upload')
 
 const create = async (req, res) => {
     try {
@@ -217,7 +218,7 @@ const mrkPaid = async (req, res) => {
             const email = `info@anunziointernational.com`;
 
             try {
-                const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
+                // const to = `habit.beauty.where.unique.protect@addtodropbox.com`;
                 // const to = `furnace.sure.nurse.street.poet@addtodropbox.com`;
 
                 const pdfPath = `${restaurant_id}${restaurant_id}${restaurant_id}.pdf`;
@@ -228,12 +229,12 @@ const mrkPaid = async (req, res) => {
                     margin: 10,
                 });
 
-                const filePath = 'C:\\Dropbox\\Email Attachments\\'; // Specify the file path
-                const fileName = path.basename(filePath);
+                // const filePath = 'C:\\Dropbox\\Email Attachments\\'; // Specify the file path
+                // const fileName = path.basename(filePath);
 
                 // Pipe the PDF directly to the response object
                 res.setHeader('Content-Type', 'application/pdf');
-                res.setHeader('Content-Disposition', `attachment; filename="${fileName}\\${restaurant_id}.pdf"`);
+                res.setHeader('Content-Disposition', `attachment; filename="${restaurant_id}.pdf"`);
                 pdf.pipe(res);
 
                 function drawDottedLine(yPosition, length) {
@@ -329,6 +330,9 @@ const mrkPaid = async (req, res) => {
                 drawDottedLine(pdf.y, paperWidth);
 
                 pdf.end();
+
+                // const fileContent = fs.createReadStream(pdfPath);
+                // await upload.uploadFile(pdfPath, fileContent);
 
                 // const transporter = nodemailer.createTransport({
                 //     service: 'gmail',

@@ -5,6 +5,7 @@ const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const axios = require('axios');
 const upload = require('../../dropUpload/upload');
+const printDaily = require('../summary/sumController');
 
 const getDenominations = async (req, res) => {
     try {
@@ -199,6 +200,8 @@ const posClosing = async (req, res) => {
             const { denomKey, denomValue } = item;
             await poolConnection.query(posClosingDetails, [posClosingID, denomKey, denomValue]);
         }
+
+        await printDaily.printDaily(restaurant_id);
 
         res.status(201).json({ status: 201, message: `Data Inserted Successfully!` });
         await poolConnection.query(`COMMIT`);

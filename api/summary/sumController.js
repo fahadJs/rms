@@ -1,14 +1,12 @@
 const poolConnection = require('../../config/database');
 const moment = require('moment-timezone');
-const nodemailer = require('nodemailer');
+// const nodemailer = require('nodemailer');
 const fs = require('fs');
 const PDFDocument = require('pdfkit');
 const upload = require('../../dropUpload/upload');
 
-const printDaily = async (req, res) => {
+const printDaily = async (restaurant_id) => {
     try {
-        const { restaurant_id } = req.params;
-
         const timeZoneQuery = 'SELECT time_zone, open_time FROM restaurants WHERE restaurant_id = ?';
         const timeZoneResult = await poolConnection.query(timeZoneQuery, [restaurant_id]);
 
