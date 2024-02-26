@@ -23,17 +23,17 @@ const getAll = async (req, res) => {
 const create = async (req, res) => {
     try {
         const { restaurant_id } = req.params;
-        const { name } = req.body;
+        const { name, login_id, login_pass } = req.body;
 
-        const checkKitchen = 'SELECT COUNT(*) as count FROM kitchens WHERE Name = ?';
-        const checkKitchenRes = await poolConnection.query(checkKitchen, [name]);
+        const checkKitchen = 'SELECT COUNT(*) as count FROM kitchens WHERE Name = ? AND login_id = ? AND restaurant_id = ?';
+        const checkKitchenRes = await poolConnection.query(checkKitchen, [name, login_id, restaurant_id]);
 
         if (checkKitchenRes.count > 0) {
-            throw new Error('');
+            throw new Error('Kitchen Already exist!');
         }
 
-        const addKitchenQuery = 'INSERT INTO kitchens (Name, restaurant_id) VALUES (?, ?)';
-        const addKitchenValues = [name, restaurant_id];
+        const addKitchenQuery = 'INSERT INTO kitchens (Name, restaurant_id, login_id, login_pass) VALUES (?, ?)';
+        const addKitchenValues = [name, restaurant_id, login_id, login_pass];
 
         await poolConnection.query(addKitchenQuery, addKitchenValues);
 
@@ -99,7 +99,7 @@ const getById = async (req, res) => {
 const kLogin = async (req, res) => {
     try {
         const { login_id, login_pass } = req.body;
-        const getKitchenQuery = 'SELECT * FROM kitchens WHERE Name = ?';
+        const getKitchenQuery = 'SELECT * FROM kitchens WHERE login_id = ?';
         const result = await poolConnection.query(getKitchenQuery, [login_id]);
 
         if (result.length === 0) {
