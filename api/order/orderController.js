@@ -117,6 +117,7 @@ const getAllOrders = async (req, res) => {
             SELECT
                 orders.OrderID,
                 orders.waiter_id,
+                waiters.waiter_name,
                 orders.table_id,
                 tables.table_name,
                 orders.time,
@@ -144,6 +145,8 @@ const getAllOrders = async (req, res) => {
                 menu_extras ON order_extras.extras_id = menu_extras.extras_id
             JOIN
                 tables ON orders.table_id = tables.table_id
+            JOIN
+                waiters ON orders.waiter_id = waiters.waiter_id
             WHERE
                 orders.restaurant_id = ?
                 AND order_items.IStatus != 'cancelled'
@@ -159,6 +162,7 @@ const getAllOrders = async (req, res) => {
             let {
                 OrderID,
                 waiter_id,
+                waiter_name,
                 table_id,
                 table_name,
                 time,
@@ -183,6 +187,7 @@ const getAllOrders = async (req, res) => {
                     OrderID,
                     series,
                     waiter_id,
+                    waiter_name,
                     table_id,
                     table_name,
                     time,
