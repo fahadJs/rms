@@ -3,11 +3,11 @@ require('dotenv').config();
 const mysql = require('mysql');
 
 const pool = mysql.createPool({
-    port: process.env.DB_PORT_TEST,
-    host: process.env.DB_HOST_TEST,
-    user: process.env.DB_USER_TEST,
-    password: process.env.DB_PASS_TEST,
-    database: process.env.DB_NAME_TEST,
+    port: process.env.DB_PORT,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
     connectionLimit: 1,
     connectTimeout  : 60 * 60 * 1000,
     acquireTimeout  : 60 * 60 * 1000,

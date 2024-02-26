@@ -3,15 +3,13 @@ const express = require('express');
 const https = require('https');
 const fs = require('fs');
 const socketIo = require('socket.io');
-const poolConnection = require('./config/database');
 const { emitOrderToKitchen, initializeIO, orderStatusUpdate, waiterReceivingOrder } = require('./socket/socketEmits');
 
 const app = express();
-const port = 443;
 
 const options = {
-    key: fs.readFileSync('./server.key'),
-    cert: fs.readFileSync('./server.pem'),
+    key: fs.readFileSync('../server.key'),
+    cert: fs.readFileSync('../server.pem'),
 };
 
 const itemRouter = require('./api/items/itemRouter');
@@ -139,8 +137,8 @@ io.on('connection', (socket) => {
 });
 app.set('socketio', io);
 
-app.listen(3000, () => {
-    console.log(`Server up and running! 3000\nConnection will be established once any request hits!`);
+server.listen(process.env.HTTPS_PORT || 3000, () => {
+    console.log(`Server up and running!\nConnection will be established once any request hits!`);
 })
 
 initializeIO(io);
