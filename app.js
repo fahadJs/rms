@@ -131,6 +131,11 @@ io.on('connection', (socket) => {
         io.emit('waiterReceivedOrder', 'true');
     });
 
+    socket.on('notifyWaiter', (orderData) => {
+        const id = orderData.waiterID;
+        io.emit(`notify-${id}`, orderData);
+    })
+
     socket.on('disconnect', () => {
         console.log('A client disconnected');
     });
