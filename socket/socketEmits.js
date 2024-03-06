@@ -79,7 +79,7 @@ const emitOrderToKitchen = async (kitchenID) => {
         }
 
         const orderList = Object.values(orders);
-        io.emit('getKitchenID', orderList);
+        io.emit(`getKitchenID-${kitchenID}`, orderList);
 
         // console.log(`order from socket: ${JSON.stringify(orderList)}`);
 
