@@ -23,10 +23,10 @@ const getAll = async (req, res) => {
 const create = async (req, res) => {
     try {
         const { restaurant_id } = req.params;
-        const { name, login_id, login_pass } = req.body;
+        const { name } = req.body;
 
-        const checkKitchen = 'SELECT COUNT(*) as count FROM kitchens WHERE Name = ? AND login_id = ? AND restaurant_id = ?';
-        const checkKitchenRes = await poolConnection.query(checkKitchen, [name, login_id, restaurant_id]);
+        const checkKitchen = 'SELECT COUNT(*) as count FROM kitchens WHERE Name = ? AND restaurant_id = ?';
+        const checkKitchenRes = await poolConnection.query(checkKitchen, [name, restaurant_id]);
 
         if (checkKitchenRes.count > 0) {
             throw new Error('Kitchen Already exist!');
