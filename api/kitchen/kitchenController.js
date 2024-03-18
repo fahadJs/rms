@@ -32,8 +32,8 @@ const create = async (req, res) => {
             throw new Error('Kitchen Already exist!');
         }
 
-        const addKitchenQuery = 'INSERT INTO kitchens (Name, restaurant_id, login_id, login_pass) VALUES (?, ?)';
-        const addKitchenValues = [name, restaurant_id, login_id, login_pass];
+        const addKitchenQuery = 'INSERT INTO kitchens (Name, restaurant_id) VALUES (?, ?)';
+        const addKitchenValues = [name, restaurant_id];
 
         await poolConnection.query(addKitchenQuery, addKitchenValues);
 
