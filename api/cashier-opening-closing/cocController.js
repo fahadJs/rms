@@ -106,13 +106,33 @@ const posClosing = async (req, res) => {
         await poolConnection.query(`START TRANSACTION`);
 
         const { restaurant_id } = req.params;
-        const { username, total, items } = req.body;
+        const { username, total, items, dailyCostSum } = req.body;
 
         const currentDateQuery = `SELECT time_zone, open_time FROM restaurants WHERE restaurant_id = ?`;
         const currentDateResult = await poolConnection.query(currentDateQuery, [restaurant_id]);
 
         if (!currentDateResult[0] || currentDateResult[0].time_zone === null) {
             throw new Error("Time zone not available for the restaurant");
+        }
+
+        const getFixedCost = `SELECT * FROM res_fix_cost_monthly WHERE restaurant_id = ?`;
+        const getFixedCostRes = await poolConnection.query(getFixedCost, [restaurant_id]);
+
+        if (getFixedCostRes == 0) {
+            console.log('Daily Fixed Cost Not Found, Try to Create!');
+            throw new Error('Daily Fixed Cost Not Found, Try to Create!');
+        }
+
+        const fixedDaily = getFixedCostRes[0].fixedDailyCost + getFixedCostRes[0].currentCost;
+        let finalCost = fixedDaily - dailyCostSum;
+
+        if (finalCost < 0) {
+            finalCost = 0;
+            const updateCurrentCost = `UPDATE res_fix_cost_monthly SET currentCost = ?`;
+            await poolConnection.query(updateCurrentCost, [finalCost]);
+        } else {
+            const updateCurrentCost = `UPDATE res_fix_cost_monthly SET currentCost = currentCost + ?`;
+            await poolConnection.query(updateCurrentCost, [finalCost]);
         }
 
         const { time_zone, open_time } = currentDateResult[0];

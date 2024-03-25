@@ -16,4 +16,6 @@ router.get('/res/:restaurantId/combined/daily', expenseController.getCombinedDai
 
 router.get('/res/:restaurantId/combined/monthly', expenseController.getCombinedMonthlyExpense);
 
+router.get('/res/:restaurantId/cost', expenseController.dailyFixedCostTarget);
+
 module.exports = router;

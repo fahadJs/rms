@@ -25,10 +25,19 @@ const create = async (req, res) => {
 
         const orderExtrasInsertQuery = `INSERT INTO order_extras (OrderItemID, extras_id) VALUES (?, ?)`;
 
+        const getAddedFixedCost = `SELECT AddedFixedCost, FixedCostPercent FROM menuitems WHERE MenuItemID = ?`;
+        const menuitemContribution = `UPDATE menuitems SET FixedCostContribution = FixedCostContribution + ? WHERE MenuItemID = ?`;
+
         for (const item of items) {
             const { menuitemID, name, price, quantity, kitchenID, categoryID, note, extras } = item;
             const orderItemsValues = [orderID, menuitemID, name, price, quantity, kitchenID, categoryID, note, 0];
             const orderItemsResult = await poolConnection.query(orderItemsInsertQuery, orderItemsValues);
+
+            const getAddedFixedCostRes = await poolConnection.query(getAddedFixedCost, [menuitemID]);
+            let fixedCost = getAddedFixedCostRes[0].CostPrice;
+            const percent = getAddedFixedCostRes[0].FixedCostPercent;
+            fixedCost = (percent / 100) * price;
+            await poolConnection.query(menuitemContribution, [fixedCost, menuitemID]);
 
             const orderItemID = orderItemsResult.insertId;
 

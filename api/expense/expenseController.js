@@ -255,6 +255,19 @@ const getPosDailyExpense = async (req, res) => {
     }
 }
 
+const dailyFixedCostTarget = async (req, res) => {
+    const { restaurantId } = req.params;
+    try {
+        const menuitems = `SELECT * FROM menuitems WHERE restaurant_id = ?`;
+        const menuitemsRes = await poolConnection.query(menuitems, [restaurantId]);
+
+        res.status(200).json(menuitemsRes);
+    } catch (error) {
+        console.log(`Error! ${error.message}`);
+        res.status(500).json({ status: 500, message: error.message });
+    }
+}
+
 const getWaiterMonthlyExpenseAdminAllMonths = async (req, res) => {
     const { restaurantId } = req.params;
     try {
@@ -987,5 +1000,7 @@ module.exports = {
     getCombinedDailyExpense,
     getCombinedMonthlyExpense,
 
-    getWaiterMonthlyExpenseAdminAllMonths
+    getWaiterMonthlyExpenseAdminAllMonths,
+
+    dailyFixedCostTarget
 }

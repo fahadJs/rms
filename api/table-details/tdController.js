@@ -529,11 +529,14 @@ const cancel = async (req, res) => {
 
         const tableId = tableIdResult[0].table_id;
 
-        const getOrderItemsQuery = 'SELECT MenuItemID, Quantity FROM order_items WHERE OrderID = ?';
+        const getOrderItemsQuery = 'SELECT * FROM order_items WHERE OrderID = ?';
         const orderItemsResult = await poolConnection.query(getOrderItemsQuery, [orderId]);
 
         const deleteSplitOrderItemsQuery = 'DELETE FROM bill_split_item WHERE OrderID = ?';
         await poolConnection.query(deleteSplitOrderItemsQuery, [orderId]);
+
+        const getAddedFixedCost = `SELECT AddedFixedCost, FixedCostPercent FROM menuitems WHERE MenuItemID = ?`;
+        const menuitemContribution = `UPDATE menuitems SET FixedCostContribution = FixedCostContribution - ? WHERE MenuItemID = ?`;
 
         // const deleteOrderItemsQuery = 'DELETE FROM order_items WHERE OrderID = ?';
         // await poolConnection.query(deleteOrderItemsQuery, [orderId]);
@@ -553,6 +556,12 @@ const cancel = async (req, res) => {
         for (const item of orderItemsResult) {
             const updateInventoryQuery = 'UPDATE inventory SET on_hand = on_hand + ? WHERE MenuItemID = ?';
             await poolConnection.query(updateInventoryQuery, [item.Quantity, item.MenuItemID]);
+
+            const getAddedFixedCostRes = await poolConnection.query(getAddedFixedCost, [item.MenuItemID]);
+            let fixedCost = getAddedFixedCostRes[0].CostPrice;
+            const percent = getAddedFixedCostRes[0].FixedCostPercent;
+            fixedCost = (percent / 100) * item.Price;
+            await poolConnection.query(menuitemContribution, [fixedCost, item.MenuItemID]);
         }
 
         await poolConnection.query('COMMIT');
