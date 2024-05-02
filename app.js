@@ -41,6 +41,7 @@ const tnRouter = require('./api/targetNumbers/tnRouter');
 const cocRouter = require('./api/cashier-opening-closing/cocRouter');
 const sumRouter = require('./api/summary/sumRouter');
 const fcRouter = require('./api/fixed-cost/fcRouter');
+const waRouter = require('./api/wabot/waRouter');
 
 // TEST RMS CPANEL
 const testRmsRouter = require('./api/test-rms/testRmsRouter');
@@ -93,6 +94,7 @@ app.use('/api/tasksoftware/numbers', tnRouter);
 app.use('/api/coc', cocRouter);
 app.use('/api/summary', sumRouter);
 app.use('/api/fc', fcRouter);
+app.use('/api/send', waRouter);
 
 // TEST RMS CPANEL
 app.use('/api/testrms', testRmsRouter);
